@@ -1,8 +1,9 @@
 [user]
+	email = turnejac01@gmail.com
 	name = jacobdt23
-	email = 155868822+jacobdt23@users.noreply.github.com
-[filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
