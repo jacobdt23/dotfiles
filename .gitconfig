@@ -1,0 +1,8 @@
+[user]
+	name = jacobdt23
+	email = 155868822+jacobdt23@users.noreply.github.com
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
