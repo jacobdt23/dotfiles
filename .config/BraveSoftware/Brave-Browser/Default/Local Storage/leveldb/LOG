@@ -1,0 +1,36 @@
+2026/08/24-19:02:32.376 5 Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Local Storage/leveldb/MANIFEST-000001
+2026/08/24-19:02:32.385 5 Recovering log #833
+2026/08/24-19:02:32.385 5 Reusing old log /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Local Storage/leveldb/000833.log 
+2026/08/24-19:41:32.830 7 Level-0 table #837: started
+2026/08/24-19:41:32.847 7 Level-0 table #837: 15805 bytes OK
+2026/08/24-19:41:32.860 7 Delete type=0 #833
+2026/08/24-19:41:32.860 7 Compacting 4@0 + 1@1 files
+2026/08/24-19:41:32.883 7 Generated table #838@0: 802 keys, 1828952 bytes
+2026/08/24-19:41:32.883 7 Compacted 4@0 + 1@1 files => 1828952 bytes
+2026/08/24-19:41:32.896 7 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/08/24-19:41:32.896 7 Delete type=2 #828
+2026/08/24-19:41:32.896 7 Delete type=2 #830
+2026/08/24-19:41:32.896 7 Delete type=2 #832
+2026/08/24-19:41:32.896 7 Delete type=2 #834
+2026/08/24-19:41:32.896 7 Delete type=2 #837
+2026/08/24-20:28:32.830 7 Level-0 table #840: started
+2026/08/24-20:28:32.840 7 Level-0 table #840: 16085 bytes OK
+2026/08/24-20:28:32.853 7 Delete type=0 #836
+2026/08/24-22:42:57.878 7 Level-0 table #842: started
+2026/08/24-22:42:57.888 7 Level-0 table #842: 15591 bytes OK
+2026/08/24-22:42:57.901 7 Delete type=0 #839
+2026/08/24-23:31:04.299 7 Level-0 table #844: started
+2026/08/24-23:31:04.316 7 Level-0 table #844: 15731 bytes OK
+2026/08/24-23:31:04.327 7 Delete type=0 #841
+2026/08/25-00:10:06.553 7 Level-0 table #846: started
+2026/08/25-00:10:06.570 7 Level-0 table #846: 15002 bytes OK
+2026/08/25-00:10:06.580 7 Delete type=0 #843
+2026/08/25-00:10:06.580 7 Compacting 4@0 + 1@1 files
+2026/08/25-00:10:06.602 7 Generated table #847@0: 803 keys, 1828816 bytes
+2026/08/25-00:10:06.602 7 Compacted 4@0 + 1@1 files => 1828816 bytes
+2026/08/25-00:10:06.616 7 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/08/25-00:10:06.616 7 Delete type=2 #838
+2026/08/25-00:10:06.616 7 Delete type=2 #840
+2026/08/25-00:10:06.616 7 Delete type=2 #842
+2026/08/25-00:10:06.616 7 Delete type=2 #844
+2026/08/25-00:10:06.616 7 Delete type=2 #846

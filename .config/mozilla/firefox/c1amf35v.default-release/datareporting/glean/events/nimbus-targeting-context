@@ -1,1 +1,0 @@
-{"timestamp":1748988,"category":"nimbus_events","name":"enrollment_status","extra":{"slug":"restore-chips-133","migration":"bug-2054546-mitigation","reason":"Migration","branch":"control","status":"WasEnrolled","glean_timestamp":"1787457103864"}}
