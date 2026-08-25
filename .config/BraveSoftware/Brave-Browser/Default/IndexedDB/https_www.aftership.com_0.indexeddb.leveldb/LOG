@@ -1,6 +1,0 @@
-2026/08/07-17:35:05.867 d6bb Creating DB /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_www.aftership.com_0.indexeddb.leveldb since it was missing.
-2026/08/07-17:35:05.881 d6bb Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_www.aftership.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/08/07-17:35:20.299 d6bd Level-0 table #5: started
-2026/08/07-17:35:20.304 d6bd Level-0 table #5: 1111 bytes OK
-2026/08/07-17:35:20.313 d6bd Delete type=0 #3
-2026/08/07-17:35:20.314 d6bd Manual compaction at level-0 from (begin) .. (end); will stop at (end)

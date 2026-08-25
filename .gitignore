@@ -11,3 +11,4 @@ node_modules/
 *.img
 *.iso
 .config/mozilla/
+.config/BraveSoftware/
