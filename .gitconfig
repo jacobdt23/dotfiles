@@ -1,1 +1,3 @@
-cachyos-dotfiles/home/.gitconfig
+[user]
+	name = jacobdt23
+	email = turnejac01@gmail.com
