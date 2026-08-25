@@ -1,5 +1,0 @@
-2026/08/23-17:55:44.210 5 Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Session Storage/MANIFEST-000001
-2026/08/23-17:55:44.210 5 Recovering log #103
-2026/08/23-17:55:44.211 5 (ignoring error) /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Session Storage/000103.log: dropping 23075 bytes; Corruption: checksum mismatch
-2026/08/23-17:55:44.211 5 (ignoring error) /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Session Storage/000103.log: dropping 58 bytes; Corruption: missing start of fragmented record(2)
-2026/08/23-17:55:44.211 5 Reusing old log /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Session Storage/000103.log 
