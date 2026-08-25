@@ -10,3 +10,4 @@ node_modules/
 *.qcow2
 *.img
 *.iso
+.config/BraveSoftware/
