@@ -1,0 +1,7 @@
+2026/08/05-23:02:23.643 12543 Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_turner-nc.duckdns.org_0.indexeddb.leveldb/MANIFEST-000001
+2026/08/05-23:02:23.643 12543 Recovering log #3
+2026/08/05-23:02:23.644 12543 Reusing old log /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_turner-nc.duckdns.org_0.indexeddb.leveldb/000003.log 
+2026/08/06-00:36:19.092 12543 Level-0 table #5: started
+2026/08/06-00:36:19.097 12543 Level-0 table #5: 49166 bytes OK
+2026/08/06-00:36:19.107 12543 Delete type=0 #3
+2026/08/06-00:36:19.107 12543 Manual compaction at level-0 from (begin) .. (end); will stop at (end)

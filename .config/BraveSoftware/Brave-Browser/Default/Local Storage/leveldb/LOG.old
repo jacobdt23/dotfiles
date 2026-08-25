@@ -1,0 +1,48 @@
+2026/08/23-17:55:44.127 5 Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Local Storage/leveldb/MANIFEST-000001
+2026/08/23-17:55:44.130 5 Recovering log #812
+2026/08/23-17:55:44.140 5 Reusing old log /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Local Storage/leveldb/000812.log 
+2026/08/23-17:55:51.271 7 Level-0 table #816: started
+2026/08/23-17:55:51.278 7 Level-0 table #816: 19925 bytes OK
+2026/08/23-17:55:51.288 7 Delete type=0 #812
+2026/08/23-18:56:00.950 7 Level-0 table #818: started
+2026/08/23-18:56:00.965 7 Level-0 table #818: 15456 bytes OK
+2026/08/23-18:56:00.975 7 Delete type=0 #815
+2026/08/23-18:56:00.975 7 Compacting 4@0 + 1@1 files
+2026/08/23-18:56:00.996 7 Generated table #819@0: 799 keys, 1829354 bytes
+2026/08/23-18:56:00.996 7 Compacted 4@0 + 1@1 files => 1829354 bytes
+2026/08/23-18:56:01.005 7 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/08/23-18:56:01.006 7 Delete type=2 #808
+2026/08/23-18:56:01.006 7 Delete type=2 #811
+2026/08/23-18:56:01.006 7 Delete type=2 #813
+2026/08/23-18:56:01.006 7 Delete type=2 #816
+2026/08/23-18:56:01.006 7 Delete type=2 #818
+2026/08/23-19:54:40.091 7 Level-0 table #821: started
+2026/08/23-19:54:40.108 7 Level-0 table #821: 15564 bytes OK
+2026/08/23-19:54:40.118 7 Delete type=0 #817
+2026/08/23-21:44:20.281 7 Level-0 table #823: started
+2026/08/23-21:44:20.287 7 Level-0 table #823: 15124 bytes OK
+2026/08/23-21:44:20.297 7 Delete type=0 #820
+2026/08/23-22:24:54.597 7 Level-0 table #825: started
+2026/08/23-22:24:54.604 7 Level-0 table #825: 15144 bytes OK
+2026/08/23-22:24:54.613 7 Delete type=0 #822
+2026/08/24-00:18:06.522 7 Level-0 table #827: started
+2026/08/24-00:18:06.530 7 Level-0 table #827: 15216 bytes OK
+2026/08/24-00:18:06.540 7 Delete type=0 #824
+2026/08/24-00:18:06.541 7 Compacting 4@0 + 1@1 files
+2026/08/24-00:18:06.563 7 Generated table #828@0: 799 keys, 1829381 bytes
+2026/08/24-00:18:06.563 7 Compacted 4@0 + 1@1 files => 1829381 bytes
+2026/08/24-00:18:06.572 7 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/08/24-00:18:06.573 7 Delete type=2 #819
+2026/08/24-00:18:06.573 7 Delete type=2 #821
+2026/08/24-00:18:06.573 7 Delete type=2 #823
+2026/08/24-00:18:06.573 7 Delete type=2 #825
+2026/08/24-00:18:06.573 7 Delete type=2 #827
+2026/08/24-00:52:48.386 7 Level-0 table #830: started
+2026/08/24-00:52:48.401 7 Level-0 table #830: 15914 bytes OK
+2026/08/24-00:52:48.411 7 Delete type=0 #826
+2026/08/24-01:26:02.617 7 Level-0 table #832: started
+2026/08/24-01:26:02.625 7 Level-0 table #832: 16546 bytes OK
+2026/08/24-01:26:02.639 7 Delete type=0 #829
+2026/08/24-03:03:48.070 7 Level-0 table #834: started
+2026/08/24-03:03:48.084 7 Level-0 table #834: 15846 bytes OK
+2026/08/24-03:03:48.094 7 Delete type=0 #831

@@ -1,0 +1,22 @@
+2026/08/16-00:51:52.010 4c06 Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_claude.ai_0.indexeddb.leveldb/MANIFEST-000001
+2026/08/16-00:51:52.011 4c06 Recovering log #18
+2026/08/16-00:51:52.011 4c06 Reusing old log /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_claude.ai_0.indexeddb.leveldb/000018.log 
+2026/08/16-01:12:53.585 4bbd Level-0 table #23: started
+2026/08/16-01:12:53.593 4bbd Level-0 table #23: 281966 bytes OK
+2026/08/16-01:12:53.606 4bbd Delete type=0 #18
+2026/08/16-01:12:53.606 4bbd Manual compaction at level-0 from (begin) .. (end); will stop at '\x00\x01\x01\x03\x01\x11\x00r\x00e\x00a\x00c\x00t\x00-\x00q\x00u\x00e\x00r\x00y\x00-\x00c\x00a\x00c\x00h\x00e' @ 9257 : 0
+2026/08/16-01:12:53.606 4bbd Compacting 1@0 + 1@1 files
+2026/08/16-01:12:53.613 4bbd Generated table #24@0: 976 keys, 49421 bytes
+2026/08/16-01:12:53.613 4bbd Compacted 1@0 + 1@1 files => 49421 bytes
+2026/08/16-01:12:53.627 4bbd compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/08/16-01:12:53.627 4bbd Delete type=2 #20
+2026/08/16-01:12:53.627 4bbd Delete type=2 #23
+2026/08/16-01:12:53.627 4bbd Manual compaction at level-0 from '\x00\x01\x01\x03\x01\x11\x00r\x00e\x00a\x00c\x00t\x00-\x00q\x00u\x00e\x00r\x00y\x00-\x00c\x00a\x00c\x00h\x00e' @ 9257 : 0 .. (end); will stop at (end)
+2026/08/16-01:12:53.627 4bbd Manual compaction at level-1 from (begin) .. (end); will stop at '\x00\x07\x01\x02\x013\x00[\x00D\x00E\x00F\x00A\x00U\x00L\x00T\x00]\x00!\x001\x00:\x003\x006\x005\x000\x006\x006\x009\x006\x004\x009\x004\x006\x00:\x00w\x00e\x00b\x00:\x009\x002\x000\x00e\x00b\x000\x001\x00e\x00c\x003\x004\x000\x00c\x005\x002\x00c\x00b\x008\x004\x002\x000\x00b' @ 9067 : 1
+2026/08/16-01:12:53.627 4bbd Compacting 1@1 + 1@2 files
+2026/08/16-01:12:53.635 4bbd Generated table #25@1: 133 keys, 44135 bytes
+2026/08/16-01:12:53.635 4bbd Compacted 1@1 + 1@2 files => 44135 bytes
+2026/08/16-01:12:53.646 4bbd compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/08/16-01:12:53.646 4bbd Delete type=2 #5
+2026/08/16-01:12:53.646 4bbd Delete type=2 #24
+2026/08/16-01:12:53.646 4bbd Manual compaction at level-1 from '\x00\x07\x01\x02\x013\x00[\x00D\x00E\x00F\x00A\x00U\x00L\x00T\x00]\x00!\x001\x00:\x003\x006\x005\x000\x006\x006\x009\x006\x004\x009\x004\x006\x00:\x00w\x00e\x00b\x00:\x009\x002\x000\x00e\x00b\x000\x001\x00e\x00c\x003\x004\x000\x00c\x005\x002\x00c\x00b\x008\x004\x002\x000\x00b' @ 9067 : 1 .. (end); will stop at (end)

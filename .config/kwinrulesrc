@@ -1,0 +1,13 @@
+[17aab116-d10c-49ff-8a00-e5196e15cc98]
+Description=Window settings for looking-glass-client
+size=1920,1080
+sizerule=2
+title=Looking Glass (client)
+titlematch=1
+types=1
+wmclass=looking-glass-client
+wmclassmatch=1
+
+[General]
+count=1
+rules=17aab116-d10c-49ff-8a00-e5196e15cc98

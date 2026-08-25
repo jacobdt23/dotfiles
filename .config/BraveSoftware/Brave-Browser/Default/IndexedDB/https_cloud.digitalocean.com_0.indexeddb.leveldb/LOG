@@ -1,0 +1,10 @@
+2026/08/01-02:02:41.249 dacc Creating DB /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_cloud.digitalocean.com_0.indexeddb.leveldb since it was missing.
+2026/08/01-02:02:41.267 dacc Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_cloud.digitalocean.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/08/01-02:02:41.716 dacc Level-0 table #5: started
+2026/08/01-02:02:41.724 dacc Level-0 table #5: 4287 bytes OK
+2026/08/01-02:02:41.737 dacc Delete type=0 #3
+2026/08/01-02:02:41.737 dacc Manual compaction at level-0 from '\x00\x03\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x04\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/08/01-02:02:42.071 dae0 Level-0 table #7: started
+2026/08/01-02:02:42.077 dae0 Level-0 table #7: 532 bytes OK
+2026/08/01-02:02:42.091 dae0 Delete type=0 #4
+2026/08/01-02:02:42.091 dacc Manual compaction at level-0 from '\x00\x04\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x05\x00\x00\x00' @ 0 : 0; will stop at (end)

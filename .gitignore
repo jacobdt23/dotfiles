@@ -1,0 +1,12 @@
+# Caches and logs
+.cache/
+.local/share/
+.local/state/
+node_modules/
+
+# Browser profiles & caches (if you want to avoid giant state files, or keep them if they are small)
+.config/libvirt/qemu/save/
+.config/libvirt/qemu/nvram/
+*.qcow2
+*.img
+*.iso
