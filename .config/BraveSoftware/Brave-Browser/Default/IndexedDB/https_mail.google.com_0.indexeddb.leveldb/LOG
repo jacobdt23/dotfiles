@@ -1,0 +1,15 @@
+2026/08/08-18:25:22.284 16b88 Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_mail.google.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/08/08-18:25:22.284 16b88 Recovering log #7
+2026/08/08-18:25:22.286 16b88 Reusing old log /home/jacob/.config/BraveSoftware/Brave-Browser/Default/IndexedDB/https_mail.google.com_0.indexeddb.leveldb/000007.log 
+2026/08/08-18:47:42.679 16b75 Level-0 table #12: started
+2026/08/08-18:47:42.686 16b75 Level-0 table #12: 39685 bytes OK
+2026/08/08-18:47:42.696 16b75 Delete type=0 #7
+2026/08/08-18:47:42.696 16b75 Manual compaction at level-0 from (begin) .. (end); will stop at (end)
+2026/08/08-18:47:42.696 16b75 Manual compaction at level-1 from (begin) .. (end); will stop at '\x00\x01\x01\x02\x01(\x00S\x00t\x00o\x00r\x00e\x00d\x00N\x00e\x00t\x00w\x00o\x00r\x00k\x00F\x00e\x00t\x00c\x00h\x00C\x00o\x00u\x00n\x00t\x00e\x00r\x00s\x00:\x00:\x00S\x00T\x00A\x00T\x00I\x00C\x00_\x00A\x00S\x00S\x00E\x00T' @ 7170 : 1
+2026/08/08-18:47:42.696 16b75 Compacting 1@1 + 1@2 files
+2026/08/08-18:47:42.701 16b75 Generated table #13@1: 74 keys, 1723 bytes
+2026/08/08-18:47:42.701 16b75 Compacted 1@1 + 1@2 files => 1723 bytes
+2026/08/08-18:47:42.710 16b75 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/08/08-18:47:42.710 16b75 Delete type=2 #9
+2026/08/08-18:47:42.710 16b75 Delete type=2 #12
+2026/08/08-18:47:42.711 16b75 Manual compaction at level-1 from '\x00\x01\x01\x02\x01(\x00S\x00t\x00o\x00r\x00e\x00d\x00N\x00e\x00t\x00w\x00o\x00r\x00k\x00F\x00e\x00t\x00c\x00h\x00C\x00o\x00u\x00n\x00t\x00e\x00r\x00s\x00:\x00:\x00S\x00T\x00A\x00T\x00I\x00C\x00_\x00A\x00S\x00S\x00E\x00T' @ 7170 : 1 .. (end); will stop at (end)

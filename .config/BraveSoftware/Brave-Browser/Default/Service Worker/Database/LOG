@@ -1,0 +1,6 @@
+2026/08/24-19:02:32.368 1199c Reusing MANIFEST /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Service Worker/Database/MANIFEST-000001
+2026/08/24-19:02:32.368 1199c Recovering log #3
+2026/08/24-19:02:32.374 1199c Reusing old log /home/jacob/.config/BraveSoftware/Brave-Browser/Default/Service Worker/Database/000003.log 
+2026/08/24-23:12:37.844 11951 Level-0 table #5: started
+2026/08/24-23:12:37.854 11951 Level-0 table #5: 85794 bytes OK
+2026/08/24-23:12:37.865 11951 Delete type=0 #3
