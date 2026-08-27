@@ -31,14 +31,19 @@ PanelWindow {
 
     Process {
         id: appProc
-        command: ["sh", "-c", "grep -h '^Name=' /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop 2>/dev/null | cut -d= -f2- | sort -u"]
+        // Extract both the desktop filename and the Name field cleanly
+        command: ["sh", "-c", "for f in /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop; do if [ -f \"$f\" ]; then name=$(grep -m1 ^Name= \"$f\" | cut -d= -f2-); if [ -n \"$name\" ]; then echo \"$(basename \"$f\")|$name\"; fi; fi; done | sort -t\| -k2 -u"]
         running: true
         stdout: SplitParser {
             onRead: data => {
                 let trimmed = data.trim();
                 if (trimmed !== "") {
-                    appModel.append({ appName: trimmed });
-                    filteredModel.append({ appName: trimmed });
+                    let parts = trimmed.split("|");
+                    if (parts.length === 2) {
+                        let entry = { desktopFile: parts[0], appName: parts[1] };
+                        appModel.append(entry);
+                        filteredModel.append(entry);
+                    }
                 }
             }
         }
@@ -49,7 +54,7 @@ PanelWindow {
         for (let i = 0; i < appModel.count; i++) {
             let item = appModel.get(i);
             if (item.appName.toLowerCase().includes(query.toLowerCase())) {
-                filteredModel.append({ appName: item.appName });
+                filteredModel.append({ desktopFile: item.desktopFile, appName: item.appName });
             }
         }
     }
@@ -142,12 +147,12 @@ PanelWindow {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: {
                             rootScope.launcherOpen = false;
-                            // Execute using a clean sh command wrapper
-                            launchProc.exec(["sh", "-c", "gtk-launch \"" + appName + "\""]);
-}
-}
-}
-}
-}
-}
+                            // Launch using the precise .desktop filename target
+                            launchProc.exec(["sh", "-c", "gtk-launch \"" + desktopFile + "\""]);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
