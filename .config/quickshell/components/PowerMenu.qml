@@ -10,7 +10,7 @@ PanelWindow {
     screen: targetScreen
     anchors { top: true; right: true }
     margins { top: 40; right: 20 }
-    
+
     WlrLayershell.layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
     visible: rootScope.powerMenuOpen
@@ -25,6 +25,8 @@ PanelWindow {
         border.color: "#3b4261"
         border.width: 1
         radius: 12
+
+        MouseArea { anchors.fill: parent }
 
         ColumnLayout {
             anchors.fill: parent

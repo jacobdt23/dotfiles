@@ -1,6 +1,6 @@
 import Quickshell
-import Quickshell.Wayland
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
@@ -10,29 +10,23 @@ PanelWindow {
 
     screen: targetScreen
     anchors { top: true; left: true; right: true; bottom: true }
-    
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-    exclusionMode: ExclusionMode.Ignore
-    visible: rootScope.launcherOpen
-    color: "#80000000"
 
+    WlrLayershell.layer: WlrLayer.Overlay
+    visible: rootScope.launcherOpen
+    color: "transparent"
+
+    // Click backdrop to close
     MouseArea {
         anchors.fill: parent
         onClicked: rootScope.launcherOpen = false
     }
 
-    ListModel {
-        id: appModel
-    }
-
-    ListModel {
-        id: filteredModel
-    }
+    ListModel { id: appModel }
+    ListModel { id: filteredModel }
 
     Process {
         id: appProc
-        command: ["sh", "-c", "grep -h \"^Name=\" /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop 2>/dev/null | cut -d= -f2- | sort -u"]
+        command: ["sh", "-c", "grep -h '^Name=' /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop 2>/dev/null | cut -d= -f2- | sort -u"]
         running: true
         stdout: SplitParser {
             onRead: data => {
@@ -63,6 +57,8 @@ PanelWindow {
         border.color: "#3b4261"
         border.width: 1
         radius: 12
+
+        MouseArea { anchors.fill: parent }
 
         ColumnLayout {
             anchors.fill: parent
