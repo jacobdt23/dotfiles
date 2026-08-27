@@ -1,0 +1,69 @@
+{
+   "checksum": "df80f30536aaa750dae1b26ac906a0c3",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "date_added": "13430112313719744",
+            "date_last_used": "13430124880791294",
+            "guid": "2be21f22-c1cd-4e6c-b2bb-f46cd94651ff",
+            "id": "7",
+            "meta_info": {
+               "power_bookmark_meta": ""
+            },
+            "name": "Home | Oracle Cloud Infrastructure",
+            "type": "url",
+            "url": "https://cloud.oracle.com/?region=us-ashburn-1&tenant=indianarasied2001&username=indianarasied2001%40gmail.com&provider=OracleIdentityCloudService"
+         }, {
+            "date_added": "13430124872569044",
+            "date_last_used": "13430208844927954",
+            "guid": "7a5a2fc4-8cee-476f-9e93-ce0d8e9b8dc1",
+            "id": "8",
+            "meta_info": {
+               "power_bookmark_meta": ""
+            },
+            "name": "Instances | Oracle Cloud Infrastructure",
+            "type": "url",
+            "url": "https://cloud.oracle.com/compute/instances/create?region=us-ashburn-1"
+         }, {
+            "date_added": "13432114184740758",
+            "date_last_used": "0",
+            "guid": "a46aecc3-034b-44dd-b79b-36c159eecc42",
+            "id": "10",
+            "meta_info": {
+               "power_bookmark_meta": ""
+            },
+            "name": "Dashboard - Nextcloud",
+            "type": "url",
+            "url": "https://nextcloud.local/apps/dashboard/"
+         } ],
+         "date_added": "13430008145606607",
+         "date_last_used": "0",
+         "date_modified": "13432114184740758",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Bookmarks bar",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13430008145606607",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Other bookmarks",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13430008145606607",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Mobile bookmarks",
+         "type": "folder"
+      }
+   },
+   "version": 1
+}
