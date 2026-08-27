@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Io
+import QtQuick
 import "components"
 
 Scope {
@@ -45,53 +46,52 @@ Scope {
         model: Quickshell.screens
 
         delegate: Component {
-            Loader {
+            Item {
                 required property var modelData
-                sourceComponent: Item {
-                    TopBar {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
 
-                    BottomDock {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                TopBar {
+                    targetScreen: modelData
+                    rootScope: root
+                }
 
-                    Launcher {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                BottomDock {
+                    targetScreen: modelData
+                    rootScope: root
+                }
 
-                    PowerMenu {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                Launcher {
+                    targetScreen: modelData
+                    rootScope: root
+                }
 
-                    CalendarDropdown {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                PowerMenu {
+                    targetScreen: modelData
+                    rootScope: root
+                }
 
-                    ClipboardMenu {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                CalendarDropdown {
+                    targetScreen: modelData
+                    rootScope: root
+                }
 
-                    KeybindsMenu {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                ClipboardMenu {
+                    targetScreen: modelData
+                    rootScope: root
+                }
 
-                    Notifications {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                KeybindsMenu {
+                    targetScreen: modelData
+                    rootScope: root
+                }
 
-                    MediaMenu {
-                        targetScreen: modelData
-                        rootScope: root
-                    }
+                Notifications {
+                    targetScreen: modelData
+                    rootScope: root
+                }
+
+                MediaMenu {
+                    targetScreen: modelData
+                    rootScope: root
                 }
             }
         }
