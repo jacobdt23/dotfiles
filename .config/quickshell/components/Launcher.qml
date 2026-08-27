@@ -142,7 +142,9 @@ PanelWindow {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: {
                             rootScope.launcherOpen = false;
-                            launchProc.exec(["setsid", "gtk-launch", appName, "&"]);
+                            let targetApp = appName;
+                            let cmd = "setsid gtk-launch \"$(grep -l \"^Name=" + targetApp + "$\" /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop 2>/dev/null | head -n 1 | xargs basename -s .desktop)\" >/dev/null 2>&1 &";
+                            launchProc.exec(["sh", "-c", cmd]);
                         }
                     }
                 }
