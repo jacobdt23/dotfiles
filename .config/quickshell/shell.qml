@@ -80,7 +80,7 @@ Scope {
                 }
 
                 KeybindsMenu {
-                    targetScreen: modelData
+                    screen: modelData
                     rootScope: root
                 }
 
