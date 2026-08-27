@@ -1,0 +1,17 @@
+# Allow tracking of specific config directories
+!/.config/
+!/.config/alacritty/
+!/.config/fish/
+!/.config/hypr/
+!/.config/micro/
+!/.config/nvim/
+!/.config/quickshell/
+!/.config/waypaper/
+!/.config/nwg-*
+!/.config/gtk-*
+!/.config/qt*ct/
+
+# Ignore logs or cache files inside configs if any
+/.config/**/logs/
+/.config/**/cache/
+/.config/**/*.log
