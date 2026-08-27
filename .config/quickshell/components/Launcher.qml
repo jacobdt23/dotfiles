@@ -1,22 +1,26 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-Window {
+PanelWindow {
     required property var targetScreen
     required property var rootScope
 
     screen: targetScreen
-    visible: rootScope.launcherOpen
-    width: 500
-    height: 450
-    color: "#1a1b26"
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
+    anchors { top: true; left: true; right: true; bottom: true }
 
-    // Center on screen
-    x: (targetScreen.width - width) / 2
-    y: (targetScreen.height - height) / 2
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    color: "#01000000"
+    visible: rootScope.launcherOpen
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: rootScope.launcherOpen = false
+    }
 
     ListModel { id: appModel }
     ListModel { id: filteredModel }
@@ -46,10 +50,20 @@ Window {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: {} // Catch events inside the box
+    Rectangle {
+        anchors.centerIn: parent
+        width: 500
+        height: 450
+        color: "#1a1b26"
+        border.color: "#3b4261"
+        border.width: 1
+        radius: 12
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: {}
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -125,10 +139,10 @@ Window {
                         onClicked: {
                             rootScope.launcherOpen = false;
                             Quickshell.sh("gtk-launch \"" + appName + "\" &");
-                        }
-                    }
-                }
-            }
-        }
-    }
+}
+}
+}
+}
+}
+}
 }
