@@ -13,8 +13,8 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    
-    // Force Wayland to register this as an active hit-testable surface
+
+    // Force Wayland to register this as an active hit-testable surface instead of click-through
     color: "#01000000"
     visible: rootScope.launcherOpen
 
@@ -141,10 +141,10 @@ PanelWindow {
                         onClicked: {
                             rootScope.launcherOpen = false;
                             Quickshell.sh("gtk-launch \"" + appName + "\" &");
-}
-}
-}
-}
-}
-}
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
