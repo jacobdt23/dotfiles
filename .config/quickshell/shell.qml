@@ -13,6 +13,9 @@ Scope {
     property bool clipboardOpen: false
     property bool notificationsOpen: false
     property bool mediaOpen: false
+    property bool osdVisible: false
+    property string osdIcon: ""
+    property real osdValue: 0
 
     function closeAll() {
         launcherOpen = false;
@@ -79,7 +82,7 @@ Scope {
             }
 
             KeybindsMenu {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
 
@@ -89,6 +92,11 @@ Scope {
             }
 
             MediaMenu {
+                targetScreen: modelData
+                rootScope: root
+            }
+
+            Osd {
                 targetScreen: modelData
                 rootScope: root
             }
