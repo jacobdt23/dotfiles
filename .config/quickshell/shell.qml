@@ -45,54 +45,52 @@ Scope {
     Variants {
         model: Quickshell.screens
 
-        delegate: Component {
-            Item {
-                required property var modelData
+        delegate: Item {
+            required property var modelData
 
-                TopBar {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            TopBar {
+                screen: modelData
+                rootScope: root
+            }
 
-                BottomDock {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            BottomDock {
+                screen: modelData
+                rootScope: root
+            }
 
-                Launcher {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            Launcher {
+                targetScreen: modelData
+                rootScope: root
+            }
 
-                PowerMenu {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            PowerMenu {
+                targetScreen: modelData
+                rootScope: root
+            }
 
-                CalendarDropdown {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            CalendarDropdown {
+                screen: modelData
+                rootScope: root
+            }
 
-                ClipboardMenu {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            ClipboardMenu {
+                screen: modelData
+                rootScope: root
+            }
 
-                KeybindsMenu {
-                    screen: modelData
-                    rootScope: root
-                }
+            KeybindsMenu {
+                screen: modelData
+                rootScope: root
+            }
 
-                Notifications {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            Notifications {
+                screen: modelData
+                rootScope: root
+            }
 
-                MediaMenu {
-                    targetScreen: modelData
-                    rootScope: root
-                }
+            MediaMenu {
+                screen: modelData
+                rootScope: root
             }
         }
     }
