@@ -12,12 +12,13 @@ PanelWindow {
     anchors { top: true; left: true; right: true; bottom: true }
 
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     color: "transparent"
     visible: rootScope.launcherOpen
 
+    // Full screen background click blocker to catch and handle all events
     MouseArea {
         anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: rootScope.launcherOpen = false
     }
 
@@ -58,9 +59,11 @@ PanelWindow {
         border.width: 1
         radius: 12
 
-        MouseArea { 
-            anchors.fill: parent 
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+        // Intercept clicks on the dialog box so they don’t trigger background close
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+            onClicked: {} // absorbs click
         }
 
         ColumnLayout {

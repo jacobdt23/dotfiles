@@ -12,7 +12,6 @@ anchors { top: true; right: true }
 margins { top: 40; right: 20 }
 
 WlrLayershell.layer: WlrLayer.Overlay
-WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 exclusionMode: ExclusionMode.Ignore
 visible: rootScope.powerMenuOpen
 color: "transparent"
@@ -27,9 +26,10 @@ border.color: "#3b4261"
 border.width: 1
 radius: 12
 
-MouseArea { 
-anchors.fill: parent 
+MouseArea {
+anchors.fill: parent
 acceptedButtons: Qt.LeftButton | Qt.RightButton
+onClicked: {} // absorbs event
 }
 
 ColumnLayout {
