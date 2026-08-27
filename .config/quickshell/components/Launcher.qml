@@ -1,28 +1,22 @@
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-PanelWindow {
+Window {
     required property var targetScreen
     required property var rootScope
 
     screen: targetScreen
-    anchors { top: true; left: true; right: true; bottom: true }
-
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-
-    // Force Wayland to register this as an active hit-testable surface instead of click-through
-    color: "#01000000"
     visible: rootScope.launcherOpen
+    width: 500
+    height: 450
+    color: "#1a1b26"
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
 
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: rootScope.launcherOpen = false
-    }
+    // Center on screen
+    x: (targetScreen.width - width) / 2
+    y: (targetScreen.height - height) / 2
 
     ListModel { id: appModel }
     ListModel { id: filteredModel }
@@ -52,20 +46,10 @@ PanelWindow {
         }
     }
 
-    Rectangle {
-        anchors.centerIn: parent
-        width: 500
-        height: 450
-        color: "#1a1b26"
-        border.color: "#3b4261"
-        border.width: 1
-        radius: 12
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: {}
-        }
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: {} // Catch events inside the box
 
         ColumnLayout {
             anchors.fill: parent

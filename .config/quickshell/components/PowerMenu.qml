@@ -1,44 +1,26 @@
 import Quickshell
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-PanelWindow {
+Window {
     required property var targetScreen
     required property var rootScope
 
     screen: targetScreen
-    anchors { top: true; right: true }
-    margins { top: 40; right: 20 }
-
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-
-    // Force Wayland to register this as an active hit-testable surface instead of click-through
-    color: "#01000000"
     visible: rootScope.powerMenuOpen
+    width: 220
+    height: 200
+    color: "#1a1b26"
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
 
-    implicitWidth: 220
-    implicitHeight: 200
+    // Position near top right
+    x: targetScreen.width - width - 20
+    y: 40
 
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: rootScope.powerMenuOpen = false
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        color: "#1a1b26"
-        border.color: "#3b4261"
-        border.width: 1
-        radius: 12
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: {}
-        }
+        onClicked: {}
 
         ColumnLayout {
             anchors.fill: parent
