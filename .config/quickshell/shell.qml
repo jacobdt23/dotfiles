@@ -45,6 +45,15 @@ Scope {
         }
     }
 
+    IpcHandler {
+        target: "keybinds"
+        function toggle(): void {
+            let state = root.keybindsOpen;
+            root.closeAll();
+            root.keybindsOpen = !state;
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
