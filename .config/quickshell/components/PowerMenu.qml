@@ -12,13 +12,18 @@ anchors { top: true; right: true }
 margins { top: 40; right: 20 }
 
 WlrLayershell.layer: WlrLayer.Overlay
-WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-exclusionMode: ExclusionMode.Ignore
-visible: rootScope.powerMenuOpen
+WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 color: "transparent"
+visible: rootScope.powerMenuOpen
 
 implicitWidth: 220
 implicitHeight: 200
+
+MouseArea {
+anchors.fill: parent
+acceptedButtons: Qt.LeftButton | Qt.RightButton
+onClicked: rootScope.powerMenuOpen = false
+}
 
 Rectangle {
 anchors.fill: parent

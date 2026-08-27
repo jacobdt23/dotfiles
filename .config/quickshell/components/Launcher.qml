@@ -13,7 +13,6 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     visible: rootScope.launcherOpen
 
@@ -63,7 +62,7 @@ PanelWindow {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: {} 
+            onClicked: {}
         }
 
         ColumnLayout {
