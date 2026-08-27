@@ -15,7 +15,6 @@ PanelWindow {
     visible: rootScope.launcherOpen
     color: "transparent"
 
-    // Click backdrop to close
     MouseArea {
         anchors.fill: parent
         onClicked: rootScope.launcherOpen = false
