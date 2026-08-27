@@ -11,6 +11,8 @@ PanelWindow {
     screen: targetScreen
     anchors { top: true; left: true; right: true; bottom: true }
 
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     color: "transparent"
     visible: rootScope.launcherOpen
 
@@ -56,7 +58,10 @@ PanelWindow {
         border.width: 1
         radius: 12
 
-        MouseArea { anchors.fill: parent }
+        MouseArea { 
+            anchors.fill: parent 
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -128,13 +133,14 @@ PanelWindow {
                         id: launcherMouse
                         anchors.fill: parent
                         hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: {
                             rootScope.launcherOpen = false;
                             Quickshell.sh("gtk-launch \"" + appName + "\" &");
-                        }
-                    }
-                }
-            }
-        }
-    }
+}
+}
+}
+}
+}
+}
 }
