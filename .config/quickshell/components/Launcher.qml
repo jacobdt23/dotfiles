@@ -26,6 +26,10 @@ PanelWindow {
     ListModel { id: filteredModel }
 
     Process {
+        id: launchProc
+    }
+
+    Process {
         id: appProc
         command: ["sh", "-c", "grep -h '^Name=' /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop 2>/dev/null | cut -d= -f2- | sort -u"]
         running: true
@@ -138,7 +142,8 @@ PanelWindow {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: {
                             rootScope.launcherOpen = false;
-                            Quickshell.sh("gtk-launch \"" + appName + "\" &");
+                            // Execute using a clean sh command wrapper
+                            launchProc.exec(["sh", "-c", "gtk-launch \"" + appName + "\""]);
 }
 }
 }
