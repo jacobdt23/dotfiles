@@ -31,19 +31,14 @@ PanelWindow {
 
     Process {
         id: appProc
-        // Extract both the desktop filename and the Name field cleanly
-        command: ["sh", "-c", "for f in /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop; do if [ -f \"$f\" ]; then name=$(grep -m1 ^Name= \"$f\" | cut -d= -f2-); if [ -n \"$name\" ]; then echo \"$(basename \"$f\")|$name\"; fi; fi; done | sort -t\| -k2 -u"]
+        command: ["sh", "-c", "grep -h \"^Name=\" /usr/share/applications/*.desktop ~/.local/share/applications/*.desktop 2>/dev/null | cut -d= -f2- | sort -u"]
         running: true
         stdout: SplitParser {
             onRead: data => {
                 let trimmed = data.trim();
                 if (trimmed !== "") {
-                    let parts = trimmed.split("|");
-                    if (parts.length === 2) {
-                        let entry = { desktopFile: parts[0], appName: parts[1] };
-                        appModel.append(entry);
-                        filteredModel.append(entry);
-                    }
+                    appModel.append({ appName: trimmed });
+                    filteredModel.append({ appName: trimmed });
                 }
             }
         }
@@ -54,7 +49,7 @@ PanelWindow {
         for (let i = 0; i < appModel.count; i++) {
             let item = appModel.get(i);
             if (item.appName.toLowerCase().includes(query.toLowerCase())) {
-                filteredModel.append({ desktopFile: item.desktopFile, appName: item.appName });
+                filteredModel.append({ appName: item.appName });
             }
         }
     }
@@ -147,8 +142,7 @@ PanelWindow {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: {
                             rootScope.launcherOpen = false;
-                            // Launch using the precise .desktop filename target
-                            launchProc.exec(["sh", "-c", "gtk-launch \"" + desktopFile + "\""]);
+                            launchProc.exec(["setsid", "gtk-launch", appName, "&"]);
                         }
                     }
                 }
