@@ -49,12 +49,12 @@ Scope {
             required property var modelData
 
             TopBar {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
 
             BottomDock {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
 
@@ -69,27 +69,27 @@ Scope {
             }
 
             CalendarDropdown {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
 
             ClipboardMenu {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
 
             KeybindsMenu {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
 
             Notifications {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
 
             MediaMenu {
-                screen: modelData
+                targetScreen: modelData
                 rootScope: root
             }
         }
