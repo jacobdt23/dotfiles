@@ -13,7 +13,9 @@ margins { top: 40; right: 20 }
 
 WlrLayershell.layer: WlrLayer.Overlay
 WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-color: "transparent"
+
+// Force Wayland to register this as an active hit-testable surface
+color: "#01000000"
 visible: rootScope.powerMenuOpen
 
 implicitWidth: 220

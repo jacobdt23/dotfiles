@@ -13,7 +13,9 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    color: "transparent"
+    
+    // Force Wayland to register this as an active hit-testable surface
+    color: "#01000000"
     visible: rootScope.launcherOpen
 
     MouseArea {
