@@ -11,9 +11,8 @@ PanelWindow {
     screen: targetScreen
     anchors { top: true; left: true; right: true; bottom: true }
 
-    WlrLayershell.layer: WlrLayer.Overlay
-    visible: rootScope.launcherOpen
     color: "transparent"
+    visible: rootScope.launcherOpen
 
     MouseArea {
         anchors.fill: parent
