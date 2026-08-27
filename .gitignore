@@ -1,5 +1,0 @@
-# Track everything in home and .config
-# Ignore generic cache and log folders anywhere inside .config
-**/cache/
-**/logs/
-**/*.log
