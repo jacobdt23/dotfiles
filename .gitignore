@@ -1,0 +1,23 @@
+# Ignore generic logs and caches
+**/cache/
+**/logs/
+**/*.log
+
+# Ignore heavy browser runtime states and databases (Brave, Firefox, Chrome)
+/.config/BraveSoftware/**/Default/IndexedDB/
+/.config/BraveSoftware/**/Default/Local Storage/
+/.config/BraveSoftware/**/Default/Session Storage/
+/.config/BraveSoftware/**/Default/Sessions/
+/.config/BraveSoftware/**/Default/Service Worker/
+/.config/BraveSoftware/**/Default/Cache/
+/.config/BraveSoftware/**/Default/GPUCache/
+/.config/BraveSoftware/**/Default/DawnGraphiteCache/
+/.config/BraveSoftware/**/Default/DawnWebGPUCache/
+/.config/BraveSoftware/**/Default/Safe Browsing/
+/.config/BraveSoftware/**/component_crx_cache/
+/.config/BraveSoftware/**/extensions_crx_cache/
+
+/.config/mozilla/firefox/**/*.sqlite*
+/.config/mozilla/firefox/**/*.sqlite-wal
+/.config/mozilla/firefox/**/datareporting/
+/.config/mozilla/firefox/**/storage/

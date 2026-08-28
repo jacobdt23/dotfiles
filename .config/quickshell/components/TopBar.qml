@@ -73,7 +73,7 @@ PanelWindow {
                     height: 20
                     radius: 4
                     color: isFocused ? "#7aa2f7" : "#24283b"
-                    
+
                     Behavior on width { NumberAnimation { duration: 150 } }
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -96,18 +96,25 @@ PanelWindow {
 
         Item { Layout.fillWidth: true }
 
-        // Clock with Clickable Dropdown Toggle (Centered cleanly)
-        Item {
+        // Clock with Clickable Dropdown Toggle wrapped in a styled box
+        Rectangle {
             Layout.alignment: Qt.AlignHCenter
-            implicitWidth: clockText.width + 24
-            implicitHeight: 24
+            height: 24
+            implicitWidth: clockText.width + 20
+            radius: 6
+            color: clockArea.containsMouse ? "#3b4261" : "#24283b"
+            border.color: "#3b4261"
+            border.width: 1
             z: 10
+
+            Behavior on color { ColorAnimation { duration: 150 } }
 
             Text {
                 id: clockText
                 anchors.centerIn: parent
                 color: "#c0caf5"
                 font.bold: true
+                font.pixelSize: 11
                 text: Qt.formatDateTime(new Date(), "MMM d • hh:mm AP")
                 Timer {
                     interval: 1000; running: true; repeat: true
@@ -116,6 +123,7 @@ PanelWindow {
             }
 
             MouseArea {
+                id: clockArea
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
@@ -158,7 +166,7 @@ PanelWindow {
 
         RowLayout {
             spacing: 8
-            
+
             Repeater {
                 model: SystemTray.items
 
@@ -166,7 +174,7 @@ PanelWindow {
                     required property var modelData
                     width: 24; height: 24; radius: 6
                     color: trayMouse.containsMouse ? "#3b4261" : "transparent"
-                    
+
                     Behavior on color { ColorAnimation { duration: 150 } }
 
                     Image {
@@ -195,7 +203,7 @@ PanelWindow {
 
         Rectangle {
             width: 24; height: 24; radius: 6; color: "#24283b"
-            
+
             Image {
                 anchors.centerIn: parent
                 width: 14; height: 14
