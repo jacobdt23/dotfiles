@@ -25,6 +25,8 @@ PanelWindow {
         Rectangle {
             width: 32; height: 32; radius: 6
             color: btn1Mouse.containsMouse ? "#3b4261" : "#24283b"
+            border.color: "#3b4261"
+            border.width: 1
             Behavior on color { ColorAnimation { duration: 150 } }
 
             Image {
@@ -49,6 +51,8 @@ PanelWindow {
         Rectangle {
             width: 32; height: 32; radius: 6
             color: btn2Mouse.containsMouse ? "#3b4261" : "#24283b"
+            border.color: "#3b4261"
+            border.width: 1
             Behavior on color { ColorAnimation { duration: 150 } }
 
             Text {
@@ -71,6 +75,8 @@ PanelWindow {
         Rectangle {
             width: 32; height: 32; radius: 6
             color: btn3Mouse.containsMouse ? "#3b4261" : "#24283b"
+            border.color: "#3b4261"
+            border.width: 1
             Behavior on color { ColorAnimation { duration: 150 } }
 
             Text {
