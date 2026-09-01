@@ -1,5 +1,36 @@
 {
     "name": "Untitled",
+    "AuxAudioDevice1": {
+        "prev_ver": 537001986,
+        "name": "Mic/Aux",
+        "uuid": "c92943a6-9a12-4660-9a11-cc881046e8e4",
+        "id": "pulse_input_capture",
+        "versioned_id": "pulse_input_capture",
+        "settings": {
+            "device_id": "alsa_input.usb-Elgato_Systems_Elgato_Wave_1_AS50J1A01887-00.mono-fallback"
+        },
+        "mixers": 255,
+        "sync": 0,
+        "flags": 0,
+        "volume": 1.0,
+        "balance": 0.5,
+        "enabled": true,
+        "muted": false,
+        "push-to-mute": false,
+        "push-to-mute-delay": 0,
+        "push-to-talk": false,
+        "push-to-talk-delay": 0,
+        "hotkeys": {
+            "libobs.mute": [],
+            "libobs.unmute": [],
+            "libobs.push-to-mute": [],
+            "libobs.push-to-talk": []
+        },
+        "deinterlace_mode": 0,
+        "deinterlace_field_order": 0,
+        "monitoring_type": 0,
+        "private_settings": {}
+    },
     "sources": [
         {
             "prev_ver": 537001986,
@@ -37,7 +68,7 @@
             "id": "alsa_input_capture",
             "versioned_id": "alsa_input_capture",
             "settings": {
-                "device_id": "front:CARD=Wireless,DEV=0"
+                "device_id": "front:CARD=Wave1,DEV=0"
             },
             "mixers": 255,
             "sync": 0,
@@ -58,7 +89,7 @@
             },
             "deinterlace_mode": 0,
             "deinterlace_field_order": 0,
-            "monitoring_type": 2,
+            "monitoring_type": 0,
             "private_settings": {}
         },
         {
