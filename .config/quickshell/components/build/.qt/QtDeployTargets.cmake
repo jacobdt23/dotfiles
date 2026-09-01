@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_control_center_cpp_FILE /home/jacob/.config/quickshell/components/build/control_center_cpp)
+set(__QT_DEPLOY_TARGET_control_center_cpp_TYPE EXECUTABLE)

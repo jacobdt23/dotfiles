@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/control_center_cpp.dir/link.d CMakeFiles/control_center_cpp.dir/control_center_cpp_autogen/mocs_compilation.cpp.o CMakeFiles/control_center_cpp.dir/control_center.cpp.o -o control_center_cpp  /usr/lib/libQt6Widgets.so.6.11.2 /usr/lib/libQt6Gui.so.6.11.2 /usr/lib/libGLX.so /usr/lib/libOpenGL.so /usr/lib/libQt6Core.so.6.11.2

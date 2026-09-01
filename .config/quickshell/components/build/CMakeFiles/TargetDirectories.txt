@@ -1,0 +1,5 @@
+/home/jacob/.config/quickshell/components/build/CMakeFiles/control_center_cpp.dir
+/home/jacob/.config/quickshell/components/build/CMakeFiles/edit_cache.dir
+/home/jacob/.config/quickshell/components/build/CMakeFiles/rebuild_cache.dir
+/home/jacob/.config/quickshell/components/build/CMakeFiles/control_center_cpp_autogen_timestamp_deps.dir
+/home/jacob/.config/quickshell/components/build/CMakeFiles/control_center_cpp_autogen.dir

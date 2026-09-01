@@ -5,7 +5,7 @@ import "components"
 
 Scope {
     id: root
-
+    
     property bool launcherOpen: false
     property bool powerMenuOpen: false
     property bool calendarOpen: false
@@ -13,9 +13,7 @@ Scope {
     property bool clipboardOpen: false
     property bool notificationsOpen: false
     property bool mediaOpen: false
-    property bool osdVisible: false
-    property string osdIcon: ""
-    property real osdValue: 0
+    property bool controlCenterOpen: false
 
     function closeAll() {
         launcherOpen = false;
@@ -25,6 +23,7 @@ Scope {
         clipboardOpen = false;
         notificationsOpen = false;
         mediaOpen = false;
+        controlCenterOpen = false;
     }
 
     IpcHandler {
@@ -54,61 +53,30 @@ Scope {
         }
     }
 
+    IpcHandler {
+        target: "controlcenter"
+        function toggle(): void {
+            let state = root.controlCenterOpen;
+            root.closeAll();
+            root.controlCenterOpen = !state;
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
         delegate: Item {
             required property var modelData
 
-            TopBar {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            BottomDock {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            Launcher {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            PowerMenu {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            CalendarDropdown {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            ClipboardMenu {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            KeybindsMenu {
-                screen: modelData
-                rootScope: root
-            }
-
-            Notifications {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            MediaMenu {
-                targetScreen: modelData
-                rootScope: root
-            }
-
-            Osd {
-                targetScreen: modelData
-                rootScope: root
-            }
+            TopBar { targetScreen: modelData; rootScope: root }
+            BottomDock { targetScreen: modelData; rootScope: root }
+            Launcher { targetScreen: modelData; rootScope: root }
+            PowerMenu { targetScreen: modelData; rootScope: root }
+            CalendarDropdown { targetScreen: modelData; rootScope: root }
+            ClipboardMenu { targetScreen: modelData; rootScope: root }
+            KeybindsMenu { screen: modelData; rootScope: root }
+            Notifications { targetScreen: modelData; rootScope: root }
+            MediaMenu { targetScreen: modelData; rootScope: root }
         }
     }
 }
