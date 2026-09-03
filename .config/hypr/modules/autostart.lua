@@ -16,6 +16,7 @@ hl.on("hyprland.start", function()
     -- Background Services
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
     hl.exec_cmd("awww-daemon")
+    hl.exec_cmd("sh ~/.config/hypr/wallpaper_loop.sh")
     hl.exec_cmd("hyprpm reload -n")
 
     -- Start Quickshell
