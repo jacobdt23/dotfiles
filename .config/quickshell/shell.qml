@@ -5,7 +5,7 @@ import "components"
 
 Scope {
     id: root
-    
+
     property bool launcherOpen: false
     property bool powerMenuOpen: false
     property bool calendarOpen: false

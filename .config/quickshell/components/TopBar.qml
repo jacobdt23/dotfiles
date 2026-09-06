@@ -7,6 +7,7 @@ import QtQuick
 import QtQuick.Layouts
 
 PanelWindow {
+    id: windowRoot
     required property var targetScreen
     required property var rootScope
 
@@ -20,8 +21,23 @@ PanelWindow {
     property string cpuUsage: "--%"
     property string memUsage: "--%"
     property string diskUsage: "--%"
+    property string activeLayout: "dwindle"
 
     Process { id: topBarExec }
+
+    Process {
+        id: layoutChecker
+        running: true
+        command: ["hyprctl", "getoption", "general:layout", "-j"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    let json = JSON.parse(data);
+                    activeLayout = json.str;
+                } catch(e) {}
+            }
+        }
+    }
 
     Timer {
         interval: 2000
@@ -32,6 +48,7 @@ PanelWindow {
             cpuProc.running = true;
             memProc.running = true;
             diskProc.running = true;
+            layoutChecker.running = true;
         }
     }
 
@@ -58,43 +75,88 @@ PanelWindow {
         anchors.margins: 8
         spacing: 8
 
-        // Workspaces Module
+        // Left Side: Workspaces + Layout Switcher
         RowLayout {
-            spacing: 6
-            Repeater {
-                model: {
-                    let screenIndex = Quickshell.screens.indexOf(targetScreen);
-                    return screenIndex === 0 ? [1, 2, 3, 4, 5] : [6, 7, 8, 9, 10];
-                }
+            spacing: 8
 
-                Rectangle {
-                    required property var modelData
-                    property bool isFocused: (Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.id === modelData)
-                    property bool isHovered: wsMouse.containsMouse
-
-                    height: 24
-                    width: isFocused ? 28 : 24
-                    radius: 6
-                    color: isFocused ? "#7aa2f7" : (isHovered ? "#3b4261" : "#24283b")
-                    border.color: "#3b4261"
-                    border.width: 1
-
-                    Behavior on width { NumberAnimation { duration: 150 } }
-                    Behavior on color { ColorAnimation { duration: 150 } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData
-                        color: parent.isFocused ? "#1a1b26" : "#c0caf5"
-                        font.pixelSize: 11
-                        font.bold: true
+            RowLayout {
+                spacing: 6
+                Repeater {
+                    model: {
+                        let screenIndex = Quickshell.screens.indexOf(targetScreen);
+                        return screenIndex === 0 ? [1, 2, 3, 4, 5] : [6, 7, 8, 9, 10];
                     }
 
-                    MouseArea {
-                        id: wsMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: topBarExec.exec(["hyprctl", "dispatch", "workspace", modelData.toString()])
+                    Rectangle {
+                        required property var modelData
+                        property bool isFocused: (Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.id === modelData)
+                        property bool isHovered: wsMouse.containsMouse
+
+                        height: 24
+                        width: isFocused ? 28 : 24
+                        radius: 6
+                        color: isFocused ? "#7aa2f7" : (isHovered ? "#3b4261" : "#24283b")
+                        border.color: "#3b4261"
+                        border.width: 1
+
+                        Behavior on width { NumberAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData
+                            color: parent.isFocused ? "#1a1b26" : "#c0caf5"
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: wsMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: topBarExec.exec(["hyprctl", "dispatch", "workspace", modelData.toString()])
+                        }
+                    }
+                }
+            }
+
+            // Layout Mode Widget (Cycles layouts and overrides configuration live)
+            Rectangle {
+                height: 24
+                implicitWidth: layoutText.width + 16
+                radius: 6
+                color: layoutMouse.containsMouse ? "#3b4261" : "#24283b"
+                border.color: "#bb9af7"
+                border.width: 1
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    id: layoutText
+                    anchors.centerIn: parent
+                    text: activeLayout.charAt(0).toUpperCase() + activeLayout.slice(1)
+                    color: "#bb9af7"
+                    font.pixelSize: 11
+                    font.bold: true
+                }
+
+                MouseArea {
+                    id: layoutMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.RightButton) {
+                            topBarExec.exec(["hyprctl", "dispatch", "togglefloating", "active"]);
+                        } else {
+                            let layouts = ["dwindle", "master", "monocle", "scrolling"];
+                            let currentIndex = layouts.indexOf(activeLayout);
+                            let nextLayout = layouts[(currentIndex + 1) % layouts.length];
+                            
+                            // Forcefully apply keyword layout setting to stick immediately
+                            topBarExec.exec(["sh", "-c", `hyprctl keyword general:layout ${nextLayout}`]);
+                            activeLayout = nextLayout;
+                        }
                     }
                 }
             }
@@ -102,7 +164,7 @@ PanelWindow {
 
         Item { Layout.fillWidth: true }
 
-        // Clock Module wrapped in a styled box
+        // Clock Module
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             height: 24
@@ -142,126 +204,116 @@ PanelWindow {
 
         Item { Layout.fillWidth: true }
 
-        // 1. System Tray Items (Placed first on the right)
+        // Right Side: Tray, Stats, Buttons
         RowLayout {
             spacing: 8
 
-            Repeater {
-                model: SystemTray.items
+            RowLayout {
+                spacing: 8
+                Repeater {
+                    model: SystemTray.items
 
-                delegate: Rectangle {
-                    required property var modelData
-                    width: 24; height: 24; radius: 6
-                    color: trayMouse.containsMouse ? "#3b4261" : "#24283b"
-                    border.color: "#3b4261"; border.width: 1
+                    delegate: Rectangle {
+                        required property var modelData
+                        width: 24; height: 24; radius: 6
+                        color: trayMouse.containsMouse ? "#3b4261" : "#24283b"
+                        border.color: "#3b4261"; border.width: 1
 
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: 150 } }
 
-                    Image {
-                        anchors.centerIn: parent
-                        width: 14; height: 14
-                        source: modelData.icon
-                        fillMode: Image.PreserveAspectFit
-                    }
+                        Image {
+                            anchors.centerIn: parent
+                            width: 14; height: 14
+                            source: modelData.icon
+                            fillMode: Image.PreserveAspectFit
+                        }
 
-                    MouseArea {
-                        id: trayMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.RightButton) {
-                                modelData.display(parent, mouse.x, mouse.y);
-                            } else {
-                                modelData.activate();
+                        MouseArea {
+                            id: trayMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.RightButton) {
+                                    modelData.display(parent, mouse.x, mouse.y);
+                                } else {
+                                    modelData.activate();
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // 2. System Stats Modules (CPU, MEM, DISK)
-        RowLayout {
-            spacing: 8
+            RowLayout {
+                spacing: 8
 
-            Rectangle {
-                height: 24; implicitWidth: cpuText.width + 16; radius: 6
-                color: cpuArea.containsMouse ? "#3b4261" : "#24283b"
-                border.color: "#3b4261"; border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Text { id: cpuText; anchors.centerIn: parent; text: "CPU: " + cpuUsage; color: "#7aa2f7"; font.pixelSize: 11; font.bold: true }
-                MouseArea { id: cpuArea; anchors.fill: parent; hoverEnabled: true; onClicked: topBarExec.exec(["alacritty", "-e", "btm"]) }
-            }
+                Rectangle {
+                    height: 24; implicitWidth: cpuText.width + 16; radius: 6
+                    color: cpuArea.containsMouse ? "#3b4261" : "#24283b"
+                    border.color: "#3b4261"; border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Text { id: cpuText; anchors.centerIn: parent; text: "CPU: " + cpuUsage; color: "#7aa2f7"; font.pixelSize: 11; font.bold: true }
+                    MouseArea { id: cpuArea; anchors.fill: parent; hoverEnabled: true; onClicked: topBarExec.exec(["alacritty", "-e", "btm"]) }
+                }
 
-            Rectangle {
-                height: 24; implicitWidth: memText.width + 16; radius: 6
-                color: memArea.containsMouse ? "#3b4261" : "#24283b"
-                border.color: "#3b4261"; border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Text { id: memText; anchors.centerIn: parent; text: "MEM: " + memUsage; color: "#bb9af7"; font.pixelSize: 11; font.bold: true }
-                MouseArea { id: memArea; anchors.fill: parent; hoverEnabled: true; onClicked: topBarExec.exec(["alacritty", "-e", "btm"]) }
-            }
+                Rectangle {
+                    height: 24; implicitWidth: memText.width + 16; radius: 6
+                    color: memArea.containsMouse ? "#3b4261" : "#24283b"
+                    border.color: "#3b4261"; border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Text { id: memText; anchors.centerIn: parent; text: "MEM: " + memUsage; color: "#bb9af7"; font.pixelSize: 11; font.bold: true }
+                    MouseArea { id: memArea; anchors.fill: parent; hoverEnabled: true; onClicked: topBarExec.exec(["alacritty", "-e", "btm"]) }
+                }
 
-            Rectangle {
-                height: 24; implicitWidth: diskText.width + 16; radius: 6
-                color: diskArea.containsMouse ? "#3b4261" : "#24283b"
-                border.color: "#3b4261"; border.width: 1
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Text { id: diskText; anchors.centerIn: parent; text: "DISK: " + diskUsage; color: "#e0af68"; font.pixelSize: 11; font.bold: true }
-                MouseArea { id: diskArea; anchors.fill: parent; hoverEnabled: true; onClicked: topBarExec.exec(["alacritty", "-e", "ncdu"]) }
-            }
-        }
-
-        // 3. Notification Toggle Button
-        Rectangle {
-            width: 24; height: 24; radius: 6
-            color: notifMouse.containsMouse ? "#3b4261" : "#24283b"
-            border.color: "#3b4261"; border.width: 1
-
-            Behavior on color { ColorAnimation { duration: 150 } }
-
-            Text { 
-                anchors.centerIn: parent; 
-                text: "󰂚"; 
-                color: "#7aa2f7" 
-                font.pixelSize: 11
-            }
-
-            MouseArea {
-                id: notifMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    let n = rootScope.notificationsOpen;
-                    rootScope.closeAll();
-                    rootScope.notificationsOpen = !n;
+                Rectangle {
+                    height: 24; implicitWidth: diskText.width + 16; radius: 6
+                    color: diskArea.containsMouse ? "#3b4261" : "#24283b"
+                    border.color: "#3b4261"; border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Text { id: diskText; anchors.centerIn: parent; text: "DISK: " + diskUsage; color: "#e0af68"; font.pixelSize: 11; font.bold: true }
+                    MouseArea { id: diskArea; anchors.fill: parent; hoverEnabled: true; onClicked: topBarExec.exec(["alacritty", "-e", "ncdu"]) }
                 }
             }
-        }
 
-        // 4. Power Menu Button
-        Rectangle {
-            width: 24; height: 24; radius: 6
-            color: powerMouse.containsMouse ? "#3b4261" : "#24283b"
-            border.color: "#3b4261"; border.width: 1
+            Rectangle {
+                width: 24; height: 24; radius: 6
+                color: notifMouse.containsMouse ? "#3b4261" : "#24283b"
+                border.color: "#3b4261"; border.width: 1
 
-            Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: 150 } }
 
-            Text { 
-                anchors.centerIn: parent; 
-                text: "⏻"; 
-                color: "#f7768e" 
-                font.pixelSize: 11
+                Text { anchors.centerIn: parent; text: "󰂚"; color: "#7aa2f7"; font.pixelSize: 11 }
+
+                MouseArea {
+                    id: notifMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: {
+                        let n = rootScope.notificationsOpen;
+                        rootScope.closeAll();
+                        rootScope.notificationsOpen = !n;
+                    }
+                }
             }
 
-            MouseArea {
-                id: powerMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    rootScope.closeAll()
-                    rootScope.powerMenuOpen = true
+            Rectangle {
+                width: 24; height: 24; radius: 6
+                color: powerMouse.containsMouse ? "#3b4261" : "#24283b"
+                border.color: "#3b4261"; border.width: 1
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text { anchors.centerIn: parent; text: "⏻"; color: "#f7768e"; font.pixelSize: 11 }
+
+                MouseArea {
+                    id: powerMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: {
+                        rootScope.closeAll()
+                        rootScope.powerMenuOpen = true
+                    }
                 }
             }
         }
