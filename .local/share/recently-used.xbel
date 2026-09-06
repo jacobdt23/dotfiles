@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///home/jacob" added="2026-09-04T16:32:49.134653Z" modified="2026-09-04T16:32:49.134655Z" visited="2026-09-04T16:32:49.134654Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="inode/directory"/>
+        <bookmark:applications>
+          <bookmark:application name="waypaper" exec="&apos;waypaper %u&apos;" modified="2026-09-04T16:32:49.134654Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/jacob/Pictures/wallpaperflare.com_wallpaper.jpg" added="2026-09-04T17:15:08.264495Z" modified="2026-09-04T17:15:08.514486Z" visited="2026-09-04T17:15:08.264495Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="application/octet-stream"/>
+        <bookmark:applications>
+          <bookmark:application name="xdg-desktop-portal-gtk" exec="&apos;gio open %u&apos;" modified="2026-09-04T17:15:08.514486Z" count="2"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/jacob/Pictures" added="2026-09-04T17:15:47.043689Z" modified="2026-09-04T17:15:47.043691Z" visited="2026-09-04T17:15:47.043690Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="inode/directory"/>
+        <bookmark:applications>
+          <bookmark:application name="waypaper" exec="&apos;waypaper %u&apos;" modified="2026-09-04T17:15:47.043690Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/jacob/archinstall/custom-arch-iso/out/archlinux-2026.09.04-x86_64.iso" added="2026-09-04T20:36:05.538909Z" modified="2026-09-05T02:49:01.397489Z" visited="2026-09-04T20:36:05.538910Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="application/vnd.efi.iso"/>
+        <bookmark:applications>
+          <bookmark:application name="virt-manager" exec="&apos;virt-manager %u&apos;" modified="2026-09-05T02:49:01.397488Z" count="19"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/jacob/archinstall/iso/out/archlinux-2026.09.05-x86_64.iso" added="2026-09-05T05:35:06.468092Z" modified="2026-09-05T05:35:06.468094Z" visited="2026-09-05T05:35:06.468093Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="application/vnd.efi.iso"/>
+        <bookmark:applications>
+          <bookmark:application name="virt-manager" exec="&apos;virt-manager %u&apos;" modified="2026-09-05T05:35:06.468093Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///var/lib/libvirt/images/archlinux-2026.09.05-x86_64.iso" added="2026-09-05T05:48:16.892077Z" modified="2026-09-05T05:48:16.892079Z" visited="2026-09-05T05:48:16.892078Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="application/vnd.efi.iso"/>
+        <bookmark:applications>
+          <bookmark:application name="virt-manager" exec="&apos;virt-manager %u&apos;" modified="2026-09-05T05:48:16.892078Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>

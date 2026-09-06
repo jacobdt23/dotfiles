@@ -1,0 +1,163 @@
+Environment variable $DISPLAY not set, ignoring.
+The XKEYBOARD keymap compiler (xkbcomp) reports:
+> Warning:          Multiple symbols for level 1/group 1 on key <FK23>
+>                   Using F23, ignoring XF86TouchpadOff
+> Warning:          Symbol map for key <FK23> redefined
+>                   Using last definition for conflicting fields
+> Warning:          Symbol map for key <FK24> redefined
+>                   Using last definition for conflicting fields
+> Warning:          Could not resolve keysym XF86ElectronicPrivacyScreenOn
+> Warning:          Could not resolve keysym XF86ElectronicPrivacyScreenOff
+> Warning:          Could not resolve keysym XF86ActionOnSelection
+> Warning:          Could not resolve keysym XF86ContextualInsert
+> Warning:          Could not resolve keysym XF86ContextualQuery
+Errors from xkbcomp are not fatal to the X server
+The XKEYBOARD keymap compiler (xkbcomp) reports:
+> Warning:          Unsupported maximum keycode 709, clipping.
+>                   X11 cannot support keycodes above 255.
+> Warning:          Virtual modifier Hyper multiply defined
+>                   Using 0, ignoring 0
+> Warning:          Virtual modifier ScrollLock multiply defined
+>                   Using 0, ignoring 0
+Errors from xkbcomp are not fatal to the X server
+libva error: /usr/lib/dri/nvidia_drv_video.so init failed
+[3272:3272:0905/183025.332160:ERROR:media/gpu/vaapi/vaapi_wrapper.cc:1801] vaInitialize failed: operation failed
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+*** BUG ***
+In pixman_region32_init_rect: Invalid rectangle passed
+Set a breakpoint on '_pixman_log_error' to debug
+
+[3226:3226:0905/183029.948277:ERROR:chrome/browser/extensions/corrupted_extension_reinstaller.cc:96] Corrupted extension gkkmiofalnjagdcjheckamobghglpdpm reinstalled with latency 4.71605 s
+[3272:3422:0905/183214.717840:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.102 ms
+[3272:3422:0905/183457.722403:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.144 ms
+[3272:3422:0905/190758.053336:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.204 ms
+[3272:3422:0905/190802.536488:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.269 ms
+[3272:3422:0905/190804.951166:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.056 ms
+[3272:3422:0905/192504.878972:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.304 ms
+[3272:3422:0905/193107.580978:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.005 ms
+[3272:3422:0905/193107.764189:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.104 ms
+[3275:3281:0905/200007.078883:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -101
+[3275:3281:0905/200009.667116:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -101
+[3226:3226:0905/200232.513773:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3226:3226:0905/200247.597421:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3226:3226:0905/200307.738994:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3272:3422:0905/200309.587577:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.275 ms
+[3226:3226:0905/200354.125989:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3226:3226:0905/201016.073993:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[67746:1:0905/201026.438611:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[67746:1:0905/201026.462314:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[3226:3226:0905/201031.229411:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3226:3226:0905/201051.406115:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3226:3226:0905/201121.609224:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3272:3422:0905/201131.150879:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.224 ms
+[3226:3226:0905/201211.888241:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3226:3226:0905/201342.519688:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3226:3226:0905/201632.902278:ERROR:brave/components/p3a/star_randomness_points.cc:120] StarRandomnessPoints: no response body for randomness request, net error: ERR_HTTP_RESPONSE_CODE_FAILURE
+[3275:3281:0905/224218.895926:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/224409.162980:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/224409.208545:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/224409.471074:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/224552.920755:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3272:3422:0905/224907.103468:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.061 ms
+[3275:3281:0905/225910.236684:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/225910.247935:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/225910.248032:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/230104.208424:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/230104.236398:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/230800.393013:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/230800.444334:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/230800.704588:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/231009.327054:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/231909.035855:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3272:3422:0905/232830.295063:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.032 ms
+[3275:3281:0905/233002.787454:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/233002.795805:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[192448:1:0905/233026.054105:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[192448:1:0905/233026.077858:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[192461:1:0905/233026.402825:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[192461:1:0905/233026.416845:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[3275:3281:0905/233817.270665:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/233817.276622:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/233817.277692:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/233910.754892:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/233910.938740:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3272:3422:0905/234730.965592:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.013 ms
+[3275:3281:0905/235205.478617:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3226:3226:0905/235205.498552:ERROR:mojo/public/cpp/bindings/lib/interface_endpoint_client.cc:748] Message 1 rejected by interface blink.mojom.WidgetHost
+[3275:3281:0905/235205.523409:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0905/235205.787971:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/000404.222735:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/000404.245957:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3272:3422:0906/001613.331535:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.12 ms
+[3275:3281:0906/003751.229467:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/003751.257651:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/004504.280227:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/004504.304934:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/004904.208223:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/004904.234115:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/005304.226935:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/005304.255883:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/010604.223960:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/010604.247942:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/011004.251187:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/011004.275560:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[255939:1:0906/011025.975765:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[255939:1:0906/011025.999442:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[3275:3281:0906/013404.208257:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/013404.233606:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/014804.304963:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/014804.337733:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3272:3422:0906/015001.938391:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.307 ms
+[3275:3281:0906/015504.249314:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/015504.280962:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/020204.206119:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/020204.230267:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/023504.313912:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/023504.339764:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/023904.239118:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/023904.268269:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[319446:1:0906/025025.932201:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[319446:1:0906/025025.955688:ERROR:third_party/puffin/src/puffpatch.cc:122] Failed to create a temporary file for memory-mapping: Operation not permitted (1)
+[3275:3281:0906/025504.243886:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3275:3281:0906/025504.274687:ERROR:net/socket/ssl_client_socket_impl.cc:962] handshake failed; returned -1, SSL error code 1, net_error -202
+[3226:3226:0906/030203.480473:ERROR:mojo/public/cpp/bindings/lib/interface_endpoint_client.cc:748] Message 4 rejected by interface blink.mojom.WidgetHost
+[3226:3226:0906/030207.788090:ERROR:mojo/public/cpp/bindings/lib/interface_endpoint_client.cc:748] Message 4 rejected by interface blink.mojom.WidgetHost
+[3226:3226:0906/030309.546790:ERROR:mojo/public/cpp/bindings/lib/interface_endpoint_client.cc:748] Message 4 rejected by interface blink.mojom.WidgetHost
+[3226:3226:0906/030313.316160:ERROR:mojo/public/cpp/bindings/lib/interface_endpoint_client.cc:748] Message 4 rejected by interface blink.mojom.WidgetHost
+[3226:3226:0906/030343.421648:ERROR:mojo/public/cpp/bindings/lib/interface_endpoint_client.cc:748] Message 4 rejected by interface blink.mojom.WidgetHost
+[3272:3422:0906/031305.672616:ERROR:components/viz/service/display/display.cc:271] Frame latency is negative: -0.042 ms
