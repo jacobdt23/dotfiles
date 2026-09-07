@@ -3,3 +3,5 @@
 	email = turnejac01@gmail.com
 [credential]
 	helper = cache
+[push]
+	autoSetupRemote = true

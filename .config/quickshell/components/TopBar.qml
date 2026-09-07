@@ -25,20 +25,6 @@ PanelWindow {
 
     Process { id: topBarExec }
 
-    Process {
-        id: layoutChecker
-        running: true
-        command: ["hyprctl", "getoption", "general:layout", "-j"]
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    let json = JSON.parse(data);
-                    activeLayout = json.str;
-                } catch(e) {}
-            }
-        }
-    }
-
     Timer {
         interval: 2000
         running: true
@@ -48,7 +34,6 @@ PanelWindow {
             cpuProc.running = true;
             memProc.running = true;
             diskProc.running = true;
-            layoutChecker.running = true;
         }
     }
 
@@ -152,8 +137,7 @@ PanelWindow {
                             let layouts = ["dwindle", "master", "monocle", "scrolling"];
                             let currentIndex = layouts.indexOf(activeLayout);
                             let nextLayout = layouts[(currentIndex + 1) % layouts.length];
-                            
-                            // Forcefully apply keyword layout setting to stick immediately
+
                             topBarExec.exec(["sh", "-c", `hyprctl keyword general:layout ${nextLayout}`]);
                             activeLayout = nextLayout;
                         }
