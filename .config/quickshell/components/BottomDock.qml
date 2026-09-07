@@ -21,7 +21,7 @@ PanelWindow {
         anchors.centerIn: parent
         spacing: 12
 
-        // App Launcher Button with custom CachyOS image from Downloads
+        // App Launcher Button with custom CachyOS logo from Downloads
         Rectangle {
             width: 32; height: 32; radius: 6
             color: btn1Mouse.containsMouse ? "#3b4261" : "#24283b"
@@ -32,7 +32,7 @@ PanelWindow {
             Image {
                 anchors.centerIn: parent
                 width: 20; height: 20
-                source: "file:///home/jacob/Downloads/cachyos-linux.png"
+                source: "file:///home/jacob/Downloads/cachyos-logo.png"
                 fillMode: Image.PreserveAspectFit
             }
 
@@ -41,8 +41,9 @@ PanelWindow {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    rootScope.closeAll()
-                    rootScope.launcherOpen = true
+                    let state = rootScope.launcherOpen;
+                    rootScope.closeAll();
+                    rootScope.launcherOpen = !state;
                 }
             }
         }
