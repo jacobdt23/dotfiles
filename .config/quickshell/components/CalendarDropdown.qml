@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 
 PanelWindow {
+    id: calendarRoot
     required property var targetScreen
     required property var rootScope
 
@@ -39,10 +40,10 @@ PanelWindow {
             anchors.margins: 16
             spacing: 12
 
-            // Restored Header Date at the Top
+            // Directly referencing calendarRoot.currentDate
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                text: Qt.formatDateTime(parent.parent.parent.currentDate, "dddd, MMMM d, yyyy")
+                text: Qt.formatDateTime(calendarRoot.currentDate, "dddd, MMMM d, yyyy")
                 color: "#7aa2f7"
                 font.pixelSize: 15
                 font.bold: true
