@@ -11,14 +11,26 @@ PanelWindow {
     screen: targetScreen
     anchors { top: true; left: true }
     margins { top: 40; left: (targetScreen.width / 2) - (implicitWidth / 2) }
-    
+
     WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
     exclusionMode: ExclusionMode.Ignore
-    visible: rootScope.calendarOpen
+    visible: rootScope ? rootScope.calendarOpen : false
     color: "transparent"
 
     implicitWidth: 360
     implicitHeight: 440
+
+    // Dynamic date calculations based on real-time clock
+    property var currentDate: new Date()
+    property int currentYear: currentDate.getFullYear()
+    property int currentMonth: currentDate.getMonth() // 0-indexed (8 = September)
+    
+    // Total days in the current month
+    property int daysInMonth: new Date(currentYear, currentMonth + 1, 0).getDate()
+    
+    // Get the weekday index of the 1st of the month (0 = Sunday, 1 = Tuesday for Sep 2026, etc.)
+    property int firstDayOffset: new Date(currentYear, currentMonth, 1).getDay()
 
     Rectangle {
         anchors.fill: parent
@@ -32,9 +44,10 @@ PanelWindow {
             anchors.margins: 16
             spacing: 12
 
+            // Header Date string
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                text: Qt.formatDateTime(new Date(), "dddd, MMMM d, yyyy")
+                text: Qt.formatDateTime(parent.parent.parent.currentDate, "dddd, MMMM d, yyyy")
                 color: "#7aa2f7"
                 font.pixelSize: 15
                 font.bold: true
@@ -65,7 +78,7 @@ PanelWindow {
                 }
             }
 
-            // Clean Uniform Grid for Calendar Days
+            // Dynamic Uniform Grid for Calendar Days (42 cells covers 6 rows cleanly)
             Grid {
                 Layout.alignment: Qt.AlignHCenter
                 columns: 7
@@ -73,17 +86,16 @@ PanelWindow {
                 columnSpacing: 8
 
                 Repeater {
-                    model: 35
+                    model: 42 
                     Rectangle {
                         required property int index
                         width: 40
                         height: 32
                         radius: 6
-                        
-                        property int firstDayOffset: 6 // Saturday start offset for August 2026
+
                         property int dayNum: index - firstDayOffset + 1
-                        property bool isCurrentMonth: dayNum > 0 && dayNum <= 31
-                        property bool isToday: isCurrentMonth && dayNum === new Date().getDate()
+                        property bool isCurrentMonth: dayNum > 0 && dayNum <= daysInMonth
+                        property bool isToday: isCurrentMonth && dayNum === new Date().getDate() && currentMonth === new Date().getMonth()
 
                         color: isToday ? "#7aa2f7" : "transparent"
 
@@ -128,8 +140,8 @@ PanelWindow {
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 8
-                        Text { text: modelData.summary; color: "#c0caf5"; font.bold: true; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
-                        Text { text: modelData.body; color: "#565f89"; font.pixelSize: 10; elide: Text.ElideRight; Layout.fillWidth: true }
+                        Text { text: modelData.summary ?? "Notification"; color: "#c0caf5"; font.bold: true; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                        Text { text: modelData.body ?? ""; color: "#565f89"; font.pixelSize: 10; elide: Text.ElideRight; Layout.fillWidth: true }
                     }
                 }
             }
