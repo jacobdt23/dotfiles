@@ -19,17 +19,12 @@ PanelWindow {
     color: "transparent"
 
     implicitWidth: 360
-    implicitHeight: 440
+    implicitHeight: 460
 
-    // Dynamic date calculations based on real-time clock
     property var currentDate: new Date()
     property int currentYear: currentDate.getFullYear()
-    property int currentMonth: currentDate.getMonth() // 0-indexed (8 = September)
-    
-    // Total days in the current month
+    property int currentMonth: currentDate.getMonth()
     property int daysInMonth: new Date(currentYear, currentMonth + 1, 0).getDate()
-    
-    // Get the weekday index of the 1st of the month (0 = Sunday, 1 = Tuesday for Sep 2026, etc.)
     property int firstDayOffset: new Date(currentYear, currentMonth, 1).getDay()
 
     Rectangle {
@@ -44,7 +39,7 @@ PanelWindow {
             anchors.margins: 16
             spacing: 12
 
-            // Header Date string
+            // Restored Header Date at the Top
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: Qt.formatDateTime(parent.parent.parent.currentDate, "dddd, MMMM d, yyyy")
@@ -78,7 +73,7 @@ PanelWindow {
                 }
             }
 
-            // Dynamic Uniform Grid for Calendar Days (42 cells covers 6 rows cleanly)
+            // Calendar Grid
             Grid {
                 Layout.alignment: Qt.AlignHCenter
                 columns: 7
