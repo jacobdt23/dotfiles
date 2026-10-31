@@ -1,0 +1,1084 @@
+#!/usr/bin/env python3
+"""
+jacob-shell — Jacob's Custom Arch Linux desktop shell (Python + GTK3 + gtk-layer-shell)
+
+Daemon  : `jacob-shell`                      starts Top Bar, Bottom Dock, notification daemon
+Control : `jacob-shell toggle <panel>`       launcher | power | calendar | clipboard | keybinds
+                                              notifications | media | welcome | controlcenter
+          `jacob-shell volume up|down|mute`  PipeWire volume via wpctl
+"""
+import os
+import socket
+import sys
+
+SOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "jacob-shell.sock")
+
+
+def send_command(argv):
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(1.0)
+        s.connect(SOCK)
+        s.sendall((" ".join(argv) + "\n").encode())
+        s.close()
+        return 0
+    except OSError as exc:
+        print(f"jacob-shell: daemon not reachable ({exc})", file=sys.stderr)
+        return 1
+
+
+# Client mode is handled before importing GTK so keybinds stay instant.
+if len(sys.argv) > 1:
+    sys.exit(send_command(sys.argv[1:]))
+
+import json
+import shutil
+import subprocess
+import time
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+gi.require_version("GtkLayerShell", "0.1")
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, GtkLayerShell, Pango  # noqa: E402
+
+FONT = "JetBrainsMono Nerd Font"
+LOGO = "/usr/share/pixmaps/jacob-arch-logo.png"
+HICOLOR = "/usr/share/icons/hicolor"
+WELCOME_FLAG = os.path.expanduser("~/.config/jacob-welcome-disabled")
+
+# Nerd Font (Material Design) glyphs
+G_CPU, G_RAM, G_DISK = "\U000F0EE0", "\U000F035B", "\U000F02CA"
+G_VOL, G_BELL, G_POWER, G_CAL = "\U000F057E", "\U000F009A", "\U000F0425", "\U000F00ED"
+G_LOCK, G_REBOOT, G_CLIP, G_KEY, G_MEDIA = "\U000F033E", "\U000F0709", "\U000F0147", "\U000F030C", "\U000F057E"
+G_PREV, G_PLAY, G_NEXT, G_VDN, G_VUP, G_MUTE = (
+    "\U000F04AE", "\U000F040E", "\U000F04AD", "\U000F057F", "\U000F057E", "\U000F075F",
+)
+
+CSS = f"""
+* {{ font-family: "{FONT}", monospace; font-size: 11px; color: #c0caf5; }}
+window.transparent {{ background-color: transparent; }}
+button {{ background-image: none; box-shadow: none; text-shadow: none; border-image: none; outline-style: none; }}
+.topbar {{ background-color: #1a1b26; border-bottom: 1px solid #292e42; }}
+.pill {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 2px 9px; min-height: 22px; }}
+button.pill:hover {{ background-color: #3b4261; }}
+.pill-active {{ border-color: #7aa2f7; }}
+.ws {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 2px 0; min-width: 24px; min-height: 22px; font-weight: bold; }}
+.ws:hover {{ background-color: #3b4261; }}
+.ws-active {{ background-color: #7aa2f7; border-color: #7aa2f7; min-width: 30px; }}
+.ws-active label {{ color: #1a1b26; }}
+.dock {{ background-color: #1a1b26; border: 1px solid #3b4261; border-radius: 12px; padding: 5px 10px; }}
+.dock-btn {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; padding: 4px; min-width: 26px; min-height: 26px; }}
+.dock-btn:hover {{ background-color: #3b4261; }}
+.dock-install {{ background-color: #24283b; border: 1px solid #7aa2f7; border-radius: 8px; padding: 4px 10px; }}
+.dock-install label {{ color: #7aa2f7; font-weight: bold; }}
+.dock-install:hover {{ background-color: #3b4261; }}
+.card {{ background-color: #1a1b26; border: 1px solid #3b4261; border-radius: 12px; padding: 16px; }}
+.card-welcome {{ padding: 22px; }}
+.card-blue {{ border: 2px solid #7aa2f7; }}
+.card-red {{ border-color: #f7768e; }}
+.card-yellow {{ border-color: #e0af68; }}
+.card-purple {{ border-color: #bb9af7; }}
+.title {{ font-weight: bold; font-size: 13px; }}
+.muted {{ color: #9aa5ce; font-size: 10px; }}
+.sep {{ background-color: #3b4261; min-height: 1px; }}
+.row {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; padding: 6px 10px; }}
+.row:hover {{ background-color: #3b4261; }}
+.row-title {{ font-weight: bold; }}
+.row-desc {{ color: #565f89; font-size: 10px; }}
+.key {{ color: #7aa2f7; font-weight: bold; background-color: #1a1b26; border: 1px solid #7aa2f7; border-radius: 5px; padding: 2px 7px; font-size: 10px; }}
+.tab {{ background-color: #16161e; border: 1px solid #3b4261; border-radius: 8px; padding: 8px; font-weight: bold; }}
+.tab:hover {{ background-color: #24283b; }}
+.tab-active {{ background-color: #283457; border-color: #7aa2f7; }}
+.btn-open {{ background-color: #1a1b26; border: 1px solid #7aa2f7; border-radius: 6px; padding: 3px 12px; font-size: 10px; font-weight: bold; color: #7aa2f7; }}
+.btn-open:hover {{ background-color: #7aa2f7; }}
+.btn-open:hover label {{ color: #1a1b26; }}
+.btn-red {{ border-color: #f7768e; }}
+.btn-red label {{ color: #f7768e; }}
+.btn-yellow {{ border-color: #e0af68; }}
+.btn-yellow label {{ color: #e0af68; }}
+.glyph {{ font-size: 15px; }}
+.glyph-media {{ font-size: 17px; }}
+entry {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; padding: 7px 10px; color: #c0caf5; }}
+entry:focus {{ border-color: #7aa2f7; }}
+scrolledwindow, viewport, list, listbox {{ background-color: transparent; }}
+list row, listbox row {{ background-color: transparent; padding: 2px 0; }}
+list row:selected, listbox row:selected {{ background-color: transparent; }}
+list row:selected .row, listbox row:selected .row {{ border-color: #7aa2f7; background-color: #283457; }}
+calendar {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; color: #c0caf5; }}
+calendar:selected {{ background-color: #7aa2f7; color: #1a1b26; }}
+calendar.header, calendar.button {{ color: #7aa2f7; }}
+.toast {{ background-color: #1a1b26; border: 1px solid #7aa2f7; border-radius: 10px; padding: 10px 14px; }}
+"""
+
+KEYBINDS = [
+    ("SUPER + W", "Open / Close Welcome Hub & Cheat Sheet"),
+    ("SUPER + SHIFT + I", "Launch Calamares Graphical Installer"),
+    ("SUPER", "Open Application Launcher"),
+    ("SUPER + RETURN", "Open Kitty Terminal"),
+    ("SUPER + E", "Open Thunar File Manager"),
+    ("SUPER + C", "Close Active Window"),
+    ("SUPER + V", "Toggle Floating / Tiling Window"),
+    ("SUPER + J / P", "Toggle Split / Pseudo-Tile Layout"),
+    ("SUPER + Arrows", "Move Focus Between Windows"),
+    ("SUPER + 1 – 0", "Switch to Workspace 1 – 10"),
+    ("SUPER + SHIFT + 1 – 0", "Move Window to Workspace 1 – 10"),
+    ("SUPER + S", "Toggle Special Scratchpad Workspace"),
+    ("SUPER + I", "Open System Control Center"),
+    ("SUPER + K", "Toggle Quick Keybinds Popup"),
+    ("SUPER + N", "Toggle Notification Center"),
+    ("SUPER + SHIFT + V", "Toggle Clipboard History (cliphist)"),
+    ("SUPER + M", "Toggle Media & Audio Player"),
+    ("SUPER + L", "Toggle Calendar & Clock Dropdown"),
+    ("SUPER + Q", "Open Power Menu (Lock / Reboot / Off)"),
+    ("SUPER + = / - / BS", "Volume Up / Down / Mute Audio"),
+]
+
+ESSENTIAL_APPS = [
+    ("Install System (Calamares)", "Graphical Btrfs/GPT/MBR OS Installer", f"{HICOLOR}/scalable/apps/calamares.svg", "/usr/local/bin/launch-calamares"),
+    ("Timeshift Btrfs Snapshots", "Create & Restore Bootable GRUB Snapshots", f"{HICOLOR}/128x128/apps/timeshift.png", "/usr/local/bin/timeshift-launcher"),
+    ("Firefox Web Browser", "Fast, Private Web Browser", f"{HICOLOR}/256x256/apps/firefox.png", "firefox"),
+    ("Kitty Terminal", "GPU-Accelerated Terminal Emulator", f"{HICOLOR}/256x256/apps/kitty.png", "kitty"),
+    ("Thunar File Manager", "Browse Disks, Folders & Archives", f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", "thunar"),
+    ("System Control Center", "Audio, Network, Bluetooth, Display & Btrfs", LOGO, "/usr/local/bin/jacob-control-center"),
+    ("Audio Mixer (Pavucontrol)", "Configure Speakers, Headsets & Mic", f"{HICOLOR}/scalable/apps/org.pulseaudio.pavucontrol.svg", "pavucontrol"),
+    ("Bluetooth Manager", "Pair Controllers, Audio & Devices", f"{HICOLOR}/256x256/apps/blueman.png", "blueman-manager"),
+    ("Media Player (mpv)", "High Performance Video & Audio Player", f"{HICOLOR}/64x64/apps/mpv.png", "mpv --player-operation-mode=pseudo-gui"),
+    ("System Monitor (btop++)", "Live CPU, Memory, Disk & Process Viewer", f"{HICOLOR}/scalable/apps/btop.svg", "kitty -e btop"),
+]
+
+
+# ----------------------------------------------------------------------------
+# Helpers
+# ----------------------------------------------------------------------------
+def spawn(cmd):
+    """Run a shell command fully detached from the shell process."""
+    try:
+        subprocess.Popen(
+            ["sh", "-c", cmd],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except OSError:
+        pass
+
+
+def run_out(cmd, timeout=3):
+    try:
+        r = subprocess.run(["sh", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                           text=True, timeout=timeout)
+        return r.stdout.strip()
+    except Exception:
+        return ""
+
+
+def make_icon(path, size):
+    try:
+        if path and os.path.isfile(path):
+            pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(path, size, size, True)
+            return Gtk.Image.new_from_pixbuf(pb)
+    except GLib.Error:
+        pass
+    # Never fall back to the icon theme here: a broken SVG loader makes GTK abort the whole shell.
+    img = Gtk.Image()
+    img.set_size_request(size, size)
+    return img
+
+
+def make_label(text="", css=None, xalign=0.0, ellipsize=False, wrap=False):
+    lbl = Gtk.Label(label=text, xalign=xalign)
+    if css:
+        lbl.get_style_context().add_class(css)
+    if ellipsize:
+        lbl.set_ellipsize(Pango.EllipsizeMode.END)
+    if wrap:
+        lbl.set_line_wrap(True)
+    return lbl
+
+
+def add_class(widget, *names):
+    ctx = widget.get_style_context()
+    for n in names:
+        ctx.add_class(n)
+    return widget
+
+
+def flat_button(child, *classes, cb=None):
+    btn = Gtk.Button()
+    btn.set_relief(Gtk.ReliefStyle.NONE)
+    btn.set_focus_on_click(False)
+    if isinstance(child, str):
+        child = Gtk.Label(label=child)
+    btn.add(child)
+    add_class(btn, *classes)
+    if cb:
+        btn.connect("clicked", lambda *_: cb())
+    return btn
+
+
+def hline():
+    return add_class(Gtk.Box(), "sep")
+
+
+def scrolled(child, height=-1, width=-1):
+    sw = Gtk.ScrolledWindow()
+    sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    sw.set_min_content_height(height)
+    if width > 0:
+        sw.set_min_content_width(width)
+    sw.add(child)
+    return sw
+
+
+def card_box(spacing=10, margin=16, *classes):
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=spacing)
+    return box
+
+
+E = GtkLayerShell.Edge
+
+
+class Layer(Gtk.Window):
+    """A wlr-layer-shell surface with transparent background."""
+
+    def __init__(self, name, layer=GtkLayerShell.Layer.TOP, anchors=(), margins=None,
+                 keyboard=GtkLayerShell.KeyboardMode.NONE, exclusive=False, monitor=None):
+        super().__init__(type=Gtk.WindowType.TOPLEVEL)
+        self.set_title(f"jacob-{name}")
+        self.set_decorated(False)
+        self.set_app_paintable(True)
+        self.set_resizable(False)
+        visual = self.get_screen().get_rgba_visual()
+        if visual:
+            self.set_visual(visual)
+        GtkLayerShell.init_for_window(self)
+        GtkLayerShell.set_namespace(self, f"jacob-{name}")
+        GtkLayerShell.set_layer(self, layer)
+        for edge in (E.TOP, E.BOTTOM, E.LEFT, E.RIGHT):
+            GtkLayerShell.set_anchor(self, edge, edge in anchors)
+        for edge, px in (margins or {}).items():
+            GtkLayerShell.set_margin(self, edge, px)
+        GtkLayerShell.set_keyboard_mode(self, keyboard)
+        if exclusive:
+            GtkLayerShell.auto_exclusive_zone_enable(self)
+        if monitor is not None:
+            GtkLayerShell.set_monitor(self, monitor)
+        add_class(self, "transparent")
+
+
+class Popup(Layer):
+    """Toggleable overlay panel. Escape closes it."""
+
+    def __init__(self, shell, name, **kw):
+        kw.setdefault("layer", GtkLayerShell.Layer.OVERLAY)
+        super().__init__(name, **kw)
+        self.shell = shell
+        self.connect("key-press-event", self._on_key)
+
+    def _on_key(self, _w, ev):
+        if ev.keyval == Gdk.KEY_Escape:
+            self.close_popup()
+            return True
+        return self.handle_key(ev)
+
+    def handle_key(self, _ev):
+        return False
+
+    def on_open(self):
+        pass
+
+    def open_popup(self):
+        self.on_open()
+        self.show_all()
+        self.present()
+
+    def close_popup(self):
+        self.hide()
+
+    def toggle(self):
+        if self.get_visible():
+            self.close_popup()
+        else:
+            self.open_popup()
+
+
+# ----------------------------------------------------------------------------
+# Top Bar
+# ----------------------------------------------------------------------------
+class TopBar(Layer):
+    def __init__(self, shell, monitor, index):
+        super().__init__("topbar", GtkLayerShell.Layer.TOP, (E.TOP, E.LEFT, E.RIGHT),
+                         exclusive=True, monitor=monitor)
+        self.shell = shell
+        self.ws_ids = [1, 2, 3, 4, 5] if index == 0 else [6, 7, 8, 9, 10]
+        self.ws_buttons = {}
+        self._last_cpu = None
+
+        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, homogeneous=True)
+        add_class(root, "topbar")
+        root.set_size_request(-1, 38)
+        self.add(root)
+
+        left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
+        left.set_margin_start(10)
+        left.set_halign(Gtk.Align.START)
+        for wid in self.ws_ids:
+            b = flat_button(str(wid), "ws", cb=lambda w=wid: spawn(f"hyprctl dispatch workspace {w}"))
+            self.ws_buttons[wid] = b
+            left.pack_start(b, False, False, 0)
+        root.pack_start(left, True, True, 0)
+
+        center = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        center.set_halign(Gtk.Align.CENTER)
+        self.clock = Gtk.Label()
+        clock_btn = flat_button(self.clock, "pill", cb=lambda: shell.toggle("calendar"))
+        center.pack_start(clock_btn, False, False, 0)
+        root.pack_start(center, True, True, 0)
+
+        right = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        right.set_margin_end(10)
+        right.set_halign(Gtk.Align.END)
+        self.cpu_l, self.ram_l, self.dsk_l, self.vol_l = (Gtk.Label() for _ in range(4))
+        for lbl in (self.cpu_l, self.ram_l, self.dsk_l):
+            pill = add_class(Gtk.Box(), "pill")
+            pill.add(lbl)
+            right.pack_start(pill, False, False, 0)
+        right.pack_start(flat_button(self.vol_l, "pill", cb=lambda: shell.toggle("media")), False, False, 0)
+        right.pack_start(flat_button(G_BELL, "pill", cb=lambda: shell.toggle("notifications")), False, False, 0)
+        right.pack_start(flat_button(G_POWER, "pill", "btn-red", cb=lambda: shell.toggle("power")), False, False, 0)
+        root.pack_start(right, True, True, 0)
+
+        self.tick_clock()
+        GLib.timeout_add_seconds(1, self.tick_clock)
+        self.tick_stats()
+        GLib.timeout_add(2500, self.tick_stats)
+        self.tick_workspace()
+        GLib.timeout_add(800, self.tick_workspace)
+
+    def tick_clock(self):
+        self.clock.set_text(f"{G_CAL}  {time.strftime('%b %d • %I:%M %p')}")
+        return True
+
+    @staticmethod
+    def _read_cpu():
+        with open("/proc/stat") as f:
+            parts = f.readline().split()[1:]
+        vals = list(map(int, parts))
+        idle = vals[3] + (vals[4] if len(vals) > 4 else 0)
+        return sum(vals), idle
+
+    def tick_stats(self):
+        try:
+            total, idle = self._read_cpu()
+            if self._last_cpu:
+                dt, di = total - self._last_cpu[0], idle - self._last_cpu[1]
+                cpu = int(100 * (dt - di) / dt) if dt > 0 else 0
+            else:
+                cpu = 0
+            self._last_cpu = (total, idle)
+            mem = {}
+            with open("/proc/meminfo") as f:
+                for line in f:
+                    k, v = line.split(":", 1)
+                    mem[k] = int(v.split()[0])
+            ram = int(100 * (mem["MemTotal"] - mem["MemAvailable"]) / mem["MemTotal"])
+            du = shutil.disk_usage("/")
+            dsk = int(100 * du.used / du.total)
+            self.cpu_l.set_text(f"{G_CPU} {cpu}%")
+            self.ram_l.set_text(f"{G_RAM} {ram}%")
+            self.dsk_l.set_text(f"{G_DISK} {dsk}%")
+        except Exception:
+            pass
+        vol = run_out("wpctl get-volume @DEFAULT_AUDIO_SINK@", timeout=1)
+        try:
+            level = int(float(vol.split()[1]) * 100)
+            self.vol_l.set_text(f"{G_MUTE if '[MUTED]' in vol else G_VOL} {level}%")
+        except (IndexError, ValueError):
+            self.vol_l.set_text(f"{G_VOL} --")
+        return True
+
+    def tick_workspace(self):
+        if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            return True
+        try:
+            r = subprocess.run(["hyprctl", "-j", "activeworkspace"], stdout=subprocess.PIPE,
+                               stderr=subprocess.DEVNULL, text=True, timeout=1)
+            active = json.loads(r.stdout).get("id")
+        except Exception:
+            return True
+        for wid, btn in self.ws_buttons.items():
+            ctx = btn.get_style_context()
+            (ctx.add_class if wid == active else ctx.remove_class)("ws-active")
+        return True
+
+
+# ----------------------------------------------------------------------------
+# Bottom Dock
+# ----------------------------------------------------------------------------
+class BottomDock(Layer):
+    def __init__(self, shell, monitor):
+        super().__init__("dock", GtkLayerShell.Layer.TOP, (E.BOTTOM,), {E.BOTTOM: 6},
+                         exclusive=True, monitor=monitor)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=9)
+        add_class(box, "dock")
+        self.add(box)
+
+        items = [
+            (LOGO, 22, lambda: shell.toggle("launcher")),
+            (f"{HICOLOR}/256x256/apps/kitty.png", 24, lambda: spawn("command -v kitty >/dev/null && exec kitty || exec alacritty")),
+            (f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", 24, lambda: spawn("thunar")),
+            (f"{HICOLOR}/256x256/apps/firefox.png", 24, lambda: spawn("firefox")),
+            (f"{HICOLOR}/scalable/apps/org.pulseaudio.pavucontrol.svg", 24, lambda: spawn("pavucontrol")),
+            (f"{HICOLOR}/256x256/apps/blueman.png", 24, lambda: spawn("blueman-manager")),
+            (f"{HICOLOR}/128x128/apps/timeshift.png", 24, lambda: spawn("/usr/local/bin/timeshift-launcher")),
+        ]
+        for path, size, cb in items:
+            box.pack_start(flat_button(make_icon(path, size), "dock-btn", cb=cb), False, False, 0)
+        gear = Gtk.Label()
+        gear.set_markup("<span size='x-large'>\u2699</span>")
+        box.pack_start(flat_button(gear, "dock-btn", cb=lambda: shell.toggle("controlcenter")), False, False, 0)
+
+        if os.path.isfile("/usr/local/bin/launch-calamares"):
+            box.pack_start(add_class(Gtk.Box(), "sep"), False, False, 2)
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 22), False, False, 0)
+            row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
+            box.pack_start(flat_button(row, "dock-install", cb=lambda: spawn("/usr/local/bin/launch-calamares")), False, False, 0)
+
+
+# ----------------------------------------------------------------------------
+# Application Launcher
+# ----------------------------------------------------------------------------
+class Launcher(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "launcher", keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        card = card_box(10, 16)
+        add_class(card, "card", "card-blue")
+        card.set_size_request(540, 480)
+        self.add(card)
+
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(make_icon(LOGO, 20), False, False, 0)
+        head.pack_start(make_label("Application Launcher", "title"), False, False, 0)
+        head.pack_end(make_label("ESC to close", "muted"), False, False, 0)
+        card.pack_start(head, False, False, 0)
+
+        self.entry = Gtk.Entry()
+        self.entry.set_placeholder_text("Search applications...")
+        self.entry.connect("changed", self._on_changed)
+        self.entry.connect("activate", lambda *_: self._launch_selected())
+        card.pack_start(self.entry, False, False, 0)
+
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.set_filter_func(self._filter)
+        self.listbox.connect("row-activated", lambda _lb, row: self._launch(row))
+        card.pack_start(scrolled(self.listbox), True, True, 0)
+        self.rows = []
+
+    def _populate(self):
+        for r in self.rows:
+            self.listbox.remove(r)
+        self.rows = []
+        for line in run_out("/usr/local/bin/list-desktop-apps", timeout=6).splitlines():
+            parts = line.split("\t")
+            if len(parts) < 4:
+                continue
+            name, desc, desktop_id, icon_path = parts[:4]
+            row = Gtk.ListBoxRow()
+            row.app = (name, desc, desktop_id)
+            body = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            add_class(body, "row")
+            body.pack_start(make_icon(icon_path, 32), False, False, 0)
+            text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+            text.pack_start(make_label(name, "row-title", ellipsize=True), False, False, 0)
+            text.pack_start(make_label(desc, "row-desc", ellipsize=True), False, False, 0)
+            body.pack_start(text, True, True, 0)
+            body.pack_end(make_label("\U000F0054", "muted"), False, False, 0)
+            row.add(body)
+            self.listbox.add(row)
+            self.rows.append(row)
+
+    def _visible_rows(self):
+        return [r for r in self.rows if r.get_child_visible() and self._filter(r)]
+
+    def _filter(self, row):
+        q = self.entry.get_text().strip().lower()
+        if not q or not hasattr(row, "app"):
+            return True
+        name, desc, did = row.app
+        return q in name.lower() or q in desc.lower() or q in did.lower()
+
+    def _on_changed(self, *_):
+        self.listbox.invalidate_filter()
+        vis = self._visible_rows()
+        if vis:
+            self.listbox.select_row(vis[0])
+
+    def _launch(self, row):
+        if row is None or not hasattr(row, "app"):
+            return
+        did = row.app[2]
+        self.close_popup()
+        spawn(f"gtk-launch '{did}' || gio launch '/usr/share/applications/{did}.desktop'")
+
+    def _launch_selected(self):
+        row = self.listbox.get_selected_row()
+        vis = self._visible_rows()
+        self._launch(row if row in vis else (vis[0] if vis else None))
+
+    def handle_key(self, ev):
+        if ev.keyval in (Gdk.KEY_Down, Gdk.KEY_Up):
+            vis = self._visible_rows()
+            if not vis:
+                return True
+            cur = self.listbox.get_selected_row()
+            idx = vis.index(cur) if cur in vis else -1
+            idx = min(idx + 1, len(vis) - 1) if ev.keyval == Gdk.KEY_Down else max(idx - 1, 0)
+            self.listbox.select_row(vis[idx])
+            vis[idx].grab_focus()
+            self.entry.grab_focus()
+            return True
+        return False
+
+    def on_open(self):
+        self.entry.set_text("")
+        if not self.rows:
+            self._populate()
+        vis = self._visible_rows()
+        if vis:
+            self.listbox.select_row(vis[0])
+
+    def open_popup(self):
+        super().open_popup()
+        self.entry.grab_focus()
+
+
+# ----------------------------------------------------------------------------
+# Power Menu
+# ----------------------------------------------------------------------------
+class PowerMenu(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "power", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 14},
+                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
+        card = card_box(10, 16)
+        add_class(card, "card", "card-red")
+        card.set_size_request(230, -1)
+        self.add(card)
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(add_class(make_label(G_POWER), "glyph"), False, False, 0)
+        head.pack_start(make_label("Session & Power", "title"), False, False, 0)
+        card.pack_start(head, False, False, 0)
+        card.pack_start(hline(), False, False, 0)
+        for glyph, label, cmd in ((G_LOCK, "Lock Screen", "hyprlock"),
+                                  (G_REBOOT, "Reboot System", "systemctl reboot"),
+                                  (G_POWER, "Power Off", "systemctl poweroff")):
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.pack_start(add_class(make_label(glyph), "glyph"), False, False, 0)
+            row.pack_start(make_label(label, "row-title"), False, False, 0)
+            card.pack_start(flat_button(row, "row", cb=lambda c=cmd: (self.close_popup(), spawn(c))), False, False, 0)
+
+
+# ----------------------------------------------------------------------------
+# Calendar & Notifications
+# ----------------------------------------------------------------------------
+class CalendarPopup(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "calendar", anchors=(E.TOP,), margins={E.TOP: 44},
+                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
+        card = card_box(10, 16)
+        add_class(card, "card", "card-blue")
+        card.set_size_request(320, -1)
+        self.add(card)
+        self.date_lbl = make_label("", "title")
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(add_class(make_label(G_CAL), "glyph"), False, False, 0)
+        head.pack_start(self.date_lbl, False, False, 0)
+        card.pack_start(head, False, False, 0)
+        self.cal = Gtk.Calendar()
+        card.pack_start(self.cal, False, False, 0)
+        card.pack_start(make_label(f"{G_BELL}  Recent Notifications", "title"), False, False, 0)
+        self.recent = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        card.pack_start(self.recent, False, False, 0)
+
+    def on_open(self):
+        self.date_lbl.set_text(time.strftime("%A, %B %d, %Y"))
+        now = time.localtime()
+        self.cal.select_month(now.tm_mon - 1, now.tm_year)
+        self.cal.select_day(now.tm_mday)
+        for c in self.recent.get_children():
+            self.recent.remove(c)
+        items = self.shell.history[:3]
+        if not items:
+            self.recent.pack_start(make_label("No recent notifications", "muted"), False, False, 0)
+        for n in items:
+            self.recent.pack_start(notification_row(n), False, False, 0)
+
+
+def notification_row(n):
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+    add_class(box, "row")
+    box.pack_start(make_label(n["summary"], "row-title", ellipsize=True), False, False, 0)
+    if n["body"]:
+        box.pack_start(make_label(n["body"], "row-desc", ellipsize=True), False, False, 0)
+    return box
+
+
+class NotificationCenter(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "notifications", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 14},
+                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
+        card = card_box(10, 16)
+        add_class(card, "card", "card-purple")
+        card.set_size_request(380, -1)
+        self.add(card)
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(add_class(make_label(G_BELL), "glyph"), False, False, 0)
+        head.pack_start(make_label("Notifications Center", "title"), False, False, 0)
+        head.pack_end(flat_button("Clear", "btn-open", "btn-red", cb=self._clear), False, False, 0)
+        card.pack_start(head, False, False, 0)
+        self.items = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        card.pack_start(scrolled(self.items, height=300), True, True, 0)
+
+    def _clear(self):
+        self.shell.history.clear()
+        self.on_open()
+        self.show_all()
+
+    def on_open(self):
+        for c in self.items.get_children():
+            self.items.remove(c)
+        if not self.shell.history:
+            self.items.pack_start(make_label("No active notifications", "muted"), False, False, 0)
+        for n in self.shell.history:
+            self.items.pack_start(notification_row(n), False, False, 0)
+
+
+class Toast(Layer):
+    def __init__(self, shell, n, slot):
+        super().__init__("toast", GtkLayerShell.Layer.OVERLAY, (E.TOP, E.RIGHT),
+                         {E.TOP: 44 + slot * 78, E.RIGHT: 14})
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        add_class(box, "toast")
+        box.set_size_request(340, -1)
+        box.pack_start(make_label(n["summary"] or n["app"], "row-title", ellipsize=True), False, False, 0)
+        if n["body"]:
+            box.pack_start(make_label(n["body"], "row-desc", ellipsize=True), False, False, 0)
+        self.add(box)
+        self.show_all()
+
+
+NOTIF_XML = """
+<node>
+  <interface name="org.freedesktop.Notifications">
+    <method name="GetCapabilities"><arg direction="out" name="capabilities" type="as"/></method>
+    <method name="Notify">
+      <arg direction="in" name="app_name" type="s"/><arg direction="in" name="replaces_id" type="u"/>
+      <arg direction="in" name="app_icon" type="s"/><arg direction="in" name="summary" type="s"/>
+      <arg direction="in" name="body" type="s"/><arg direction="in" name="actions" type="as"/>
+      <arg direction="in" name="hints" type="a{sv}"/><arg direction="in" name="expire_timeout" type="i"/>
+      <arg direction="out" name="id" type="u"/>
+    </method>
+    <method name="CloseNotification"><arg direction="in" name="id" type="u"/></method>
+    <method name="GetServerInformation">
+      <arg direction="out" name="name" type="s"/><arg direction="out" name="vendor" type="s"/>
+      <arg direction="out" name="version" type="s"/><arg direction="out" name="spec_version" type="s"/>
+    </method>
+    <signal name="NotificationClosed"><arg name="id" type="u"/><arg name="reason" type="u"/></signal>
+  </interface>
+</node>
+"""
+
+
+class NotificationDaemon:
+    """org.freedesktop.Notifications server (replaces Quickshell's built-in one)."""
+
+    def __init__(self, shell):
+        self.shell = shell
+        self.next_id = 1
+        self.toasts = []
+        self.node = Gio.DBusNodeInfo.new_for_xml(NOTIF_XML)
+        Gio.bus_own_name(Gio.BusType.SESSION, "org.freedesktop.Notifications",
+                         Gio.BusNameOwnerFlags.REPLACE | Gio.BusNameOwnerFlags.ALLOW_REPLACEMENT,
+                         self._bus_acquired, None, None)
+
+    def _bus_acquired(self, connection, _name):
+        connection.register_object("/org/freedesktop/Notifications", self.node.interfaces[0],
+                                   self._on_call, None, None)
+
+    def _on_call(self, _conn, _sender, _path, _iface, method, params, invocation):
+        if method == "GetCapabilities":
+            invocation.return_value(GLib.Variant("(as)", (["body", "actions"],)))
+        elif method == "GetServerInformation":
+            invocation.return_value(GLib.Variant("(ssss)", ("jacob-shell", "Jacob", "1.0", "1.2")))
+        elif method == "CloseNotification":
+            invocation.return_value(None)
+        elif method == "Notify":
+            app, replaces, _icon, summary, body, _actions, _hints, timeout = params.unpack()
+            nid = replaces or self.next_id
+            if not replaces:
+                self.next_id += 1
+            note = {"id": nid, "app": app, "summary": summary, "body": body, "time": time.time()}
+            self.shell.history.insert(0, note)
+            del self.shell.history[50:]
+            self._toast(note, timeout)
+            invocation.return_value(GLib.Variant("(u)", (nid,)))
+        else:
+            invocation.return_value(None)
+
+    def _toast(self, note, timeout):
+        toast = Toast(self.shell, note, len(self.toasts))
+        self.toasts.append(toast)
+        ms = 5000 if timeout <= 0 else min(timeout, 10000)
+
+        def expire():
+            toast.destroy()
+            if toast in self.toasts:
+                self.toasts.remove(toast)
+            for i, t in enumerate(self.toasts):
+                GtkLayerShell.set_margin(t, E.TOP, 44 + i * 78)
+            return False
+
+        GLib.timeout_add(ms, expire)
+
+
+# ----------------------------------------------------------------------------
+# Clipboard & Media
+# ----------------------------------------------------------------------------
+class ClipboardPopup(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "clipboard", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 14},
+                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
+        card = card_box(10, 16)
+        add_class(card, "card", "card-yellow")
+        card.set_size_request(400, -1)
+        self.add(card)
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(add_class(make_label(G_CLIP), "glyph"), False, False, 0)
+        head.pack_start(make_label("Clipboard History", "title"), False, False, 0)
+        head.pack_end(flat_button("Clear", "btn-open", "btn-red", cb=self._wipe), False, False, 0)
+        card.pack_start(head, False, False, 0)
+        self.items = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        card.pack_start(scrolled(self.items, height=340), True, True, 0)
+
+    def _wipe(self):
+        spawn("cliphist wipe")
+        GLib.timeout_add(250, lambda: (self.on_open(), self.show_all(), False)[-1])
+
+    def _copy(self, cid):
+        self.close_popup()
+        spawn(f"cliphist decode {cid} | wl-copy")
+
+    def on_open(self):
+        for c in self.items.get_children():
+            self.items.remove(c)
+        lines = run_out("cliphist list | head -n 25").splitlines()
+        if not lines:
+            self.items.pack_start(make_label("Clipboard is empty", "muted"), False, False, 0)
+        for line in lines:
+            cid, _, preview = line.partition("\t")
+            lbl = make_label(preview.strip() or "(binary data)", ellipsize=True)
+            lbl.set_max_width_chars(50)
+            self.items.pack_start(flat_button(lbl, "row", cb=lambda c=cid: self._copy(c)), False, False, 0)
+
+
+class MediaPopup(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "media", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 60},
+                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
+        card = card_box(10, 16)
+        add_class(card, "card", "card-blue")
+        card.set_size_request(340, -1)
+        self.add(card)
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(add_class(make_label(G_MEDIA), "glyph"), False, False, 0)
+        head.pack_start(make_label("Media & Audio Controls", "title"), False, False, 0)
+        card.pack_start(head, False, False, 0)
+        self.track = make_label("No active media session", ellipsize=True)
+        card.pack_start(self.track, False, False, 0)
+        controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, homogeneous=True)
+        for glyph, cmd in ((G_PREV, "playerctl previous"), (G_PLAY, "playerctl play-pause"),
+                           (G_NEXT, "playerctl next"), (G_VDN, "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
+                           (G_VUP, "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"),
+                           (G_MUTE, "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")):
+            controls.pack_start(flat_button(add_class(make_label(glyph, xalign=0.5), "glyph-media"), "row",
+                                            cb=lambda c=cmd: spawn(c)), True, True, 0)
+        card.pack_start(controls, False, False, 0)
+        self._timer = None
+
+    def _refresh(self):
+        if not self.get_visible():
+            self._timer = None
+            return False
+        info = run_out("playerctl metadata --format '{{artist}} - {{title}}'", timeout=1)
+        self.track.set_text(info or "No active media session")
+        return True
+
+    def on_open(self):
+        self._refresh()
+        if self._timer is None:
+            self._timer = GLib.timeout_add(2000, self._refresh)
+
+
+# ----------------------------------------------------------------------------
+# Keybinds popup & Welcome Center
+# ----------------------------------------------------------------------------
+def keybind_row(key, desc):
+    row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    add_class(row, "row")
+    row.pack_start(add_class(make_label(key), "key"), False, False, 0)
+    row.pack_end(make_label(desc, ellipsize=True), False, False, 0)
+    return row
+
+
+class KeybindsPopup(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "keybinds", anchors=(E.TOP, E.LEFT), margins={E.TOP: 44, E.LEFT: 16},
+                         keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        card = card_box(10, 16)
+        add_class(card, "card", "card-yellow")
+        card.set_size_request(520, 500)
+        self.add(card)
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(add_class(make_label(G_KEY), "glyph"), False, False, 0)
+        head.pack_start(make_label("Keybindings Reference", "title"), False, False, 0)
+        card.pack_start(head, False, False, 0)
+        self.entry = Gtk.Entry()
+        self.entry.set_placeholder_text("Search keybinds...")
+        self.entry.connect("changed", lambda *_: self.listbox.invalidate_filter())
+        card.pack_start(self.entry, False, False, 0)
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.listbox.set_filter_func(self._filter)
+        self.data = {}
+        for key, desc in KEYBINDS:
+            row = Gtk.ListBoxRow()
+            row.add(keybind_row(key, desc))
+            self.data[row] = f"{key} {desc}".lower()
+            self.listbox.add(row)
+        card.pack_start(scrolled(self.listbox), True, True, 0)
+
+    def _filter(self, row):
+        q = self.entry.get_text().strip().lower()
+        return not q or q in self.data.get(row, "")
+
+    def on_open(self):
+        self.entry.set_text("")
+
+    def open_popup(self):
+        super().open_popup()
+        self.entry.grab_focus()
+
+
+class WelcomeCenter(Popup):
+    def __init__(self, shell):
+        super().__init__(shell, "welcome", anchors=(E.TOP, E.BOTTOM, E.LEFT, E.RIGHT),
+                         keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        GtkLayerShell.set_exclusive_zone(self, -1)
+        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        self.connect("button-press-event", self._on_backdrop)
+
+        outer = Gtk.Box()
+        self.add(outer)
+        self.card = card_box(12, 20)
+        add_class(self.card, "card", "card-blue", "card-welcome")
+        self.card.set_size_request(780, 550)
+        self.card.set_halign(Gtk.Align.CENTER)
+        self.card.set_valign(Gtk.Align.CENTER)
+        outer.pack_start(self.card, True, False, 0)
+
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        head.pack_start(make_icon(LOGO, 42), False, False, 0)
+        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        titles.pack_start(add_class(make_label("Welcome to Jacob's Custom Arch Linux"), "title"), False, False, 0)
+        sub = make_label("Hyprland + Python/GTK Shell (TokyoNight) • Btrfs + Timeshift Rollback • UEFI & BIOS Ready", "muted")
+        titles.pack_start(sub, False, False, 0)
+        head.pack_start(titles, False, False, 0)
+        head.pack_end(flat_button("✕", "pill", "btn-red", cb=self.close_popup), False, False, 0)
+        self.card.pack_start(head, False, False, 0)
+
+        tabs = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10, homogeneous=True)
+        self.tab_btns = [
+            flat_button("🚀  First-Boot Essential Apps", "tab", cb=lambda: self.set_tab(0)),
+            flat_button("⌨️  Keybindings Cheat Sheet", "tab", cb=lambda: self.set_tab(1)),
+        ]
+        for b in self.tab_btns:
+            tabs.pack_start(b, True, True, 0)
+        self.card.pack_start(tabs, False, False, 0)
+
+        self.stack = Gtk.Stack()
+        self.stack.add_named(self._apps_page(), "apps")
+        self.stack.add_named(self._keys_page(), "keys")
+        self.card.pack_start(self.stack, True, True, 0)
+        self.card.pack_start(hline(), False, False, 0)
+
+        foot = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        self.autostart = Gtk.CheckButton(label="Show Welcome on Startup")
+        self.autostart.set_active(not os.path.exists(WELCOME_FLAG))
+        self.autostart.connect("toggled", self._on_autostart)
+        foot.pack_start(self.autostart, False, False, 0)
+        foot.pack_end(make_label("Tip: Press SUPER + W anytime to reopen this hub • TAB switches tabs • ESC closes", "muted"),
+                      False, False, 0)
+        self.card.pack_start(foot, False, False, 0)
+        self.set_tab(0)
+
+    def _apps_page(self):
+        grid = Gtk.Grid(column_spacing=10, row_spacing=8, column_homogeneous=True)
+        for i, (title, subtitle, icon, cmd) in enumerate(ESSENTIAL_APPS):
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            row.pack_start(make_icon(icon, 32), False, False, 0)
+            text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            text.pack_start(make_label(title, "row-title", ellipsize=True), False, False, 0)
+            text.pack_start(make_label(subtitle, "row-desc", ellipsize=True), False, False, 0)
+            row.pack_start(text, True, True, 0)
+            row.pack_end(add_class(make_label("Open", xalign=0.5), "btn-open"), False, False, 0)
+            grid.attach(flat_button(row, "row", cb=lambda c=cmd: (self.close_popup(), spawn(c))), i % 2, i // 2, 1, 1)
+        return grid
+
+    def _keys_page(self):
+        grid = Gtk.Grid(column_spacing=10, row_spacing=6, column_homogeneous=True)
+        for i, (key, desc) in enumerate(KEYBINDS):
+            grid.attach(keybind_row(key, desc), i % 2, i // 2, 1, 1)
+        return scrolled(grid, height=300)
+
+    def set_tab(self, idx):
+        self.stack.set_visible_child_name("apps" if idx == 0 else "keys")
+        self.tab = idx
+        for i, b in enumerate(self.tab_btns):
+            ctx = b.get_style_context()
+            (ctx.add_class if i == idx else ctx.remove_class)("tab-active")
+
+    def handle_key(self, ev):
+        if ev.keyval == Gdk.KEY_Tab:
+            self.set_tab(1 - self.tab)
+            return True
+        return False
+
+    def _on_backdrop(self, _w, ev):
+        a = self.card.get_allocation()
+        if not (a.x <= ev.x <= a.x + a.width and a.y <= ev.y <= a.y + a.height):
+            self.close_popup()
+        return False
+
+    def _on_autostart(self, btn):
+        try:
+            if btn.get_active():
+                if os.path.exists(WELCOME_FLAG):
+                    os.remove(WELCOME_FLAG)
+            else:
+                os.makedirs(os.path.dirname(WELCOME_FLAG), exist_ok=True)
+                open(WELCOME_FLAG, "w").close()
+        except OSError:
+            pass
+
+
+# ----------------------------------------------------------------------------
+# Shell controller
+# ----------------------------------------------------------------------------
+class Shell:
+    def __init__(self):
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS.encode())
+        Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider,
+                                                 Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        self.history = []
+        self.cc_proc = None
+
+        display = Gdk.Display.get_default()
+        self.bars = []
+        for i in range(max(display.get_n_monitors(), 1)):
+            mon = display.get_monitor(i)
+            bar, dock = TopBar(self, mon, i), BottomDock(self, mon)
+            bar.show_all()
+            dock.show_all()
+            self.bars += [bar, dock]
+
+        self.popups = {
+            "launcher": Launcher(self),
+            "power": PowerMenu(self),
+            "calendar": CalendarPopup(self),
+            "clipboard": ClipboardPopup(self),
+            "keybinds": KeybindsPopup(self),
+            "notifications": NotificationCenter(self),
+            "media": MediaPopup(self),
+            "welcome": WelcomeCenter(self),
+        }
+        self.notifier = NotificationDaemon(self)
+        self._start_ipc()
+        if not os.path.exists(WELCOME_FLAG):
+            GLib.timeout_add(1500, lambda: (self.toggle("welcome"), False)[-1])
+
+    def close_all(self, except_name=None):
+        for name, popup in self.popups.items():
+            if name != except_name and popup.get_visible():
+                popup.close_popup()
+
+    def toggle(self, name):
+        if name == "controlcenter":
+            self.close_all()
+            if self.cc_proc and self.cc_proc.poll() is None:
+                self.cc_proc.terminate()
+            else:
+                self.cc_proc = subprocess.Popen(["/usr/local/bin/jacob-control-center"],
+                                                stdin=subprocess.DEVNULL, start_new_session=True)
+            return
+        popup = self.popups.get(name)
+        if popup:
+            self.close_all(except_name=name)
+            popup.toggle()
+
+    def volume(self, action):
+        cmds = {
+            "up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+",
+            "down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",
+            "mute": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        }
+        if action in cmds:
+            spawn(cmds[action])
+
+    def handle(self, argv):
+        if not argv:
+            return
+        if argv[0] == "toggle" and len(argv) > 1:
+            self.toggle(argv[1])
+        elif argv[0] == "close":
+            self.close_all()
+        elif argv[0] == "volume" and len(argv) > 1:
+            self.volume(argv[1])
+
+    def _start_ipc(self):
+        if os.path.exists(SOCK):
+            os.unlink(SOCK)
+        srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        srv.bind(SOCK)
+        srv.listen(8)
+        srv.setblocking(False)
+        self._srv = srv
+
+        def on_accept(_fd, _cond):
+            try:
+                conn, _ = srv.accept()
+                conn.settimeout(0.3)
+                data = conn.recv(256).decode(errors="ignore").strip()
+                conn.close()
+            except OSError:
+                return True
+            self.handle(data.split())
+            return True
+
+        GLib.io_add_watch(srv.fileno(), GLib.IO_IN, on_accept)
+
+
+def main():
+    if send_command(["close"]) == 0:
+        print("jacob-shell is already running", file=sys.stderr)
+        return 0
+    Shell()
+    Gtk.main()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,798 @@
+#!/usr/bin/env python3
+"""
+Jacob's Custom Arch Linux — Full System Control Center (Python + GTK3)
+Manages Audio/PipeWire, Network/Wi-Fi, Bluetooth, Hyprland Display & Compositor,
+Btrfs/Timeshift + grub-btrfs Rollback, and Arch System Maintenance.
+"""
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import gi
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+try:
+    gi.require_version("GtkLayerShell", "0.1")
+    from gi.repository import GtkLayerShell
+    HAS_LAYER_SHELL = True
+except Exception:
+    HAS_LAYER_SHELL = False
+
+from gi.repository import Gdk, GdkPixbuf, GLib, Gtk, Pango
+
+CSS = b"""
+window, .main-card {
+    background-color: #1a1b26;
+    color: #c0caf5;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    border-radius: 14px;
+}
+.main-card {
+    border: 2px solid #7aa2f7;
+}
+.sidebar {
+    background-color: #16161e;
+    border-right: 1px solid #292e42;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    padding: 14px 10px;
+}
+button { box-shadow: none; border-image: none; text-shadow: none; outline-style: none; }
+.nav-btn {
+    background-color: transparent;
+    background-image: none;
+    color: #9aa5ce;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.nav-btn:hover {
+    background-color: #24283b;
+    color: #c0caf5;
+    border-color: #3b4261;
+}
+.nav-btn-active {
+    background-color: #283457;
+    background-image: none;
+    color: #7aa2f7;
+    border: 1px solid #7aa2f7;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.section-card {
+    background-color: #24283b;
+    border: 1px solid #3b4261;
+    border-radius: 10px;
+    padding: 14px;
+}
+.action-btn {
+    background-color: #1a1b26;
+    background-image: none;
+    color: #7aa2f7;
+    border: 1px solid #7aa2f7;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 11px;
+    font-weight: bold;
+}
+.action-btn:hover {
+    background-color: #7aa2f7;
+    color: #1a1b26;
+}
+.action-btn-green {
+    background-color: #1a1b26;
+    background-image: none;
+    color: #9ece6a;
+    border: 1px solid #9ece6a;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 11px;
+    font-weight: bold;
+}
+.action-btn-green:hover {
+    background-color: #9ece6a;
+    color: #1a1b26;
+}
+.action-btn-red {
+    background-color: #1a1b26;
+    background-image: none;
+    color: #f7768e;
+    border: 1px solid #f7768e;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 11px;
+    font-weight: bold;
+}
+.action-btn-red:hover {
+    background-color: #f7768e;
+    color: #1a1b26;
+}
+.close-btn {
+    background-color: #24283b;
+    background-image: none;
+    color: #c0caf5;
+    border: 1px solid #3b4261;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-weight: bold;
+}
+.close-btn:hover {
+    background-color: #f7768e;
+    color: #1a1b26;
+}
+.title-lg {
+    color: #c0caf5;
+    font-size: 16px;
+    font-weight: bold;
+}
+.title-md {
+    color: #7aa2f7;
+    font-size: 13px;
+    font-weight: bold;
+}
+.muted {
+    color: #9aa5ce;
+    font-size: 11px;
+}
+.mono-box {
+    background-color: #16161e;
+    color: #c0caf5;
+    border: 1px solid #292e42;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 11px;
+}
+scale trough {
+    background-color: #16161e;
+    border-radius: 6px;
+    min-height: 8px;
+}
+scale highlight {
+    background-color: #7aa2f7;
+    border-radius: 6px;
+}
+scale slider {
+    background-color: #c0caf5;
+    border: 2px solid #7aa2f7;
+    border-radius: 50%;
+    min-width: 16px;
+    min-height: 16px;
+}
+"""
+
+
+def run_out(cmd: str) -> str:
+    try:
+        res = subprocess.run(
+            ["sh", "-c", cmd],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=2,
+        )
+        return res.stdout.strip()
+    except Exception as e:
+        return str(e)
+
+
+def spawn_bg(cmd: str) -> None:
+    subprocess.Popen(["sh", "-c", cmd], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def spawn_in_term(title: str, shell_cmd: str) -> None:
+    term = "kitty" if shutil.which("kitty") else "alacritty"
+    wrapped = f"{shell_cmd}; echo ''; echo 'Press Enter to close...'; read _"
+    subprocess.Popen([term, "-e", "sh", "-c", wrapped])
+
+
+class SystemControlCenter(Gtk.Window):
+    def __init__(self) -> None:
+        super().__init__(title="System Control Center")
+        self.set_default_size(880, 580)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_decorated(False)
+        self.set_app_paintable(True)
+
+        screen = self.get_screen()
+        visual = screen.get_rgba_visual()
+        if visual:
+            self.set_visual(visual)
+
+        if HAS_LAYER_SHELL:
+            GtkLayerShell.init_for_window(self)
+            GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+            GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.ON_DEMAND)
+
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_screen(
+            screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        self.connect("key-press-event", self._on_key)
+
+        outer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        outer.get_style_context().add_class("main-card")
+        outer.set_size_request(880, 580)
+        self.add(outer)
+
+        # Left Sidebar
+        sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        sidebar.get_style_context().add_class("sidebar")
+        sidebar.set_size_request(220, -1)
+        outer.pack_start(sidebar, False, False, 0)
+
+        # Brand Header in Sidebar
+        brand_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        brand_box.set_margin_bottom(12)
+        logo_path = "/usr/share/pixmaps/jacob-arch-logo.png"
+        if os.path.isfile(logo_path):
+            pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(logo_path, 32, 32, True)
+            brand_box.pack_start(Gtk.Image.new_from_pixbuf(pb), False, False, 0)
+
+        b_lbl = Gtk.Label(label="Control Center")
+        b_lbl.get_style_context().add_class("title-md")
+        brand_box.pack_start(b_lbl, False, False, 0)
+        sidebar.pack_start(brand_box, False, False, 0)
+
+        self.stack = Gtk.Stack()
+        self.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        self.stack.set_transition_duration(120)
+
+        self.nav_buttons = {}
+        self._builders = {}
+        self._built = set()
+        pages = [
+            ("audio", "🔊  Audio & Mic", self._build_audio_page),
+            ("network", "🌐  Network & Wi-Fi", self._build_network_page),
+            ("bluetooth", "🟦  Bluetooth", self._build_bluetooth_page),
+            ("hyprland", "🖥️  Display & Hyprland", self._build_hyprland_page),
+            ("btrfs", "🛡️  Btrfs & Timeshift", self._build_btrfs_page),
+            ("system", "⚙️  System & Updates", self._build_system_page),
+        ]
+
+        # Pages are built lazily on first visit so the window opens instantly
+        # (each page shells out to nmcli / bluetoothctl / hyprctl / wpctl).
+        for key, label, builder in pages:
+            self._builders[key] = builder
+            btn = Gtk.Button(label=label)
+            btn.set_alignment(0.0, 0.5)
+            btn.get_style_context().add_class("nav-btn")
+            btn.connect("clicked", self._switch_page, key)
+            sidebar.pack_start(btn, False, False, 0)
+            self.nav_buttons[key] = btn
+
+        # Bottom quick button in sidebar: Welcome Hub
+        spacer = Gtk.Box()
+        sidebar.pack_start(spacer, True, True, 0)
+
+        welcome_btn = Gtk.Button(label="🚀  Welcome Hub (SUPER+W)")
+        welcome_btn.get_style_context().add_class("action-btn")
+        welcome_btn.connect("clicked", lambda *_: (spawn_bg("/usr/local/bin/jacob-welcome"), Gtk.main_quit()))
+        sidebar.pack_start(welcome_btn, False, False, 4)
+
+        calamares_btn = Gtk.Button(label="💿  Install Arch (Calamares)")
+        calamares_btn.get_style_context().add_class("action-btn-green")
+        calamares_btn.connect("clicked", lambda *_: (spawn_bg("/usr/local/bin/launch-calamares"), Gtk.main_quit()))
+        if os.path.isfile("/usr/local/bin/launch-calamares"):
+            sidebar.pack_start(calamares_btn, False, False, 0)
+
+        # Right Content Area
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        right_box.set_margin_top(16)
+        right_box.set_margin_bottom(16)
+        right_box.set_margin_start(18)
+        right_box.set_margin_end(18)
+        outer.pack_start(right_box, True, True, 0)
+
+        # Top Bar with Page Title & Close Button
+        top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.page_title_lbl = Gtk.Label(label="Audio & Microphone Configuration")
+        self.page_title_lbl.get_style_context().add_class("title-lg")
+        top_row.pack_start(self.page_title_lbl, False, False, 0)
+
+        close_btn = Gtk.Button(label="✕")
+        close_btn.get_style_context().add_class("close-btn")
+        close_btn.connect("clicked", lambda *_: Gtk.main_quit())
+        top_row.pack_end(close_btn, False, False, 0)
+        right_box.pack_start(top_row, False, False, 0)
+
+        right_box.pack_start(self.stack, True, True, 0)
+        self._ensure_page("audio")
+        self.stack.set_visible_child_name("audio")
+        self._update_nav_styles("audio")
+
+    def _on_key(self, _widget, event) -> bool:
+        if event.keyval == Gdk.KEY_Escape:
+            Gtk.main_quit()
+            return True
+        return False
+
+    def _ensure_page(self, key: str) -> None:
+        if key in self._built:
+            return
+        widget = self._builders[key]()
+        widget.show_all()
+        self.stack.add_named(widget, key)
+        self._built.add(key)
+
+    def _switch_page(self, _btn, key: str) -> None:
+        self._ensure_page(key)
+        titles = {
+            "audio": "Audio & Microphone (PipeWire / WirePlumber)",
+            "network": "Network, Wi-Fi & Connections (NetworkManager)",
+            "bluetooth": "Bluetooth Controllers & Devices (BlueZ)",
+            "hyprland": "Display, Gaps, Blur & Hyprland Compositor",
+            "btrfs": "Bulletproof Btrfs, Timeshift & GRUB-Btrfs Rollback",
+            "system": "System Hardware, Mirrors & Pacman Maintenance",
+        }
+        self.page_title_lbl.set_text(titles.get(key, "System Control Center"))
+        self.stack.set_visible_child_name(key)
+        self._update_nav_styles(key)
+
+    def _update_nav_styles(self, active_key: str) -> None:
+        for k, b in self.nav_buttons.items():
+            ctx = b.get_style_context()
+            ctx.remove_class("nav-btn")
+            ctx.remove_class("nav-btn-active")
+            ctx.add_class("nav-btn-active" if k == active_key else "nav-btn")
+
+    # -------------------------------------------------------------------------
+    # PAGE 1: AUDIO & MICROPHONE
+    # -------------------------------------------------------------------------
+    def _build_audio_page(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        # Output Volume Card
+        out_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        out_card.get_style_context().add_class("section-card")
+
+        hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        lbl = Gtk.Label(label="Master Output Volume (@DEFAULT_AUDIO_SINK@)")
+        lbl.get_style_context().add_class("title-md")
+        hdr.pack_start(lbl, False, False, 0)
+
+        mute_btn = Gtk.Button(label="Toggle Mute")
+        mute_btn.get_style_context().add_class("action-btn")
+        mute_btn.connect(
+            "clicked",
+            lambda *_: (
+                spawn_bg("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
+                GLib.timeout_add(200, self._refresh_audio_status),
+            ),
+        )
+        hdr.pack_end(mute_btn, False, False, 0)
+        out_card.pack_start(hdr, False, False, 0)
+
+        vol_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 150, 5)
+        vol_scale.set_value(self._get_current_volume("@DEFAULT_AUDIO_SINK@"))
+        vol_scale.connect(
+            "value-changed",
+            lambda s: spawn_bg(f"wpctl set-volume @DEFAULT_AUDIO_SINK@ {int(s.get_value())}%"),
+        )
+        out_card.pack_start(vol_scale, False, False, 0)
+        box.pack_start(out_card, False, False, 0)
+
+        # Microphone Volume Card
+        mic_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        mic_card.get_style_context().add_class("section-card")
+
+        mhdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        mlbl = Gtk.Label(label="Microphone Input Level (@DEFAULT_AUDIO_SOURCE@)")
+        mlbl.get_style_context().add_class("title-md")
+        mhdr.pack_start(mlbl, False, False, 0)
+
+        mmute_btn = Gtk.Button(label="Toggle Mic Mute")
+        mmute_btn.get_style_context().add_class("action-btn")
+        mmute_btn.connect(
+            "clicked",
+            lambda *_: spawn_bg("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
+        )
+        mhdr.pack_end(mmute_btn, False, False, 0)
+        mic_card.pack_start(mhdr, False, False, 0)
+
+        mic_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 120, 5)
+        mic_scale.set_value(self._get_current_volume("@DEFAULT_AUDIO_SOURCE@"))
+        mic_scale.connect(
+            "value-changed",
+            lambda s: spawn_bg(f"wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {int(s.get_value())}%"),
+        )
+        mic_card.pack_start(mic_scale, False, False, 0)
+        box.pack_start(mic_card, False, False, 0)
+
+        # PipeWire / WirePlumber Status & Pavucontrol Launcher
+        status_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        status_card.get_style_context().add_class("section-card")
+
+        shdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        slbl = Gtk.Label(label="PipeWire Audio Devices & Sinks")
+        slbl.get_style_context().add_class("title-md")
+        shdr.pack_start(slbl, False, False, 0)
+
+        pavu_btn = Gtk.Button(label="🎚️  Open Full Audio Mixer (Pavucontrol)")
+        pavu_btn.get_style_context().add_class("action-btn-green")
+        pavu_btn.connect("clicked", lambda *_: spawn_bg("pavucontrol"))
+        shdr.pack_end(pavu_btn, False, False, 0)
+        status_card.pack_start(shdr, False, False, 0)
+
+        self.audio_status_lbl = Gtk.Label(xalign=0, yalign=0)
+        self.audio_status_lbl.set_selectable(True)
+        self.audio_status_lbl.get_style_context().add_class("mono-box")
+        self._refresh_audio_status()
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_min_content_height(150)
+        scroll.add(self.audio_status_lbl)
+        status_card.pack_start(scroll, True, True, 0)
+        box.pack_start(status_card, True, True, 0)
+        return box
+
+    def _get_current_volume(self, target: str) -> int:
+        out = run_out(f"wpctl get-volume {target} 2>/dev/null")
+        m = re.search(r"([0-9]+\.[0-9]+)", out)
+        if m:
+            return int(float(m.group(1)) * 100)
+        return 75
+
+    def _refresh_audio_status(self) -> bool:
+        out = run_out("wpctl status 2>/dev/null | head -n 28")
+        self.audio_status_lbl.set_text(out or "PipeWire / WirePlumber ready.")
+        return False
+
+    # -------------------------------------------------------------------------
+    # PAGE 2: NETWORK & WI-FI
+    # -------------------------------------------------------------------------
+    def _build_network_page(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        top_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        top_card.get_style_context().add_class("section-card")
+
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl = Gtk.Label(label="Active Network Interfaces & Wi-Fi Control")
+        lbl.get_style_context().add_class("title-md")
+        row.pack_start(lbl, False, False, 0)
+
+        nmtui_btn = Gtk.Button(label="🖧  Launch nmtui")
+        nmtui_btn.get_style_context().add_class("action-btn")
+        nmtui_btn.connect("clicked", lambda *_: spawn_bg("kitty -e nmtui"))
+        row.pack_end(nmtui_btn, False, False, 0)
+
+        nmce_btn = Gtk.Button(label="⚙️  Connection Editor")
+        nmce_btn.get_style_context().add_class("action-btn-green")
+        nmce_btn.connect("clicked", lambda *_: spawn_bg("nm-connection-editor || kitty -e nmtui"))
+        row.pack_end(nmce_btn, False, False, 0)
+
+        top_card.pack_start(row, False, False, 0)
+
+        btn_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        wifi_on = Gtk.Button(label="📶  Enable Wi-Fi")
+        wifi_on.get_style_context().add_class("action-btn-green")
+        wifi_on.connect("clicked", lambda *_: (spawn_bg("nmcli radio wifi on"), GLib.timeout_add(400, self._refresh_net)))
+        btn_row.pack_start(wifi_on, False, False, 0)
+
+        wifi_off = Gtk.Button(label="✈️  Disable Wi-Fi")
+        wifi_off.get_style_context().add_class("action-btn-red")
+        wifi_off.connect("clicked", lambda *_: (spawn_bg("nmcli radio wifi off"), GLib.timeout_add(400, self._refresh_net)))
+        btn_row.pack_start(wifi_off, False, False, 0)
+
+        scan_btn = Gtk.Button(label="🔄  Refresh Status & Scan Wi-Fi")
+        scan_btn.get_style_context().add_class("action-btn")
+        scan_btn.connect("clicked", lambda *_: self._refresh_net())
+        btn_row.pack_start(scan_btn, False, False, 0)
+
+        top_card.pack_start(btn_row, False, False, 0)
+        box.pack_start(top_card, False, False, 0)
+
+        net_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        net_card.get_style_context().add_class("section-card")
+        self.net_status_lbl = Gtk.Label(xalign=0, yalign=0)
+        self.net_status_lbl.set_selectable(True)
+        self.net_status_lbl.get_style_context().add_class("mono-box")
+        self._refresh_net()
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.add(self.net_status_lbl)
+        net_card.pack_start(scroll, True, True, 0)
+        box.pack_start(net_card, True, True, 0)
+        return box
+
+    def _refresh_net(self) -> bool:
+        ips = run_out("ip -br addr 2>/dev/null")
+        devs = run_out("nmcli dev status 2>/dev/null")
+        wifi = run_out("nmcli dev wifi list 2>/dev/null | head -n 15")
+        text = f"=== IP Addresses ===\n{ips}\n\n=== NetworkManager Devices ===\n{devs}\n\n=== Nearby Wi-Fi Networks ===\n{wifi}"
+        self.net_status_lbl.set_text(text)
+        return False
+
+    # -------------------------------------------------------------------------
+    # PAGE 3: BLUETOOTH
+    # -------------------------------------------------------------------------
+    def _build_bluetooth_page(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        card.get_style_context().add_class("section-card")
+
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl = Gtk.Label(label="Bluetooth Adapter & Device Pairing")
+        lbl.get_style_context().add_class("title-md")
+        row.pack_start(lbl, False, False, 0)
+
+        bm_btn = Gtk.Button(label="🟦  Open Blueman Bluetooth Manager")
+        bm_btn.get_style_context().add_class("action-btn-green")
+        bm_btn.connect("clicked", lambda *_: spawn_bg("blueman-manager"))
+        row.pack_end(bm_btn, False, False, 0)
+        card.pack_start(row, False, False, 0)
+
+        brow = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        bt_on = Gtk.Button(label="Power ON Bluetooth")
+        bt_on.get_style_context().add_class("action-btn-green")
+        bt_on.connect(
+            "clicked",
+            lambda *_: (
+                spawn_bg("rfkill unblock bluetooth; bluetoothctl power on"),
+                GLib.timeout_add(400, self._refresh_bt),
+            ),
+        )
+        brow.pack_start(bt_on, False, False, 0)
+
+        bt_off = Gtk.Button(label="Power OFF Bluetooth")
+        bt_off.get_style_context().add_class("action-btn-red")
+        bt_off.connect(
+            "clicked",
+            lambda *_: (
+                spawn_bg("bluetoothctl power off"),
+                GLib.timeout_add(400, self._refresh_bt),
+            ),
+        )
+        brow.pack_start(bt_off, False, False, 0)
+
+        bt_ref = Gtk.Button(label="🔄  Refresh Devices")
+        bt_ref.get_style_context().add_class("action-btn")
+        bt_ref.connect("clicked", lambda *_: self._refresh_bt())
+        brow.pack_start(bt_ref, False, False, 0)
+        card.pack_start(brow, False, False, 0)
+        box.pack_start(card, False, False, 0)
+
+        list_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        list_card.get_style_context().add_class("section-card")
+        self.bt_lbl = Gtk.Label(xalign=0, yalign=0)
+        self.bt_lbl.get_style_context().add_class("mono-box")
+        self._refresh_bt()
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.add(self.bt_lbl)
+        list_card.pack_start(scroll, True, True, 0)
+        box.pack_start(list_card, True, True, 0)
+        return box
+
+    def _refresh_bt(self) -> bool:
+        svc = run_out("systemctl is-active bluetooth.service 2>/dev/null")
+        ctrl = run_out("bluetoothctl list 2>/dev/null")
+        devs = run_out("bluetoothctl devices 2>/dev/null")
+        self.bt_lbl.set_text(
+            f"bluetooth.service: {svc}\n\n=== Controllers ===\n{ctrl or 'No controller detected'}\n\n=== Paired / Known Devices ===\n{devs or 'No devices paired yet.'}"
+        )
+        return False
+
+    # -------------------------------------------------------------------------
+    # PAGE 4: DISPLAY & HYPRLAND COMPOSITOR
+    # -------------------------------------------------------------------------
+    def _build_hyprland_page(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        card.get_style_context().add_class("section-card")
+
+        lbl = Gtk.Label(label="Live Hyprland Compositor Tuning (Applies Immediately)", xalign=0)
+        lbl.get_style_context().add_class("title-md")
+        card.pack_start(lbl, False, False, 0)
+
+        # Inner Gaps slider
+        g_in_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        g_in_row.pack_start(Gtk.Label(label="Inner Window Gaps (px):", xalign=0), False, False, 0)
+        g_in = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 24, 1)
+        g_in.set_value(5)
+        g_in.connect("value-changed", lambda s: spawn_bg(f"hyprctl keyword general:gaps_in {int(s.get_value())}"))
+        g_in_row.pack_start(g_in, True, True, 0)
+        card.pack_start(g_in_row, False, False, 0)
+
+        # Outer Gaps slider
+        g_out_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        g_out_row.pack_start(Gtk.Label(label="Outer Screen Gaps (px):", xalign=0), False, False, 0)
+        g_out = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 36, 1)
+        g_out.set_value(10)
+        g_out.connect("value-changed", lambda s: spawn_bg(f"hyprctl keyword general:gaps_out {int(s.get_value())}"))
+        g_out_row.pack_start(g_out, True, True, 0)
+        card.pack_start(g_out_row, False, False, 0)
+
+        # Corner Rounding slider
+        rnd_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        rnd_row.pack_start(Gtk.Label(label="Corner Rounding (px):   ", xalign=0), False, False, 0)
+        rnd = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 24, 1)
+        rnd.set_value(10)
+        rnd.connect("value-changed", lambda s: spawn_bg(f"hyprctl keyword decoration:rounding {int(s.get_value())}"))
+        rnd_row.pack_start(rnd, True, True, 0)
+        card.pack_start(rnd_row, False, False, 0)
+
+        # Toggles row
+        t_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        blur_on = Gtk.Button(label="✨ Enable Blur")
+        blur_on.get_style_context().add_class("action-btn-green")
+        blur_on.connect("clicked", lambda *_: spawn_bg("hyprctl keyword decoration:blur:enabled true"))
+        t_row.pack_start(blur_on, False, False, 0)
+
+        blur_off = Gtk.Button(label="Disable Blur")
+        blur_off.get_style_context().add_class("action-btn")
+        blur_off.connect("clicked", lambda *_: spawn_bg("hyprctl keyword decoration:blur:enabled false"))
+        t_row.pack_start(blur_off, False, False, 0)
+
+        anim_on = Gtk.Button(label="⚡ Enable Animations")
+        anim_on.get_style_context().add_class("action-btn-green")
+        anim_on.connect("clicked", lambda *_: spawn_bg("hyprctl keyword animations:enabled true"))
+        t_row.pack_start(anim_on, False, False, 0)
+
+        anim_off = Gtk.Button(label="Disable Animations")
+        anim_off.get_style_context().add_class("action-btn")
+        anim_off.connect("clicked", lambda *_: spawn_bg("hyprctl keyword animations:enabled false"))
+        t_row.pack_start(anim_off, False, False, 0)
+
+        reload_btn = Gtk.Button(label="🔄 Reload Hyprland")
+        reload_btn.get_style_context().add_class("action-btn")
+        reload_btn.connect("clicked", lambda *_: spawn_bg("hyprctl reload && notify-send 'Hyprland' 'Configuration Reloaded'"))
+        t_row.pack_end(reload_btn, False, False, 0)
+
+        card.pack_start(t_row, False, False, 0)
+        box.pack_start(card, False, False, 0)
+
+        # Monitors info
+        m_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        m_card.get_style_context().add_class("section-card")
+        mlbl = Gtk.Label(label="Connected Displays & Monitors (hyprctl monitors)", xalign=0)
+        mlbl.get_style_context().add_class("title-md")
+        m_card.pack_start(mlbl, False, False, 0)
+
+        mon_txt = Gtk.Label(label=run_out("hyprctl monitors 2>/dev/null"), xalign=0, yalign=0)
+        mon_txt.get_style_context().add_class("mono-box")
+        scroll = Gtk.ScrolledWindow()
+        scroll.add(mon_txt)
+        m_card.pack_start(scroll, True, True, 0)
+        box.pack_start(m_card, True, True, 0)
+        return box
+
+    # -------------------------------------------------------------------------
+    # PAGE 5: BTRFS & TIMESHIFT ROLLBACK
+    # -------------------------------------------------------------------------
+    def _build_btrfs_page(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        top = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        top.get_style_context().add_class("section-card")
+
+        hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        lbl = Gtk.Label(label="Btrfs Subvolumes, Timeshift & GRUB-Btrfs Daemon")
+        lbl.get_style_context().add_class("title-md")
+        hdr.pack_start(lbl, False, False, 0)
+
+        ts_gui = Gtk.Button(label="🛡️  Open Timeshift GUI")
+        ts_gui.get_style_context().add_class("action-btn-green")
+        ts_gui.connect("clicked", lambda *_: spawn_bg("/usr/local/bin/timeshift-launcher"))
+        hdr.pack_end(ts_gui, False, False, 0)
+
+        snap_now = Gtk.Button(label="➕  Create Snapshot Now")
+        snap_now.get_style_context().add_class("action-btn")
+        snap_now.connect(
+            "clicked",
+            lambda *_: spawn_in_term(
+                "Create Timeshift Snapshot",
+                "sudo timeshift --create --comments 'Manual Snapshot from Control Center' && sudo grub-mkconfig -o /boot/grub/grub.cfg",
+            ),
+        )
+        hdr.pack_end(snap_now, False, False, 0)
+        top.pack_start(hdr, False, False, 0)
+
+        sub = Gtk.Label(
+            label="Subvolume layout: /@ (/), /@home (/home), /@cache (/var/cache), /@log (/var/log) • Pre-upgrade hook: 00-timeshift-autosnap.hook",
+            xalign=0,
+        )
+        sub.get_style_context().add_class("muted")
+        top.pack_start(sub, False, False, 0)
+        box.pack_start(top, False, False, 0)
+
+        scard = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scard.get_style_context().add_class("section-card")
+        self.btrfs_lbl = Gtk.Label(xalign=0, yalign=0)
+        self.btrfs_lbl.get_style_context().add_class("mono-box")
+        self._refresh_btrfs()
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.add(self.btrfs_lbl)
+        scard.pack_start(scroll, True, True, 0)
+        box.pack_start(scard, True, True, 0)
+        return box
+
+    def _refresh_btrfs(self) -> bool:
+        fs = run_out("findmnt -no FSTYPE,SOURCE,UUID,OPTIONS / 2>/dev/null")
+        gb = run_out("systemctl is-enabled grub-btrfsd.service 2>/dev/null; systemctl is-active grub-btrfsd.service 2>/dev/null").replace("\n", " / ")
+        cr = run_out("systemctl is-enabled cronie.service 2>/dev/null; systemctl is-active cronie.service 2>/dev/null").replace("\n", " / ")
+        hook = "Present (/usr/share/libalpm/hooks/00-timeshift-autosnap.hook)" if os.path.isfile("/usr/share/libalpm/hooks/00-timeshift-autosnap.hook") else "Missing"
+        self.btrfs_lbl.set_text(
+            f"Root Mount         : {fs}\n"
+            f"grub-btrfsd.service: {gb}\n"
+            f"cronie.service     : {cr}\n"
+            f"timeshift-autosnap : {hook}\n\n"
+            f"Tip: On an installed Btrfs system, click 'Create Snapshot Now' or run 'sudo pacman -Syu'\n"
+            f"to automatically snapshot /@ and populate the GRUB boot menu."
+        )
+        return False
+
+    # -------------------------------------------------------------------------
+    # PAGE 6: SYSTEM & UPDATES
+    # -------------------------------------------------------------------------
+    def _build_system_page(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        acard = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        acard.get_style_context().add_class("section-card")
+        lbl = Gtk.Label(label="One-Click Arch Linux System Maintenance", xalign=0)
+        lbl.get_style_context().add_class("title-md")
+        acard.pack_start(lbl, False, False, 0)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        actions = [
+            ("🔄  Update Full System (pacman -Syu)", "sudo pacman -Syu", "action-btn-green"),
+            ("⚡  Refresh Fastest Mirrors (reflector)", "sudo reflector --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist && echo 'Mirrors updated!'", "action-btn"),
+            ("🧹  Clean Package Cache (pacman -Sc)", "sudo pacman -Sc", "action-btn"),
+            ("📊  Launch btop++ System Monitor", "btop", "action-btn"),
+        ]
+        for idx, (text, cmd, cls) in enumerate(actions):
+            b = Gtk.Button(label=text)
+            b.set_hexpand(True)
+            b.get_style_context().add_class(cls)
+            b.connect("clicked", lambda _b, c=cmd, t=text: spawn_in_term(t, c))
+            grid.attach(b, idx % 2, idx // 2, 1, 1)
+
+        acard.pack_start(grid, False, False, 0)
+        box.pack_start(acard, False, False, 0)
+
+        icard = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        icard.get_style_context().add_class("section-card")
+        ilbl = Gtk.Label(label="System Hardware & OS Overview", xalign=0)
+        ilbl.get_style_context().add_class("title-md")
+        icard.pack_start(ilbl, False, False, 0)
+
+        kern = run_out("uname -sr")
+        cpu = run_out("grep -m1 'model name' /proc/cpuinfo | cut -d: -f2")
+        gpu = run_out("lspci 2>/dev/null | grep -iE 'vga|3d|display'")
+        mem = run_out("free -h")
+        df = run_out("df -h /")
+
+        info = Gtk.Label(
+            label=f"Kernel : {kern}\nCPU    : {cpu}\nGPU    : {gpu}\n\n=== Memory ===\n{mem}\n\n=== Root Filesystem ===\n{df}",
+            xalign=0,
+            yalign=0,
+        )
+        info.set_selectable(True)
+        info.get_style_context().add_class("mono-box")
+        scroll = Gtk.ScrolledWindow()
+        scroll.add(info)
+        icard.pack_start(scroll, True, True, 0)
+        box.pack_start(icard, True, True, 0)
+        return box
+
+
+if __name__ == "__main__":
+    win = SystemControlCenter()
+    win.show_all()
+    Gtk.main()

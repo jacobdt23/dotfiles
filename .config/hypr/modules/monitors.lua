@@ -18,6 +18,14 @@ hl.monitor({
     scale    = "1",
 })
 
+-- Fallback for any other monitor (eDP-1, Virtual-1, etc.)
+hl.monitor({
+    output   = "",
+    mode     = "preferred",
+    position = "auto",
+    scale    = "1",
+})
+
 -- Map Workspaces 1-5 to the HDMI monitor
 for i = 1, 5 do
     hl.workspace_rule({

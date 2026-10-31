@@ -1,6 +1,0 @@
-bind = SUPER, space, exec, /home/jacob/.config/hypr/toggle_drawer.sh
-bind = SUPER, space, exec, /home/jacob/.config/hypr/toggle_drawer.sh
-bind = SUPER, Space, exec, /home/jacob/.config/hypr/toggle_drawer.sh
-bind = $mainMod, Q, exec, bash ~/.config/rofi/powermenu.sh
-bindr = SUPER, SUPER_L, exec, /home/jacob/.config/hypr/toggle_drawer.sh
-bindr = , Super_L, exec, /home/jacob/.config/hypr/toggle_drawer.sh

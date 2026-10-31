@@ -3,24 +3,26 @@ local mainMod = "SUPER"
 -- Core App Binds
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd("kitty"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("thunar"))
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("looking-glass-client egl:scale=2 win:autoResize=yes"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("jacob-shell toggle welcome"))
 hl.bind(mainMod .. " + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("discord"))
 
--- App Launcher / Menu (Scriptless Native Quickshell IPC Call)
-hl.bind("SUPER + Super_L", hl.dsp.exec_cmd("quickshell ipc call drawer toggle"), { release = true })
+-- App Launcher / Menu (Super alone)
+hl.bind("SUPER + Super_L", hl.dsp.exec_cmd("jacob-shell toggle launcher"), { release = true })
 
 -- System Management
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("notify-send 'Quickshell' 'Active!'"))
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("notify-send 'Jacob Shell' 'Active!'"))
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("sh -c 'hyprctl reload && notify-send \"Hyprland\" \"Reloaded!\"'"))
+hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd("/usr/local/bin/launch-calamares"))
 
--- Quickshell Menus
-hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("quickshell ipc call keybinds toggle"))
-hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("quickshell ipc call powermenu toggle"))
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("quickshell ipc call notifications toggle"))
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("quickshell ipc call media toggle"))
-hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("quickshell ipc call clipboard toggle"))
-hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("python3 ~/.config/quickshell/components/control_center_app.py"))
+-- jacob-shell Menus
+hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("jacob-shell toggle keybinds"))
+hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("jacob-shell toggle power"))
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("jacob-shell toggle notifications"))
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("jacob-shell toggle media"))
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("jacob-shell toggle clipboard"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("jacob-shell toggle calendar"))
+hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("jacob-shell toggle controlcenter"))
 
 -- Window Management
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("hyprctl dispatch togglefloating"))
@@ -47,7 +49,7 @@ hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("hyprctl dispatch movetoworks
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 hl.bind("mouse:274", hl.dsp.window.drag(), { mouse = true })
 
--- Native Quickshell Volume Controls
-hl.bind(mainMod .. " + equal", hl.dsp.exec_cmd("quickshell ipc call volume change up"), { repeating = true })
-hl.bind(mainMod .. " + minus", hl.dsp.exec_cmd("quickshell ipc call volume change down"), { repeating = true })
-hl.bind(mainMod .. " + BackSpace", hl.dsp.exec_cmd("quickshell ipc call volume change mute"))
+-- jacob-shell Volume Controls
+hl.bind(mainMod .. " + equal", hl.dsp.exec_cmd("jacob-shell volume up"), { repeating = true })
+hl.bind(mainMod .. " + minus", hl.dsp.exec_cmd("jacob-shell volume down"), { repeating = true })
+hl.bind(mainMod .. " + BackSpace", hl.dsp.exec_cmd("jacob-shell volume mute"))

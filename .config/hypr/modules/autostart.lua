@@ -2,7 +2,7 @@
 ---- MY PROGRAMS ----
 ---------------------
 local terminal    = "kitty"
-local fileManager = "dolphin"
+local fileManager = "thunar"
 
 -------------------
 ---- AUTOSTART ----
@@ -10,15 +10,16 @@ local fileManager = "dolphin"
 
 hl.on("hyprland.start", function()
     -- Start Apps
-    hl.exec_cmd("terminal")
+    hl.exec_cmd(terminal)
     hl.exec_cmd("nm-applet")
 
     -- Background Services
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
+    hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("sh ~/.config/hypr/wallpaper_loop.sh")
     hl.exec_cmd("hyprpm reload -n")
 
-    -- Start Quickshell
-    hl.exec_cmd("quickshell")
+    -- Start Jacob's Python/GTK desktop shell (top bar, dock, launcher, notifications)
+    hl.exec_cmd("/usr/local/bin/jacob-shell")
 end)
