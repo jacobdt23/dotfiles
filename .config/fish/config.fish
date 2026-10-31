@@ -1,3 +1,5 @@
+fish_add_path -a $HOME/.local/bin
+
 if status is-interactive
     # Disable default greeting
     set -g fish_greeting ""
