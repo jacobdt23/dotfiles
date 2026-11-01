@@ -482,7 +482,10 @@ class Launcher(Popup):
         for r in self.rows:
             self.listbox.remove(r)
         self.rows = []
-        for line in run_out("/usr/local/bin/list-desktop-apps", timeout=6).splitlines():
+        cmd = os.path.expanduser("~/.local/bin/list-desktop-apps")
+        if not os.path.isfile(cmd):
+            cmd = "/usr/local/bin/list-desktop-apps"
+        for line in run_out(cmd, timeout=6).splitlines():
             parts = line.split("\t")
             if len(parts) < 4:
                 continue
@@ -545,8 +548,7 @@ class Launcher(Popup):
 
     def on_open(self):
         self.entry.set_text("")
-        if not self.rows:
-            self._populate()
+        self._populate()
         vis = self._visible_rows()
         if vis:
             self.listbox.select_row(vis[0])

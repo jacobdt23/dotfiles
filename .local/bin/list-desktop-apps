@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+import configparser
+import glob
+import os
+
+# Prioritize official upstream application icons in hicolor & pixmaps first
+SEARCH_DIRS = [
+    "/usr/share/icons/hicolor/256x256/apps",
+    "/usr/share/icons/hicolor/192x192/apps",
+    "/usr/share/icons/hicolor/128x128/apps",
+    "/usr/share/icons/hicolor/scalable/apps",
+    "/usr/share/icons/hicolor/64x64/apps",
+    "/usr/share/icons/hicolor/48x48/apps",
+    "/usr/share/pixmaps",
+    "/usr/share/icons/Adwaita/scalable/apps",
+    "/usr/share/icons/Adwaita/scalable/devices",
+    "/usr/share/icons/Adwaita/scalable/categories",
+    "/usr/share/icons/breeze-dark/apps/48",
+    "/usr/share/icons/breeze-dark/preferences/32",
+    "/usr/share/icons/breeze-dark/devices/64",
+    "/usr/share/icons/Papirus-Dark/48x48/apps",
+    "/usr/share/icons/Papirus/48x48/apps",
+    "/usr/share/icons/Papirus/48x48/devices",
+]
+
+icon_map = {}
+for d in reversed(SEARCH_DIRS):
+    if not os.path.isdir(d):
+        continue
+    try:
+        for entry in os.scandir(d):
+            if entry.name.endswith((".png", ".svg")):
+                stem = os.path.splitext(entry.name)[0]
+                icon_map[stem] = entry.path
+    except OSError:
+        continue
+
+FALLBACK_ICON = icon_map.get("application-x-executable", "")
+
+# Internal/helper .desktop entries that should not clutter the main app launcher
+HIDDEN_DESKTOP_IDS = {
+    "avahi-discover",
+    "bssh",
+    "bvnc",
+    "blueman-adapters",
+    "kitty-open",
+    "lstopo",
+    "qv4l2",
+    "qvidcap",
+    "thunar-bulk-rename",
+    "thunar-settings",
+    "thunar-volman-settings",
+    "vim",
+    "xgps",
+    "xgpsspeed",
+}
+
+# Featured primary applications order at the top of the launcher
+PRIMARY_ORDER = {
+    "jacob-welcome": 0,
+    "calamares": 1,
+    "timeshift-gtk": 2,
+    "firefox": 3,
+    "kitty": 4,
+    "thunar": 5,
+    "Alacritty": 6,
+    "steam": 7,
+    "DaVinciResolve": 8,
+    "ai.storyteller.artcraft-launcher": 9,
+    "net.davidotek.pupgui2": 10,
+    "com.obsproject.Studio": 11,
+    "vlc": 12,
+    "org.pulseaudio.pavucontrol": 13,
+    "blueman-manager": 14,
+    "btop": 15,
+    "nvidia-settings": 16,
+    "nm-connection-editor": 17,
+    "micro": 18,
+}
+
+
+def resolve_icon(icon_name: str) -> str:
+    if not icon_name:
+        return FALLBACK_ICON
+    if icon_name.startswith("/") and os.path.isfile(icon_name):
+        return icon_name
+    if icon_name in icon_map:
+        return icon_map[icon_name]
+    stem = os.path.splitext(os.path.basename(icon_name))[0]
+    if stem in icon_map:
+        return icon_map[stem]
+    if "." in stem:
+        short = stem.split(".")[-1].lower()
+        if short in icon_map:
+            return icon_map[short]
+    if icon_name.endswith("-symbolic") and icon_name[:-9] in icon_map:
+        return icon_map[icon_name[:-9]]
+    return FALLBACK_ICON
+
+
+desktop_files = sorted(
+    glob.glob("/usr/share/applications/*.desktop")
+    + glob.glob(os.path.expanduser("~/.local/share/applications/*.desktop"))
+)
+
+seen_names = set()
+entries = []
+
+for f in desktop_files:
+    desktop_id = os.path.splitext(os.path.basename(f))[0]
+    if desktop_id in HIDDEN_DESKTOP_IDS:
+        continue
+    cp = configparser.ConfigParser(interpolation=None, strict=False)
+    try:
+        cp.read(f, encoding="utf-8")
+    except Exception:
+        continue
+    if "Desktop Entry" not in cp:
+        continue
+    sec = cp["Desktop Entry"]
+    if sec.get("NoDisplay", "").lower() == "true" or sec.get("Hidden", "").lower() == "true":
+        continue
+    name = sec.get("Name", "").strip()
+    if not name or name in seen_names:
+        continue
+    seen_names.add(name)
+    desc = (sec.get("Comment", "") or sec.get("GenericName", "") or "Application").strip()
+    icon_raw = sec.get("Icon", "").strip()
+    icon_path = resolve_icon(icon_raw)
+    priority = PRIMARY_ORDER.get(desktop_id, 50)
+    entries.append((priority, name.lower(), name, desc, desktop_id, icon_path))
+
+entries.sort(key=lambda x: (x[0], x[1]))
+
+for _, _, name, desc, desktop_id, icon_path in entries:
+    print(f"{name}\t{desc}\t{desktop_id}\t{icon_path}")
