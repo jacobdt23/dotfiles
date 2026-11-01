@@ -1,3 +1,0 @@
-[stream-properties]
-Output/Audio:application.name:Antigravity={"channelVolumes":[1.000000, 1.000000], "channelMap":["FL", "FR"], "volume":1.000000, "mute":false}
-Output/Audio:application.name:Firefox={"channelVolumes":[1.000000, 1.000000], "volume":1.000000, "channelMap":["FL", "FR"], "mute":false}

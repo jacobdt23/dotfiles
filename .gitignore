@@ -1,0 +1,43 @@
+# ==========================================
+# Personal & Sensitive Data
+# ==========================================
+.bash_history
+.local/share/fish/fish_history
+.local/share/recently-used.xbel
+.local/share/pki/
+.config/pulse/cookie
+.config/dconf/user
+
+# ==========================================
+# Runtime State, Caches, & Logs
+# ==========================================
+.cache/
+.local/state/
+.local/share/gvfs-metadata/
+.local/share/hyprland/
+.local/share/Trash/
+*.log
+*.tmp
+*.swp
+
+# ==========================================
+# Compiled Binaries & Archives
+# ==========================================
+.local/bin/stylua
+.local/bin/tree-sitter
+.local/bin/unzip
+.local/bin/sassc
+*.pkg.tar.zst
+*.pkg.tar.xz
+*.tar.gz
+*.zip
+
+# ==========================================
+# Browser & App Runtime Storage
+# ==========================================
+.config/BraveSoftware/Brave-Browser/Default/Cache/
+.config/BraveSoftware/Brave-Browser/Default/Code Cache/
+.config/BraveSoftware/Brave-Browser/Default/GPUCache/
+.config/Antigravity/Cache/
+.config/Antigravity/Code Cache/
+.config/Antigravity/GPUCache/

@@ -1,3 +1,0 @@
-[default-routes]
-alsa_card.usb-HP__Inc_HyperX_Cloud_III_S_Wireless_C1V5130D5Y-00:output:analog-output={"channelVolumes":[1.000092, 1.000092], "channelMap":["FL", "FR"], "latencyOffsetNsec":0, "mute":false}
-alsa_card.usb-HP__Inc_HyperX_Cloud_III_S_Wireless_C1V5130D5Y-00:profile:output:analog-stereo+input:mono-fallback=["analog-output"]
