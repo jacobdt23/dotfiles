@@ -10,7 +10,6 @@ local fileManager = "thunar"
 
 hl.on("hyprland.start", function()
     -- Start Apps
-    hl.exec_cmd(terminal)
     hl.exec_cmd("nm-applet")
 
     -- Background Services
