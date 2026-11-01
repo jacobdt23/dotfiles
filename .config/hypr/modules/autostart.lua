@@ -25,5 +25,5 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'")
 
     -- Start Jacob's Python/GTK desktop shell (top bar, dock, launcher, notifications)
-    hl.exec_cmd("/usr/local/bin/jacob-shell")
+    hl.exec_cmd("sh -c 'test -x $HOME/.local/bin/jacob-shell && exec $HOME/.local/bin/jacob-shell || exec /usr/local/bin/jacob-shell'")
 end)

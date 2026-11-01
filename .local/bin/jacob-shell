@@ -62,17 +62,17 @@ CSS = f"""
 window.transparent {{ background-color: transparent; }}
 button {{ background-image: none; box-shadow: none; text-shadow: none; border-image: none; outline-style: none; }}
 .topbar {{ background-color: #1a1b26; border-bottom: 1px solid #292e42; }}
-.pill {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 2px 9px; min-height: 22px; }}
+.pill {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 1px 7px; min-height: 18px; }}
 button.pill:hover {{ background-color: #3b4261; }}
 .pill-active {{ border-color: #7aa2f7; }}
-.ws {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 2px 0; min-width: 24px; min-height: 22px; font-weight: bold; }}
+.ws {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 1px 0; min-width: 20px; min-height: 18px; font-weight: bold; }}
 .ws:hover {{ background-color: #3b4261; }}
-.ws-active {{ background-color: #7aa2f7; border-color: #7aa2f7; min-width: 30px; }}
+.ws-active {{ background-color: #7aa2f7; border-color: #7aa2f7; min-width: 26px; }}
 .ws-active label {{ color: #1a1b26; }}
-.dock {{ background-color: #1a1b26; border: 1px solid #3b4261; border-radius: 12px; padding: 5px 10px; }}
-.dock-btn {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; padding: 4px; min-width: 26px; min-height: 26px; }}
+.dock {{ background-color: #1a1b26; border: 1px solid #3b4261; border-radius: 10px; padding: 3px 8px; }}
+.dock-btn {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 3px; min-width: 20px; min-height: 20px; }}
 .dock-btn:hover {{ background-color: #3b4261; }}
-.dock-install {{ background-color: #24283b; border: 1px solid #7aa2f7; border-radius: 8px; padding: 4px 10px; }}
+.dock-install {{ background-color: #24283b; border: 1px solid #7aa2f7; border-radius: 6px; padding: 3px 8px; }}
 .dock-install label {{ color: #7aa2f7; font-weight: bold; }}
 .dock-install:hover {{ background-color: #3b4261; }}
 .card {{ background-color: #1a1b26; border: 1px solid #3b4261; border-radius: 12px; padding: 16px; }}
@@ -318,7 +318,7 @@ class TopBar(Layer):
 
         root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, homogeneous=True)
         add_class(root, "topbar")
-        root.set_size_request(-1, 38)
+        root.set_size_request(-1, 30)
         self.add(root)
 
         left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
@@ -419,31 +419,31 @@ class TopBar(Layer):
 # ----------------------------------------------------------------------------
 class BottomDock(Layer):
     def __init__(self, shell, monitor):
-        super().__init__("dock", GtkLayerShell.Layer.TOP, (E.BOTTOM,), {E.BOTTOM: 6},
+        super().__init__("dock", GtkLayerShell.Layer.TOP, (E.BOTTOM,), {E.BOTTOM: 5},
                          exclusive=True, monitor=monitor)
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=9)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         add_class(box, "dock")
         self.add(box)
 
         items = [
-            (LOGO, 22, lambda: shell.toggle("launcher")),
-            (f"{HICOLOR}/256x256/apps/kitty.png", 24, lambda: spawn("command -v kitty >/dev/null && exec kitty || exec alacritty")),
-            (f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", 24, lambda: spawn("thunar")),
-            (f"{HICOLOR}/256x256/apps/firefox.png", 24, lambda: spawn("firefox")),
-            (f"{HICOLOR}/scalable/apps/org.pulseaudio.pavucontrol.svg", 24, lambda: spawn("pavucontrol")),
-            (f"{HICOLOR}/256x256/apps/blueman.png", 24, lambda: spawn("blueman-manager")),
-            (f"{HICOLOR}/128x128/apps/timeshift.png", 24, lambda: spawn("/usr/local/bin/timeshift-launcher")),
+            (LOGO, 18, lambda: shell.toggle("launcher")),
+            (f"{HICOLOR}/256x256/apps/kitty.png", 20, lambda: spawn("command -v kitty >/dev/null && exec kitty || exec alacritty")),
+            (f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", 20, lambda: spawn("thunar")),
+            (f"{HICOLOR}/256x256/apps/firefox.png", 20, lambda: spawn("firefox")),
+            (f"{HICOLOR}/scalable/apps/org.pulseaudio.pavucontrol.svg", 20, lambda: spawn("pavucontrol")),
+            (f"{HICOLOR}/256x256/apps/blueman.png", 20, lambda: spawn("blueman-manager")),
+            (f"{HICOLOR}/128x128/apps/timeshift.png", 20, lambda: spawn("/usr/local/bin/timeshift-launcher")),
         ]
         for path, size, cb in items:
             box.pack_start(flat_button(make_icon(path, size), "dock-btn", cb=cb), False, False, 0)
         gear = Gtk.Label()
-        gear.set_markup("<span size='x-large'>\u2699</span>")
+        gear.set_markup("<span size='large'>\u2699</span>")
         box.pack_start(flat_button(gear, "dock-btn", cb=lambda: shell.toggle("controlcenter")), False, False, 0)
 
         if os.path.isfile("/usr/local/bin/launch-calamares"):
             box.pack_start(add_class(Gtk.Box(), "sep"), False, False, 2)
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 22), False, False, 0)
+            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 18), False, False, 0)
             row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
             box.pack_start(flat_button(row, "dock-install", cb=lambda: spawn("/usr/local/bin/launch-calamares")), False, False, 0)
 
@@ -561,7 +561,7 @@ class Launcher(Popup):
 # ----------------------------------------------------------------------------
 class PowerMenu(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "power", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 14},
+        super().__init__(shell, "power", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 36, E.RIGHT: 14},
                          keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
         card = card_box(10, 16)
         add_class(card, "card", "card-red")
@@ -586,7 +586,7 @@ class PowerMenu(Popup):
 # ----------------------------------------------------------------------------
 class CalendarPopup(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "calendar", anchors=(E.TOP,), margins={E.TOP: 44},
+        super().__init__(shell, "calendar", anchors=(E.TOP,), margins={E.TOP: 36},
                          keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
         card = card_box(10, 16)
         add_class(card, "card", "card-blue")
@@ -628,7 +628,7 @@ def notification_row(n):
 
 class NotificationCenter(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "notifications", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 14},
+        super().__init__(shell, "notifications", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 36, E.RIGHT: 14},
                          keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
         card = card_box(10, 16)
         add_class(card, "card", "card-purple")
@@ -659,7 +659,7 @@ class NotificationCenter(Popup):
 class Toast(Layer):
     def __init__(self, shell, n, slot):
         super().__init__("toast", GtkLayerShell.Layer.OVERLAY, (E.TOP, E.RIGHT),
-                         {E.TOP: 44 + slot * 78, E.RIGHT: 14})
+                         {E.TOP: 36 + slot * 78, E.RIGHT: 14})
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         add_class(box, "toast")
         box.set_size_request(340, -1)
@@ -738,7 +738,7 @@ class NotificationDaemon:
             if toast in self.toasts:
                 self.toasts.remove(toast)
             for i, t in enumerate(self.toasts):
-                GtkLayerShell.set_margin(t, E.TOP, 44 + i * 78)
+                GtkLayerShell.set_margin(t, E.TOP, 36 + i * 78)
             return False
 
         GLib.timeout_add(ms, expire)
@@ -749,7 +749,7 @@ class NotificationDaemon:
 # ----------------------------------------------------------------------------
 class ClipboardPopup(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "clipboard", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 14},
+        super().__init__(shell, "clipboard", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 36, E.RIGHT: 14},
                          keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
         card = card_box(10, 16)
         add_class(card, "card", "card-yellow")
@@ -786,7 +786,7 @@ class ClipboardPopup(Popup):
 
 class MediaPopup(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "media", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 44, E.RIGHT: 60},
+        super().__init__(shell, "media", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 36, E.RIGHT: 60},
                          keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
         card = card_box(10, 16)
         add_class(card, "card", "card-blue")
@@ -835,7 +835,7 @@ def keybind_row(key, desc):
 
 class KeybindsPopup(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "keybinds", anchors=(E.TOP, E.LEFT), margins={E.TOP: 44, E.LEFT: 16},
+        super().__init__(shell, "keybinds", anchors=(E.TOP, E.LEFT), margins={E.TOP: 36, E.LEFT: 16},
                          keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
         card = card_box(10, 16)
         add_class(card, "card", "card-yellow")
