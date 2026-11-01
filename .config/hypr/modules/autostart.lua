@@ -20,6 +20,11 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("sh ~/.config/hypr/wallpaper_loop.sh")
     hl.exec_cmd("hyprpm reload -n")
 
+    -- TokyoNight Theme Settings
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'")
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'Tokyonight-Dark'")
+    hl.exec_cmd("gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'")
+
     -- Start Jacob's Python/GTK desktop shell (top bar, dock, launcher, notifications)
     hl.exec_cmd("/usr/local/bin/jacob-shell")
 end)
