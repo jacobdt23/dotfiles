@@ -63,12 +63,6 @@ hl.window_rule({
     center = true,
 })
 
-hl.window_rule({
-    name         = "looking-glass-behavior",
-    match        = { class = "looking-glass-client" },
-    idle_inhibit = "always",
-})
-
 hl.layer_rule({
     match   = { namespace = "nwg-dock" },
     no_anim = true,
