@@ -1023,7 +1023,7 @@ class Shell:
             if self.cc_proc and self.cc_proc.poll() is None:
                 self.cc_proc.terminate()
             else:
-                cmd = shutil.which("hypr-settings") or shutil.which("jacob-control-center") or "systemsettings"
+                cmd = "/home/jacob/.local/bin/hypr-settings"
                 self.cc_proc = subprocess.Popen([cmd],
                                                 stdin=subprocess.DEVNULL, start_new_session=True)
             return

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Legacy KDE System Settings
+NoDisplay=true
+Hidden=true
+Exec=/bin/true
