@@ -142,9 +142,9 @@ ESSENTIAL_APPS = [
     ("Firefox Web Browser", "Fast, Private Web Browser", f"{HICOLOR}/256x256/apps/firefox.png", "firefox"),
     ("Kitty Terminal", "GPU-Accelerated Terminal Emulator", f"{HICOLOR}/256x256/apps/kitty.png", "kitty"),
     ("Thunar File Manager", "Browse Disks, Folders & Archives", f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", "thunar"),
-    ("Settings", "Bluetooth, Wi-Fi, Audio, Displays & Appearance", LOGO, "/home/jacob/.local/bin/hypr-settings"),
+    ("System Settings", "Configure Bluetooth, Network, Audio & System", LOGO, "systemsettings"),
     ("Audio Mixer (Pavucontrol)", "Configure Speakers, Headsets & Mic", f"{HICOLOR}/scalable/apps/org.pulseaudio.pavucontrol.svg", "pavucontrol"),
-    ("Bluetooth Settings", "Pair Controllers, Audio & Devices", f"{HICOLOR}/256x256/apps/blueman.png", "/home/jacob/.local/bin/hypr-settings"),
+    ("Bluetooth Settings", "Pair Controllers, Audio & Devices", f"{HICOLOR}/256x256/apps/blueman.png", "systemsettings kcm_bluetooth"),
     ("Media Player (mpv)", "High Performance Video & Audio Player", f"{HICOLOR}/64x64/apps/mpv.png", "mpv --player-operation-mode=pseudo-gui"),
     ("System Monitor (btop++)", "Live CPU, Memory, Disk & Process Viewer", f"{HICOLOR}/scalable/apps/btop.svg", "kitty -e btop"),
 ]
@@ -1023,7 +1023,7 @@ class Shell:
             if self.cc_proc and self.cc_proc.poll() is None:
                 self.cc_proc.terminate()
             else:
-                self.cc_proc = subprocess.Popen(["/home/jacob/.local/bin/hypr-settings"],
+                self.cc_proc = subprocess.Popen(["systemsettings"],
                                                 stdin=subprocess.DEVNULL, start_new_session=True)
             return
         popup = self.popups.get(name)
