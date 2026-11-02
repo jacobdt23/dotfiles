@@ -25,8 +25,9 @@ hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("jacob-shell toggle calendar"))
 hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("jacob-shell toggle controlcenter"))
 
 -- Window Management
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("hyprctl dispatch togglefloating"))
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("hyprctl dispatch pseudo"))
+hl.bind(mainMod .. " + V", hl.dsp.window.float())
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
+hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + TAB", hl.dsp.focus({ monitor = "+1" }))
 
@@ -43,7 +44,7 @@ for i = 1, 10 do
 end
 
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("hyprctl dispatch movetoworkspace special:magic"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- Mouse Window Interactions
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
