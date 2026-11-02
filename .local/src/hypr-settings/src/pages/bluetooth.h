@@ -3,6 +3,6 @@
 
 #include <adwaita.h>
 
-AdwPreferencesPage *create_bluetooth_page(void);
+GtkWidget *create_bluetooth_page(void);
 
 #endif // PAGE_BLUETOOTH_H
