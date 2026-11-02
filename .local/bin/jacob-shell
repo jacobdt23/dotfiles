@@ -567,7 +567,12 @@ class BottomDock(Layer):
                 def _press(_w, ev):
                     if ev.button == 3:  # Right-click app context menu!
                         geom = self.monitor.get_geometry()
-                        self.shell.show_app_context_menu(self.monitor, a, ev.x_root, geom.height - 210, is_pinned=True)
+                        alloc = _w.get_allocation()
+                        win_alloc = self.get_allocation()
+                        dock_x = (geom.width - win_alloc.width) // 2
+                        btn_x = dock_x + alloc.x + (alloc.width // 2)
+                        menu_y = geom.height - win_alloc.height - 210
+                        self.shell.show_app_context_menu(self.monitor, a, btn_x, menu_y, is_pinned=True)
                         return True
                     elif ev.button == 1:  # Left-click launch
                         spawn(c)
@@ -1194,7 +1199,7 @@ class ContextMenu(Popup):
         card.set_size_request(260, -1)
         self.add(card)
 
-        def add_item(glyph, label, shortcut=None, cmd=None, cb=None, accent=False):
+        def add_item(glyph, label, cmd=None, cb=None, accent=False):
             def on_click():
                 self.close_popup()
                 if cb:
@@ -1210,43 +1215,57 @@ class ContextMenu(Popup):
             lbl_title = make_label(label, "row-title")
             row.pack_start(lbl_title, True, True, 0)
 
-            if shortcut:
-                badge = make_label(shortcut, "menu-shortcut")
-                row.pack_end(badge, False, False, 0)
-
             cls = "menu-item-accent" if accent else "menu-item"
             btn = flat_button(row, "row", cls, cb=on_click)
             card.pack_start(btn, False, False, 1)
 
         # 1. View / Sort / Refresh (Exact Windows 11 Desktop Context Menu)
-        add_item("\U000F0208", "View (Overview)", "SUPER + S", cmd="hyprctl dispatch 'hl.dsp.workspace.toggle_special(\"magic\")'")
-        add_item("\U000F04B3", "Sort by / Arrange", "SUPER + Tab", cmd="hyprctl dispatch 'hl.dsp.focus({ monitor = \"+1\" })'")
-        add_item("\U000F0450", "Refresh", "SUPER + ⇧ + R", cmd="sh -c 'hyprctl reload && notify-send \"Desktop\" \"Refreshed!\"'")
+        add_item("\U000F0208", "View", cb=lambda: self.shell.toggle("keybinds"))
+        add_item("\U000F04B3", "Sort by", cmd="hyprctl dispatch focuswindow next")
+        add_item("\U000F0450", "Refresh", cmd="sh -c 'hyprctl reload && notify-send \"Desktop\" \"Refreshed!\"'")
 
         card.pack_start(hline(), False, False, 3)
 
-        # 2. Window & Tiling Controls
-        add_item("\U000F0572", "Toggle Tiling / Floating", "SUPER + V", cmd="hyprctl dispatch 'hl.dsp.window.float()'")
-        add_item("\U000F0293", "Toggle Fullscreen", "SUPER + F", cmd="hyprctl dispatch 'hl.dsp.window.fullscreen()'")
-        add_item("\U000F056F", "Toggle Split Layout", "SUPER + J", cmd="hyprctl dispatch 'hl.dsp.layout(\"togglesplit\")'")
+        # 2. File creation (New Folder / New Document)
+        def create_folder():
+            desktop_dir = os.path.expanduser("~/Desktop")
+            os.makedirs(desktop_dir, exist_ok=True)
+            for i in range(1, 100):
+                path = os.path.join(desktop_dir, f"New Folder" if i == 1 else f"New Folder ({i})")
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                    spawn(f"notify-send 'Desktop' 'Created {os.path.basename(path)}'")
+                    break
+
+        def create_doc():
+            desktop_dir = os.path.expanduser("~/Desktop")
+            os.makedirs(desktop_dir, exist_ok=True)
+            for i in range(1, 100):
+                path = os.path.join(desktop_dir, f"New Text Document.txt" if i == 1 else f"New Text Document ({i}).txt")
+                if not os.path.exists(path):
+                    open(path, "w").close()
+                    spawn(f"notify-send 'Desktop' 'Created {os.path.basename(path)}'")
+                    break
+
+        add_item("\U000F024B", "New Folder", cb=create_folder)
+        add_item("\U000F0219", "New Text Document", cb=create_doc)
 
         card.pack_start(hline(), False, False, 3)
 
         # 3. Open in Terminal / Open in Files (Windows 11)
-        add_item("\U000F04F2", "Open in Terminal", "SUPER + ↵", cmd="kitty")
-        add_item("\U000F024B", "Open in Files", "SUPER + E", cmd="thunar")
+        add_item("\U000F04F2", "Open in Terminal", cmd="kitty")
+        add_item("\U000F024B", "Open in Files", cmd="thunar")
 
         card.pack_start(hline(), False, False, 3)
 
         # 4. Display Settings & Personalize (Windows 11)
-        add_item("\U000F0379", "Display settings", None, cmd="/home/jacob/.local/bin/hypr-settings")
-        add_item("\U000F03E8", "Personalize", None, cmd="/home/jacob/.local/bin/hypr-settings")
+        add_item("\U000F0379", "Display settings", cmd="/home/jacob/.local/bin/hypr-settings")
+        add_item("\U000F03E8", "Personalize", cmd="/home/jacob/.local/bin/hypr-settings")
 
         card.pack_start(hline(), False, False, 3)
 
-        # 5. Show more options (Settings) & Power (Windows 11)
-        add_item("\U000F0493", "Show more options (Settings)", "SUPER + I", cb=lambda: self.shell.toggle("controlcenter"), accent=True)
-        add_item(G_POWER, "Power options...", "SUPER + Q", cb=lambda: self.shell.toggle("power"))
+        # 5. Show more options (Settings)
+        add_item("\U000F0493", "Show more options", cb=lambda: self.shell.toggle("controlcenter"), accent=True)
 
 
 class AppContextMenu(Popup):
@@ -1340,7 +1359,7 @@ class TaskbarContextMenu(Popup):
         card.pack_start(head, False, False, 4)
         card.pack_start(hline(), False, False, 3)
 
-        def add_item(glyph, label, shortcut=None, cmd=None, cb=None):
+        def add_item(glyph, label, cmd=None, cb=None):
             def on_click():
                 self.close_popup()
                 if cb:
@@ -1350,14 +1369,12 @@ class TaskbarContextMenu(Popup):
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             row.pack_start(make_label(glyph, "menu-icon"), False, False, 0)
             row.pack_start(make_label(label, "row-title"), True, True, 0)
-            if shortcut:
-                row.pack_end(make_label(shortcut, "menu-shortcut"), False, False, 0)
             card.pack_start(flat_button(row, "row", "menu-item", cb=on_click), False, False, 1)
 
-        add_item("\U000F0493", "Taskbar Settings", "SUPER + I", cmd="/home/jacob/.local/bin/hypr-settings")
-        add_item("\U000F03E8", "Personalize Colors", None, cmd="/home/jacob/.local/bin/hypr-settings")
+        add_item("\U000F0493", "Taskbar Settings", cmd="/home/jacob/.local/bin/hypr-settings")
+        add_item("\U000F03E8", "Personalize Colors", cmd="/home/jacob/.local/bin/hypr-settings")
         card.pack_start(hline(), False, False, 3)
-        add_item("\U000F0450", "Refresh Taskbar", "SUPER + ⇧ + R", cmd="sh -c 'hyprctl reload && notify-send \"Taskbar\" \"Refreshed!\"'")
+        add_item("\U000F0450", "Refresh Taskbar", cmd="sh -c 'hyprctl reload && notify-send \"Taskbar\" \"Refreshed!\"'")
 
 
 # ----------------------------------------------------------------------------
