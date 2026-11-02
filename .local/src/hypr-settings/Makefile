@@ -9,8 +9,12 @@ SRCS = src/main.c \
        src/pages/network.c \
        src/pages/audio.c \
        src/pages/displays.c \
+       src/pages/themes.c \
        src/pages/appearance.c \
+       src/pages/wallpaper.c \
        src/pages/input.c \
+       src/pages/shortcuts.c \
+       src/pages/defaultapps.c \
        src/pages/power.c \
        src/pages/about.c
 
@@ -30,6 +34,7 @@ clean:
 
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(HOME)/.local/bin/$(TARGET)
+	install -Dm644 src/style.css $(HOME)/.local/share/hypr-settings/style.css
 	ln -sf $(HOME)/.local/bin/$(TARGET) $(HOME)/.local/bin/jacob-control-center
 
 .PHONY: all clean install

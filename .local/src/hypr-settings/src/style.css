@@ -1,0 +1,189 @@
+/* KDE Plasma 6 System Settings Theme for Hyprland */
+
+window {
+    background-color: #1e2022;
+    color: #eff0f1;
+    font-family: "JetBrainsMono Nerd Font", "DejaVu Sans", sans-serif;
+}
+
+/* Left Sidebar */
+.kde-sidebar {
+    background-color: #18191b;
+    border-right: 1px solid #31363b;
+    min-width: 260px;
+    padding: 10px;
+}
+
+.kde-search {
+    background-color: #24282c;
+    border: 1px solid #31363b;
+    border-radius: 6px;
+    color: #eff0f1;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.kde-search:focus-within {
+    border-color: #3daee9;
+    box-shadow: 0 0 0 1px #3daee9;
+}
+
+.kde-sidebar-list {
+    background-color: transparent;
+}
+
+.kde-category-header {
+    color: #7f8c8d;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    margin-left: 8px;
+}
+
+.kde-sidebar-row {
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 2px 0;
+    color: #eff0f1;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 120ms ease-in-out;
+}
+
+.kde-sidebar-row:hover {
+    background-color: rgba(61, 174, 233, 0.12);
+    color: #3daee9;
+}
+
+.kde-sidebar-row:selected,
+.kde-sidebar-row.active-page {
+    background-color: rgba(61, 174, 233, 0.22);
+    color: #3daee9;
+    font-weight: 700;
+    border-left: 3px solid #3daee9;
+}
+
+/* Content Area */
+.kde-content {
+    background-color: #232629;
+}
+
+/* Breadcrumb Header Bar */
+.kde-breadcrumb-bar {
+    background-color: #202326;
+    border-bottom: 1px solid #31363b;
+    padding: 10px 24px;
+    min-height: 42px;
+}
+
+.kde-breadcrumb-root {
+    color: #7f8c8d;
+    font-size: 12px;
+}
+
+.kde-breadcrumb-sep {
+    color: #474e54;
+    font-size: 11px;
+    margin: 0 6px;
+}
+
+.kde-breadcrumb-sec {
+    color: #7f8c8d;
+    font-size: 12px;
+}
+
+.kde-breadcrumb-cur {
+    color: #eff0f1;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Bottom Action Bar */
+.kde-bottom-bar {
+    background-color: #18191b;
+    border-top: 1px solid #31363b;
+    padding: 10px 20px;
+    min-height: 48px;
+}
+
+.kde-btn {
+    background-color: #2a2e32;
+    color: #eff0f1;
+    border: 1px solid #31363b;
+    border-radius: 6px;
+    padding: 6px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 120ms ease;
+}
+
+.kde-btn:hover {
+    background-color: #353a3f;
+    border-color: #3daee9;
+    color: #3daee9;
+}
+
+.kde-btn-primary {
+    background-color: #3daee9;
+    color: #14171a;
+    font-weight: 700;
+    border: 1px solid #3daee9;
+}
+
+.kde-btn-primary:hover {
+    background-color: #55bef2;
+    color: #0b0d0e;
+}
+
+/* Badges */
+.kde-shortcut-badge {
+    background-color: #1e2022;
+    color: #3daee9;
+    border: 1px solid #3daee9;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.kde-active-badge {
+    background-color: rgba(61, 174, 233, 0.2);
+    color: #3daee9;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Adw Cards KDE Reskin */
+preferencesgroup > box {
+    background-color: #2a2e32;
+    border: 1px solid #31363b;
+    border-radius: 8px;
+}
+
+preferencesgroup > label {
+    color: #eff0f1;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+actionrow {
+    border-bottom: 1px solid rgba(49, 54, 59, 0.5);
+}
+
+actionrow:last-child {
+    border-bottom: none;
+}
+
+switch:checked {
+    background-color: #3daee9;
+}
+
+scale highlight {
+    background-color: #3daee9;
+}
