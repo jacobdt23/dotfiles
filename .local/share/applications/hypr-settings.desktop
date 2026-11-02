@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=System Settings
+GenericName=KDE-Style System Settings
+Comment=System Settings for Hyprland built with C++ & QML
+Exec=/home/jacob/.local/bin/hypr-settings
+Icon=preferences-system
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=system;settings;bluetooth;wifi;sound;audio;display;hyprland;kde;
+StartupWMClass=hypr-settings

@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/Main.qml</file>
+        <file>qml/components/FormCard.qml</file>
+        <file>qml/components/FormSwitchDelegate.qml</file>
+        <file>qml/components/FormButtonDelegate.qml</file>
+        <file>qml/components/FormSliderDelegate.qml</file>
+        <file>qml/components/FormValueDelegate.qml</file>
+        <file>qml/components/BreezeButton.qml</file>
+        <file>qml/components/BreezeSwitch.qml</file>
+        <file>qml/pages/BluetoothPage.qml</file>
+        <file>qml/pages/NetworkPage.qml</file>
+        <file>qml/pages/DisplaysPage.qml</file>
+        <file>qml/pages/AudioPage.qml</file>
+        <file>qml/pages/PowerPage.qml</file>
+        <file>qml/pages/ThemesPage.qml</file>
+        <file>qml/pages/AppearancePage.qml</file>
+        <file>qml/pages/WallpaperPage.qml</file>
+        <file>qml/pages/InputPage.qml</file>
+        <file>qml/pages/ShortcutsPage.qml</file>
+        <file>qml/pages/DefaultAppsPage.qml</file>
+        <file>qml/pages/AboutPage.qml</file>
+    </qresource>
+</RCC>
