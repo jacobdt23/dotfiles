@@ -94,12 +94,17 @@ static void on_pair_connect_clicked(GtkButton *btn, gpointer user_data) {
     gtk_button_set_label(btn, "Pairing...");
     gtk_widget_set_sensitive(GTK_WIDGET(btn), FALSE);
 
-    char *cmd = g_strdup_printf("bluetoothctl pair %s && bluetoothctl trust %s && bluetoothctl connect %s && notify-send -a 'Bluetooth' 'Device Connected' 'Successfully paired with %s'", mac, mac, mac, mac);
+    char *cmd = g_strdup_printf(
+        "bluetoothctl remove %s 2>/dev/null; sleep 1; "
+        "printf 'default-agent\\npair %s\\ntrust %s\\nconnect %s\\n' | bluetoothctl --agent NoInputNoOutput && "
+        "notify-send -a 'Bluetooth' 'Device Connected' 'Successfully paired and connected!'",
+        mac, mac, mac, mac
+    );
     run_cmd_fire_and_forget(cmd);
     g_free(cmd);
 
     if (bw) {
-        g_timeout_add(2500, on_refresh_timeout, bw);
+        g_timeout_add(4000, on_refresh_timeout, bw);
     }
 }
 
