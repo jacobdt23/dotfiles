@@ -205,11 +205,25 @@ static void on_paired_loaded(gboolean success, const char *output, gpointer user
 
                     gboolean connected = (info_out && strstr(info_out, "Connected: yes"));
                     if (connected) {
-                        char *sub = g_strdup_printf("%s • Connected", mac);
+                        char *bat_str = NULL;
+                        char *bat_pos = strstr(info_out, "Battery Percentage: ");
+                        if (bat_pos) {
+                            char *paren = strchr(bat_pos, '(');
+                            if (paren) {
+                                int pct = atoi(paren + 1);
+                                if (pct > 0) {
+                                    bat_str = g_strdup_printf(" • %d%% Battery", pct);
+                                }
+                            }
+                        }
+                        char *sub = g_strdup_printf("%s • Connected%s", mac, bat_str ? bat_str : "");
                         adw_action_row_set_subtitle(row, sub);
                         g_free(sub);
+                        g_free(bat_str);
                     } else {
-                        adw_action_row_set_subtitle(row, mac);
+                        char *sub = g_strdup_printf("%s • Disconnected", mac);
+                        adw_action_row_set_subtitle(row, sub);
+                        g_free(sub);
                     }
                     g_free(info_out);
 
@@ -281,6 +295,14 @@ static void on_scan_clicked(GtkButton *btn, gpointer user_data) {
     run_cmd_async("bluetoothctl --timeout 5 scan on", on_scan_done, bw);
 }
 
+static gboolean on_poll_bluetooth(gpointer user_data) {
+    BtWidgets *bw = (BtWidgets *)user_data;
+    if (bw && !bw->scanning) {
+        refresh_all_devices(bw);
+    }
+    return G_SOURCE_CONTINUE;
+}
+
 GtkWidget *create_bluetooth_page(void) {
     AdwPreferencesPage *page = ADW_PREFERENCES_PAGE(adw_preferences_page_new());
     adw_preferences_page_set_title(page, "Bluetooth");
@@ -343,6 +365,9 @@ GtkWidget *create_bluetooth_page(void) {
     if (is_powered) {
         on_scan_clicked(bw->scan_btn, bw);
     }
+
+    // Auto-poll state every 3 seconds
+    g_timeout_add_seconds(3, on_poll_bluetooth, bw);
 
     return GTK_WIDGET(page);
 }
