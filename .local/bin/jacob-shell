@@ -161,6 +161,53 @@ ESSENTIAL_APPS = [
     ("System Monitor (btop++)", "Live CPU, Memory, Disk & Process Viewer", f"{HICOLOR}/scalable/apps/btop.svg", "kitty -e btop"),
 ]
 
+DOCK_CONFIG = os.path.expanduser("~/.config/jacob-dock-apps.json")
+
+DEFAULT_PINNED_APPS = [
+    {
+        "name": "Terminal (Kitty)",
+        "desktop_id": "kitty",
+        "icon": f"{HICOLOR}/256x256/apps/kitty.png",
+        "cmd": "command -v kitty >/dev/null && exec kitty || exec alacritty",
+    },
+    {
+        "name": "File Manager (Thunar)",
+        "desktop_id": "thunar",
+        "icon": f"{HICOLOR}/128x128/apps/org.xfce.thunar.png",
+        "cmd": "thunar",
+    },
+    {
+        "name": "Firefox Browser",
+        "desktop_id": "firefox",
+        "icon": f"{HICOLOR}/256x256/apps/firefox.png",
+        "cmd": "firefox",
+    },
+    {
+        "name": "Steam",
+        "desktop_id": "steam",
+        "icon": f"{HICOLOR}/256x256/apps/steam.png",
+        "cmd": "steam",
+    },
+    {
+        "name": "Audio Mixer (Pavucontrol)",
+        "desktop_id": "pavucontrol",
+        "icon": f"{HICOLOR}/scalable/apps/org.pulseaudio.pavucontrol.svg",
+        "cmd": "pavucontrol",
+    },
+    {
+        "name": "Bluetooth Settings",
+        "desktop_id": "blueman",
+        "icon": f"{HICOLOR}/256x256/apps/blueman.png",
+        "cmd": "blueman-manager",
+    },
+    {
+        "name": "Timeshift",
+        "desktop_id": "timeshift-gtk",
+        "icon": f"{HICOLOR}/128x128/apps/timeshift.png",
+        "cmd": "/usr/local/bin/timeshift-launcher",
+    },
+]
+
 
 # ----------------------------------------------------------------------------
 # Helpers
@@ -477,43 +524,76 @@ class BottomDock(Layer):
                          exclusive=True, monitor=monitor)
         self.shell = shell
         self.monitor = monitor
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        add_class(box, "dock")
-        self.add(box)
+        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        add_class(self.box, "dock")
+        self.add(self.box)
+        self.rebuild()
 
-        items = [
-            (LOGO, 18, lambda: shell.toggle("launcher")),
-            (f"{HICOLOR}/256x256/apps/kitty.png", 20, lambda: spawn("command -v kitty >/dev/null && exec kitty || exec alacritty")),
-            (f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", 20, lambda: spawn("thunar")),
-            (f"{HICOLOR}/256x256/apps/firefox.png", 20, lambda: spawn("firefox")),
-            (f"{HICOLOR}/256x256/apps/steam.png", 20, lambda: spawn("steam")),
-            (f"{HICOLOR}/scalable/apps/org.pulseaudio.pavucontrol.svg", 20, lambda: spawn("pavucontrol")),
-            (f"{HICOLOR}/256x256/apps/blueman.png", 20, lambda: spawn("blueman-manager")),
-            (f"{HICOLOR}/128x128/apps/timeshift.png", 20, lambda: spawn("/usr/local/bin/timeshift-launcher")),
-        ]
-        for path, size, cb in items:
-            box.pack_start(flat_button(make_icon(path, size), "dock-btn", cb=cb), False, False, 0)
-        gear = Gtk.Label()
-        gear.set_markup("<span size='large'>\u2699</span>")
-        box.pack_start(flat_button(gear, "dock-btn", cb=lambda: shell.toggle("controlcenter")), False, False, 0)
-
-        if os.path.isfile("/usr/local/bin/launch-calamares"):
-            box.pack_start(add_class(Gtk.Box(), "sep"), False, False, 2)
-            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 18), False, False, 0)
-            row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
-            box.pack_start(flat_button(row, "dock-install", cb=lambda: spawn("/usr/local/bin/launch-calamares")), False, False, 0)
-
-        # Right-click on dock opens context menu
+        # Right-click on dock background opens taskbar context menu
         self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.connect("button-press-event", self._on_dock_click)
 
     def _on_dock_click(self, _w, ev):
         if ev.button == 3:
             geom = self.monitor.get_geometry()
-            self.shell.show_context_menu(self.monitor, ev.x, max(35, geom.height - 480))
+            self.shell.show_taskbar_context_menu(self.monitor, ev.x, max(35, geom.height - 180))
             return True
         return False
+
+    def rebuild(self):
+        for c in self.box.get_children():
+            self.box.remove(c)
+
+        # Start / App Launcher Button
+        launcher_btn = flat_button(make_icon(LOGO, 18), "dock-btn", cb=lambda: self.shell.toggle("launcher"))
+        launcher_btn.set_tooltip_text("Start / App Launcher (Super)")
+        self.box.pack_start(launcher_btn, False, False, 0)
+
+        # Dynamic Pinned Apps
+        for app in self.shell.pinned_apps:
+            icon_path = app.get("icon", LOGO)
+            cmd = app.get("cmd") or f"gtk-launch '{app.get('desktop_id')}'"
+            name = app.get("name", app.get("desktop_id", "App"))
+
+            btn = Gtk.Button()
+            btn.set_relief(Gtk.ReliefStyle.NONE)
+            btn.set_focus_on_click(False)
+            btn.add(make_icon(icon_path, 20))
+            add_class(btn, "dock-btn")
+            btn.set_tooltip_text(name)
+            btn.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+
+            def make_press_cb(a=app, c=cmd):
+                def _press(_w, ev):
+                    if ev.button == 3:  # Right-click app context menu!
+                        geom = self.monitor.get_geometry()
+                        self.shell.show_app_context_menu(self.monitor, a, ev.x_root, geom.height - 210, is_pinned=True)
+                        return True
+                    elif ev.button == 1:  # Left-click launch
+                        spawn(c)
+                        return True
+                    return False
+                return _press
+
+            btn.connect("button-press-event", make_press_cb())
+            self.box.pack_start(btn, False, False, 0)
+
+        # System Settings
+        gear = Gtk.Label()
+        gear.set_markup("<span size='large'>\u2699</span>")
+        gear_btn = flat_button(gear, "dock-btn", cb=lambda: self.shell.toggle("controlcenter"))
+        gear_btn.set_tooltip_text("System Settings (Super + I)")
+        self.box.pack_start(gear_btn, False, False, 0)
+
+        # Calamares installer (if exists)
+        if os.path.isfile("/usr/local/bin/launch-calamares"):
+            self.box.pack_start(add_class(Gtk.Box(), "sep"), False, False, 2)
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 18), False, False, 0)
+            row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
+            self.box.pack_start(flat_button(row, "dock-install", cb=lambda: spawn("/usr/local/bin/launch-calamares")), False, False, 0)
+
+        self.box.show_all()
 
 
 # ----------------------------------------------------------------------------
@@ -558,8 +638,16 @@ class Launcher(Popup):
             if len(parts) < 4:
                 continue
             name, desc, desktop_id, icon_path = parts[:4]
+            app_dict = {
+                "name": name,
+                "desc": desc,
+                "desktop_id": desktop_id,
+                "icon": icon_path,
+                "cmd": f"gtk-launch '{desktop_id}' || gio launch '/usr/share/applications/{desktop_id}.desktop'",
+            }
             row = Gtk.ListBoxRow()
-            row.app = (name, desc, desktop_id)
+            row.app = (name, desc, desktop_id, icon_path)
+            row.app_dict = app_dict
             body = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
             add_class(body, "row")
             body.pack_start(make_icon(icon_path, 32), False, False, 0)
@@ -567,8 +655,29 @@ class Launcher(Popup):
             text.pack_start(make_label(name, "row-title", ellipsize=True), False, False, 0)
             text.pack_start(make_label(desc, "row-desc", ellipsize=True), False, False, 0)
             body.pack_start(text, True, True, 0)
-            body.pack_end(make_label("\U000F0054", "muted"), False, False, 0)
+
+            is_pinned = any(a.get("desktop_id") == desktop_id for a in self.shell.pinned_apps)
+            if is_pinned:
+                pin_icon = make_label("\U000F0403", "menu-icon")
+                pin_icon.set_tooltip_text("Pinned to taskbar")
+                body.pack_end(pin_icon, False, False, 0)
+            else:
+                body.pack_end(make_label("\U000F0054", "muted"), False, False, 0)
             row.add(body)
+
+            row.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+            def make_row_press(ad=app_dict):
+                def _on_row_click(_w, ev):
+                    if ev.button == 3:  # Right-click row
+                        display = Gdk.Display.get_default()
+                        mon = display.get_monitor(0)
+                        pinned = any(p.get("desktop_id") == ad["desktop_id"] for p in self.shell.pinned_apps)
+                        self.shell.show_app_context_menu(mon, ad, ev.x_root, ev.y_root, is_pinned=pinned)
+                        return True
+                    return False
+                return _on_row_press
+
+            row.connect("button-press-event", make_row_press())
             self.listbox.add(row)
             self.rows.append(row)
 
@@ -1074,7 +1183,7 @@ class DesktopSurface(Layer):
 
 
 class ContextMenu(Popup):
-    """KDE Plasma 6 / Breeze Dark styled right-click context menu."""
+    """Windows 11 styled desktop right-click context menu."""
 
     def __init__(self, shell):
         super().__init__(shell, "contextmenu", anchors=(E.TOP, E.LEFT),
@@ -1082,18 +1191,8 @@ class ContextMenu(Popup):
 
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         add_class(card, "card", "card-context")
-        card.set_size_request(280, -1)
+        card.set_size_request(260, -1)
         self.add(card)
-
-        # Header
-        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        head.pack_start(make_icon(LOGO, 18), False, False, 0)
-        t_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
-        t_box.pack_start(make_label("Desktop Actions", "title"), False, False, 0)
-        t_box.pack_start(make_label("Hyprland • Jacob OS", "muted"), False, False, 0)
-        head.pack_start(t_box, True, True, 0)
-        card.pack_start(head, False, False, 4)
-        card.pack_start(hline(), False, False, 3)
 
         def add_item(glyph, label, shortcut=None, cmd=None, cb=None, accent=False):
             def on_click():
@@ -1119,40 +1218,146 @@ class ContextMenu(Popup):
             btn = flat_button(row, "row", cls, cb=on_click)
             card.pack_start(btn, False, False, 1)
 
-        def add_section(name):
-            sec = make_label(name, "menu-section-title")
-            card.pack_start(sec, False, False, 2)
-
-        # Customization
-        add_section("CUSTOMIZATION")
-        add_item("\U000F03E8", "Wallpaper & Appearance...", None, cmd="/home/jacob/.local/bin/hypr-settings")
-        add_item("\U000F0379", "Display Settings...", None, cmd="/home/jacob/.local/bin/hypr-settings")
-        add_item("\U000F0493", "System Settings...", "SUPER + I", cb=lambda: self.shell.toggle("controlcenter"), accent=True)
+        # 1. View / Sort / Refresh (Exact Windows 11 Desktop Context Menu)
+        add_item("\U000F0208", "View (Overview)", "SUPER + S", cmd="hyprctl dispatch 'hl.dsp.workspace.toggle_special(\"magic\")'")
+        add_item("\U000F04B3", "Sort by / Arrange", "SUPER + Tab", cmd="hyprctl dispatch 'hl.dsp.focus({ monitor = \"+1\" })'")
+        add_item("\U000F0450", "Refresh", "SUPER + ⇧ + R", cmd="sh -c 'hyprctl reload && notify-send \"Desktop\" \"Refreshed!\"'")
 
         card.pack_start(hline(), False, False, 3)
 
-        # Applications
-        add_section("APPLICATIONS")
-        add_item("\U000F04F2", "Terminal (Kitty)", "SUPER + ↵", cmd="kitty")
-        add_item("\U000F024B", "File Manager (Thunar)", "SUPER + E", cmd="thunar")
-        add_item("\U000F059F", "Web Browser (Firefox)", None, cmd="firefox")
-        add_item("\U000F01BE", "Steam Games", None, cmd="steam")
-        add_item("\U000F0055", "Application Launcher...", "SUPER", cb=lambda: self.shell.toggle("launcher"))
-
-        card.pack_start(hline(), False, False, 3)
-
-        # Window & Tiling Controls
-        add_section("WINDOW & TILING")
-        add_item("\U000F0572", "Toggle Tiling / Float", "SUPER + V", cmd="hyprctl dispatch 'hl.dsp.window.float()'")
+        # 2. Window & Tiling Controls
+        add_item("\U000F0572", "Toggle Tiling / Floating", "SUPER + V", cmd="hyprctl dispatch 'hl.dsp.window.float()'")
         add_item("\U000F0293", "Toggle Fullscreen", "SUPER + F", cmd="hyprctl dispatch 'hl.dsp.window.fullscreen()'")
         add_item("\U000F056F", "Toggle Split Layout", "SUPER + J", cmd="hyprctl dispatch 'hl.dsp.layout(\"togglesplit\")'")
 
         card.pack_start(hline(), False, False, 3)
 
-        # Session
-        add_item("\U000F0450", "Reload Desktop & Shell", "SUPER + ⇧ + R", cmd="sh -c 'hyprctl reload && pkill -USR1 -f jacob-shell || jacob-shell close'")
-        add_item(G_LOCK, "Lock Screen", None, cmd="hyprlock")
-        add_item(G_POWER, "Leave / Power Off...", "SUPER + Q", cb=lambda: self.shell.toggle("power"), accent=True)
+        # 3. Open in Terminal / Open in Files (Windows 11)
+        add_item("\U000F04F2", "Open in Terminal", "SUPER + ↵", cmd="kitty")
+        add_item("\U000F024B", "Open in Files", "SUPER + E", cmd="thunar")
+
+        card.pack_start(hline(), False, False, 3)
+
+        # 4. Display Settings & Personalize (Windows 11)
+        add_item("\U000F0379", "Display settings", None, cmd="/home/jacob/.local/bin/hypr-settings")
+        add_item("\U000F03E8", "Personalize", None, cmd="/home/jacob/.local/bin/hypr-settings")
+
+        card.pack_start(hline(), False, False, 3)
+
+        # 5. Show more options (Settings) & Power (Windows 11)
+        add_item("\U000F0493", "Show more options (Settings)", "SUPER + I", cb=lambda: self.shell.toggle("controlcenter"), accent=True)
+        add_item(G_POWER, "Power options...", "SUPER + Q", cb=lambda: self.shell.toggle("power"))
+
+
+class AppContextMenu(Popup):
+    """Windows 11 style taskbar app context menu (Pin / Unpin / New Window / Close)."""
+
+    def __init__(self, shell):
+        super().__init__(shell, "appcontextmenu", anchors=(E.TOP, E.LEFT),
+                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
+        self.card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        add_class(self.card, "card", "card-context")
+        self.card.set_size_request(250, -1)
+        self.add(self.card)
+
+    def populate(self, app, is_pinned=True):
+        for c in self.card.get_children():
+            self.card.remove(c)
+
+        name = app.get("name", "Application")
+        icon_path = app.get("icon", LOGO)
+        desktop_id = app.get("desktop_id", "")
+        cmd = app.get("cmd") or f"gtk-launch '{desktop_id}' || gio launch '/usr/share/applications/{desktop_id}.desktop'"
+
+        # Header with app icon and title
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        head.pack_start(make_icon(icon_path, 22), False, False, 0)
+        t_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        t_box.pack_start(make_label(name, "row-title", ellipsize=True), False, False, 0)
+        sub = "Pinned to taskbar" if is_pinned else "Desktop Application"
+        t_box.pack_start(make_label(sub, "muted"), False, False, 0)
+        head.pack_start(t_box, True, True, 0)
+        self.card.pack_start(head, False, False, 4)
+        self.card.pack_start(hline(), False, False, 3)
+
+        # 1. Launch / New window
+        def on_launch():
+            self.close_popup()
+            spawn(cmd)
+
+        row_launch = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row_launch.pack_start(make_label("\U000F0054", "menu-icon"), False, False, 0)
+        row_launch.pack_start(make_label("New window", "row-title"), True, True, 0)
+        self.card.pack_start(flat_button(row_launch, "row", "menu-item", cb=on_launch), False, False, 1)
+
+        self.card.pack_start(hline(), False, False, 3)
+
+        # 2. Pin / Unpin from taskbar (Windows 11)
+        if is_pinned:
+            def on_unpin():
+                self.close_popup()
+                self.shell.unpin_app(desktop_id)
+            row_pin = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row_pin.pack_start(make_label("\U000F0403", "menu-icon"), False, False, 0)
+            row_pin.pack_start(make_label("Unpin from taskbar", "row-title"), True, True, 0)
+            self.card.pack_start(flat_button(row_pin, "row", "menu-item", cb=on_unpin), False, False, 1)
+        else:
+            def on_pin():
+                self.close_popup()
+                self.shell.pin_app(app)
+            row_pin = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row_pin.pack_start(make_label("\U000F0403", "menu-icon"), False, False, 0)
+            row_pin.pack_start(make_label("Pin to taskbar", "row-title"), True, True, 0)
+            self.card.pack_start(flat_button(row_pin, "row", "menu-item-accent", cb=on_pin), False, False, 1)
+
+        # 3. Close window
+        def on_close():
+            self.close_popup()
+            spawn(f"hyprctl dispatch closewindow class:{desktop_id}")
+        row_close = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row_close.pack_start(make_label("\U000F0156", "menu-icon"), False, False, 0)
+        row_close.pack_start(make_label("Close window", "row-title"), True, True, 0)
+        self.card.pack_start(flat_button(row_close, "row", "menu-item", cb=on_close), False, False, 1)
+
+        self.card.show_all()
+
+
+class TaskbarContextMenu(Popup):
+    """Windows 11 style taskbar context menu."""
+
+    def __init__(self, shell):
+        super().__init__(shell, "taskbarmenu", anchors=(E.TOP, E.LEFT),
+                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        add_class(card, "card", "card-context")
+        card.set_size_request(240, -1)
+        self.add(card)
+
+        # Header
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        head.pack_start(make_icon(LOGO, 16), False, False, 0)
+        head.pack_start(make_label("Taskbar Settings", "row-title"), True, True, 0)
+        card.pack_start(head, False, False, 4)
+        card.pack_start(hline(), False, False, 3)
+
+        def add_item(glyph, label, shortcut=None, cmd=None, cb=None):
+            def on_click():
+                self.close_popup()
+                if cb:
+                    cb()
+                elif cmd:
+                    spawn(cmd)
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.pack_start(make_label(glyph, "menu-icon"), False, False, 0)
+            row.pack_start(make_label(label, "row-title"), True, True, 0)
+            if shortcut:
+                row.pack_end(make_label(shortcut, "menu-shortcut"), False, False, 0)
+            card.pack_start(flat_button(row, "row", "menu-item", cb=on_click), False, False, 1)
+
+        add_item("\U000F0493", "Taskbar Settings", "SUPER + I", cmd="/home/jacob/.local/bin/hypr-settings")
+        add_item("\U000F03E8", "Personalize Colors", None, cmd="/home/jacob/.local/bin/hypr-settings")
+        card.pack_start(hline(), False, False, 3)
+        add_item("\U000F0450", "Refresh Taskbar", "SUPER + ⇧ + R", cmd="sh -c 'hyprctl reload && notify-send \"Taskbar\" \"Refreshed!\"'")
 
 
 # ----------------------------------------------------------------------------
@@ -1166,18 +1371,22 @@ class Shell:
                                                  Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.history = []
         self.cc_proc = None
+        self.pinned_apps = self.load_pinned_apps()
+        self.docks = []
 
         display = Gdk.Display.get_default()
         self.bars = []
         self.desktops = []
         for i in range(max(display.get_n_monitors(), 1)):
             mon = display.get_monitor(i)
-            bar, dock = TopBar(self, mon, i), BottomDock(self, mon)
+            bar = TopBar(self, mon, i)
+            dock = BottomDock(self, mon)
             desk = DesktopSurface(self, mon)
             bar.show_all()
             dock.show_all()
             desk.show_all()
-            self.bars += [bar, dock]
+            self.bars.append(bar)
+            self.docks.append(dock)
             self.desktops.append(desk)
 
         self.popups = {
@@ -1190,11 +1399,63 @@ class Shell:
             "media": MediaPopup(self),
             "welcome": WelcomeCenter(self),
             "contextmenu": ContextMenu(self),
+            "appcontextmenu": AppContextMenu(self),
+            "taskbarmenu": TaskbarContextMenu(self),
         }
         self.notifier = NotificationDaemon(self)
         self._start_ipc()
         if not os.path.exists(WELCOME_FLAG):
             GLib.timeout_add(1500, lambda: (self.toggle("welcome"), False)[-1])
+
+    def load_pinned_apps(self):
+        if os.path.exists(DOCK_CONFIG):
+            try:
+                with open(DOCK_CONFIG, "r") as f:
+                    data = json.load(f)
+                    if isinstance(data, list) and len(data) > 0:
+                        return data
+            except Exception:
+                pass
+        return list(DEFAULT_PINNED_APPS)
+
+    def save_pinned_apps(self):
+        try:
+            os.makedirs(os.path.dirname(DOCK_CONFIG), exist_ok=True)
+            with open(DOCK_CONFIG, "w") as f:
+                json.dump(self.pinned_apps, f, indent=2)
+        except Exception as e:
+            print(f"Error saving pinned apps: {e}", file=sys.stderr)
+
+    def pin_app(self, app_data):
+        did = app_data.get("desktop_id")
+        if not did:
+            return
+        if not any(a.get("desktop_id") == did for a in self.pinned_apps):
+            self.pinned_apps.append({
+                "name": app_data.get("name", did),
+                "desktop_id": did,
+                "icon": app_data.get("icon", LOGO),
+                "cmd": app_data.get("cmd", f"gtk-launch '{did}'"),
+            })
+            self.save_pinned_apps()
+            self.refresh_docks()
+            name = app_data.get("name", did)
+            spawn(f"notify-send 'Taskbar' 'Pinned {name} to taskbar'")
+
+    def unpin_app(self, desktop_id):
+        name = desktop_id
+        for a in self.pinned_apps:
+            if a.get("desktop_id") == desktop_id:
+                name = a.get("name", desktop_id)
+                break
+        self.pinned_apps = [a for a in self.pinned_apps if a.get("desktop_id") != desktop_id]
+        self.save_pinned_apps()
+        self.refresh_docks()
+        spawn(f"notify-send 'Taskbar' 'Unpinned {name} from taskbar'")
+
+    def refresh_docks(self):
+        for dock in self.docks:
+            dock.rebuild()
 
     def close_all(self, except_name=None):
         for name, popup in self.popups.items():
@@ -1210,9 +1471,44 @@ class Shell:
             menu.close_popup()
         GtkLayerShell.set_monitor(menu, monitor)
         geom = monitor.get_geometry()
-        menu_w = 280
-        menu_h = 480
+        menu_w = 260
+        menu_h = 420
         px = max(10, min(int(x), geom.width - menu_w - 12))
+        py = max(35, min(int(y), geom.height - menu_h - 12))
+        GtkLayerShell.set_margin(menu, E.LEFT, px)
+        GtkLayerShell.set_margin(menu, E.TOP, py)
+        menu.open_popup()
+
+    def show_app_context_menu(self, monitor, app, x, y, is_pinned=True):
+        self.close_all(except_name="appcontextmenu")
+        menu = self.popups.get("appcontextmenu")
+        if not menu:
+            return
+        if menu.get_visible():
+            menu.close_popup()
+        menu.populate(app, is_pinned=is_pinned)
+        GtkLayerShell.set_monitor(menu, monitor)
+        geom = monitor.get_geometry()
+        menu_w = 250
+        menu_h = 220
+        px = max(10, min(int(x) - 100, geom.width - menu_w - 12))
+        py = max(35, min(int(y), geom.height - menu_h - 12))
+        GtkLayerShell.set_margin(menu, E.LEFT, px)
+        GtkLayerShell.set_margin(menu, E.TOP, py)
+        menu.open_popup()
+
+    def show_taskbar_context_menu(self, monitor, x, y):
+        self.close_all(except_name="taskbarmenu")
+        menu = self.popups.get("taskbarmenu")
+        if not menu:
+            return
+        if menu.get_visible():
+            menu.close_popup()
+        GtkLayerShell.set_monitor(menu, monitor)
+        geom = monitor.get_geometry()
+        menu_w = 240
+        menu_h = 180
+        px = max(10, min(int(x) - 100, geom.width - menu_w - 12))
         py = max(35, min(int(y), geom.height - menu_h - 12))
         GtkLayerShell.set_margin(menu, E.LEFT, px)
         GtkLayerShell.set_margin(menu, E.TOP, py)
