@@ -677,10 +677,15 @@ class Launcher(Popup):
                         display = Gdk.Display.get_default()
                         mon = display.get_monitor(0)
                         pinned = any(p.get("desktop_id") == ad["desktop_id"] for p in self.shell.pinned_apps)
-                        self.shell.show_app_context_menu(mon, ad, ev.x_root, ev.y_root, is_pinned=pinned)
+                        geom = mon.get_geometry()
+                        win_alloc = self.get_allocation()
+                        alloc = _w.get_allocation()
+                        pos_x = (geom.width - win_alloc.width) // 2 + 150
+                        pos_y = (geom.height - win_alloc.height) // 2 + alloc.y
+                        self.shell.show_app_context_menu(mon, ad, pos_x, pos_y, is_pinned=pinned)
                         return True
                     return False
-                return _on_row_press
+                return _on_row_click
 
             row.connect("button-press-event", make_row_press())
             self.listbox.add(row)
