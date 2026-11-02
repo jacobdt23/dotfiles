@@ -1079,7 +1079,6 @@ class ContextMenu(Popup):
     def __init__(self, shell):
         super().__init__(shell, "contextmenu", anchors=(E.TOP, E.LEFT),
                          keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
-        self.connect("focus-out-event", lambda *_: self.close_popup())
 
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         add_class(card, "card", "card-context")
