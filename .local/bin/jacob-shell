@@ -215,9 +215,9 @@ button.pill:hover {{
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: 9px;
-    padding: 4px 6px 3px 6px;
-    min-width: 30px;
-    min-height: 32px;
+    padding: 0 4px;
+    min-width: 34px;
+    min-height: 38px;
 }}
 .dock-app-btn:hover {{
     background-color: #24283b;
@@ -225,15 +225,15 @@ button.pill:hover {{
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }}
 .app-indicator {{
-    min-height: 2px;
-    min-width: 14px;
+    min-height: 3px;
+    min-width: 16px;
     border-radius: 2px;
-    background-color: transparent;
-    margin-top: 1px;
+    background-color: rgba(122, 162, 247, 0.45);
+    margin: 0;
 }}
 .app-indicator-running {{
     background-color: #7aa2f7;
-    box-shadow: 0 0 6px #7aa2f7;
+    box-shadow: 0 0 8px #7aa2f7;
 }}
 
 .dock-install {{
@@ -868,9 +868,16 @@ class BottomDock(Layer):
             col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             col.set_valign(Gtk.Align.CENTER)
             col.set_halign(Gtk.Align.CENTER)
-            col.pack_start(make_icon(icon_path, 24), False, False, 0)
+
+            # Symmetrical top spacer (balances the 3px running indicator at the bottom)
+            top_spacer = Gtk.Box()
+            top_spacer.set_size_request(16, 3)
+            col.pack_start(top_spacer, False, False, 0)
+
+            col.pack_start(make_icon(icon_path, 26), False, False, 0)
             indicator = Gtk.Box()
             add_class(indicator, "app-indicator")
+            indicator.set_size_request(16, 3)
             col.pack_start(indicator, False, False, 0)
             btn.add(col)
 
