@@ -215,9 +215,9 @@ button.pill:hover {{
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: 9px;
-    padding: 3px 6px;
-    min-width: 28px;
-    min-height: 28px;
+    padding: 4px 6px 3px 6px;
+    min-width: 30px;
+    min-height: 32px;
 }}
 .dock-app-btn:hover {{
     background-color: #24283b;
@@ -772,20 +772,24 @@ class BottomDock(Layer):
         # ----------------- Left: Start Button + Search -----------------
         left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         left.set_halign(Gtk.Align.START)
+        left.set_valign(Gtk.Align.CENTER)
 
         # Start Button
         start_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        start_box.set_valign(Gtk.Align.CENTER)
         start_box.pack_start(make_icon(LOGO, 22), False, False, 0)
         start_lbl = Gtk.Label(label="Start")
         add_class(start_lbl, "start-label")
         start_box.pack_start(start_lbl, False, False, 0)
         start_btn = flat_button(start_box, "dock-start", cb=lambda: self.shell.toggle("launcher"))
         start_btn.set_tooltip_text("Start / App Drawer (Super)")
+        start_btn.set_valign(Gtk.Align.CENTER)
         left.pack_start(start_btn, False, False, 0)
 
         # Search Pill Trigger
         search_btn = flat_button("󰍏  Search apps...", "search-pill", cb=lambda: self.shell.toggle("launcher"))
         search_btn.set_tooltip_text("Search applications (Super)")
+        search_btn.set_valign(Gtk.Align.CENTER)
         left.pack_start(search_btn, False, False, 0)
 
         root.pack_start(left, True, True, 0)
@@ -793,30 +797,37 @@ class BottomDock(Layer):
         # ----------------- Center: Main Pinned & Running Apps -----------------
         center = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         center.set_halign(Gtk.Align.CENTER)
+        center.set_valign(Gtk.Align.CENTER)
         self.dock_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         self.dock_box.set_halign(Gtk.Align.CENTER)
+        self.dock_box.set_valign(Gtk.Align.CENTER)
         center.pack_start(self.dock_box, True, True, 0)
         root.pack_start(center, True, True, 0)
 
         # ----------------- Right: Utilities (Clipboard, Snip, Keys, Welcome) + Show Desktop -----------------
         right = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         right.set_halign(Gtk.Align.END)
+        right.set_valign(Gtk.Align.CENTER)
 
         clip_btn = flat_button(f"{G_CLIP}  Clipboard", "pill", cb=lambda: self.shell.toggle("clipboard"))
         clip_btn.set_tooltip_text("Clipboard History (Super + Shift + V)")
+        clip_btn.set_valign(Gtk.Align.CENTER)
         right.pack_start(clip_btn, False, False, 0)
 
         snip_btn = flat_button("󰄀  Snip", "pill", cb=lambda: spawn("/home/jacob/.local/bin/hypr-screenshot area"))
         snip_btn.set_tooltip_text("Take Screenshot / Snip (Print / Super + Shift + S)")
+        snip_btn.set_valign(Gtk.Align.CENTER)
         right.pack_start(snip_btn, False, False, 0)
 
         keys_btn = flat_button(f"{G_KEY}  Keys", "pill", cb=lambda: self.shell.toggle("keybinds"))
         keys_btn.set_tooltip_text("Keyboard Shortcuts (Super + K)")
+        keys_btn.set_valign(Gtk.Align.CENTER)
         right.pack_start(keys_btn, False, False, 0)
 
         # Show desktop bar at far right
         show_dt = flat_button("", "show-desktop-btn", cb=lambda: spawn("hyprctl dispatch workspace special:magic"))
         show_dt.set_tooltip_text("Show Desktop / Scratchpad (Super + S)")
+        show_dt.set_valign(Gtk.Align.CENTER)
         right.pack_start(show_dt, False, False, 0)
 
         root.pack_start(right, True, True, 0)
@@ -850,10 +861,13 @@ class BottomDock(Layer):
             btn = Gtk.Button()
             btn.set_relief(Gtk.ReliefStyle.NONE)
             btn.set_focus_on_click(False)
+            btn.set_valign(Gtk.Align.CENTER)
             add_class(btn, "dock-app-btn")
             btn.set_tooltip_text(name)
 
-            col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+            col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            col.set_valign(Gtk.Align.CENTER)
+            col.set_halign(Gtk.Align.CENTER)
             col.pack_start(make_icon(icon_path, 24), False, False, 0)
             indicator = Gtk.Box()
             add_class(indicator, "app-indicator")
