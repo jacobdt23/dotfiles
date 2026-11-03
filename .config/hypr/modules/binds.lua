@@ -13,7 +13,7 @@ hl.bind("SUPER + Super_L", hl.dsp.exec_cmd("jacob-shell toggle launcher"), { rel
 -- System Management
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("notify-send 'Jacob Shell' 'Active!'"))
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("sh -c 'hyprctl reload && notify-send \"Hyprland\" \"Reloaded!\"'"))
-hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd("/usr/local/bin/launch-calamares"))
+hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd("kitty -e btop"))
 
 -- jacob-shell Menus
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("jacob-shell toggle keybinds"))

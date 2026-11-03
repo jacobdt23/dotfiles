@@ -305,7 +305,7 @@ calendar.header, calendar.button {{ color: #7aa2f7; }}
 KEYBINDS = [
     ("Right Click Desktop", "Open Desktop Actions Context Menu"),
     ("SUPER + W", "Open / Close Welcome Hub & Cheat Sheet"),
-    ("SUPER + SHIFT + I", "Launch Calamares Graphical Installer"),
+    ("SUPER + SHIFT + ESC", "Launch System Monitor (btop++)"),
     ("SUPER", "Open Application Launcher"),
     ("SUPER + RETURN", "Open Kitty Terminal"),
     ("SUPER + E", "Open Thunar File Manager"),
@@ -328,7 +328,7 @@ KEYBINDS = [
 ]
 
 ESSENTIAL_APPS = [
-    ("Install System (Calamares)", "Graphical Btrfs/GPT/MBR OS Installer", f"{HICOLOR}/scalable/apps/calamares.svg", "/usr/local/bin/launch-calamares"),
+    ("Steam Gaming Client", "Play Linux & Windows Proton Games", f"{HICOLOR}/256x256/apps/steam.png", "steam"),
     ("Timeshift Btrfs Snapshots", "Create & Restore Bootable GRUB Snapshots", f"{HICOLOR}/128x128/apps/timeshift.png", "/usr/local/bin/timeshift-launcher"),
     ("Firefox Web Browser", "Fast, Private Web Browser", f"{HICOLOR}/256x256/apps/firefox.png", "firefox"),
     ("Kitty Terminal", "GPU-Accelerated Terminal Emulator", f"{HICOLOR}/256x256/apps/kitty.png", "kitty"),
@@ -781,13 +781,6 @@ class BottomDock(Layer):
         keys_btn = flat_button(f"{G_KEY}  Keys", "pill", cb=lambda: self.shell.toggle("keybinds"))
         keys_btn.set_tooltip_text("Keyboard Shortcuts (Super + K)")
         right.pack_start(keys_btn, False, False, 0)
-
-        # Calamares installer (if exists)
-        if os.path.isfile("/usr/local/bin/launch-calamares"):
-            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 18), False, False, 0)
-            row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
-            right.pack_start(flat_button(row, "dock-install", cb=lambda: spawn("/usr/local/bin/launch-calamares")), False, False, 0)
 
         # Show desktop bar at far right
         show_dt = flat_button("", "show-desktop-btn", cb=lambda: spawn("hyprctl dispatch workspace special:magic"))
