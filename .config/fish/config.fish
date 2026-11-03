@@ -17,3 +17,6 @@ if status is-interactive
         fastfetch
     end
 end
+if test -f ~/.config/gemini/api_key
+    set -gx GEMINI_API_KEY (cat ~/.config/gemini/api_key | string trim)
+end
