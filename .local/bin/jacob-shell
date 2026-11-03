@@ -182,7 +182,8 @@ button.pill:hover {{
     background-color: #1a1b26;
     border: 1px solid #292e42;
     border-radius: 8px;
-    padding: 3px 10px;
+    padding: 3px 12px;
+    min-width: 175px;
     min-height: 22px;
 }}
 .search-pill label {{
@@ -581,7 +582,7 @@ class TopBar(Layer):
         self.ws_buttons = {}
         self._last_cpu = None
 
-        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, homogeneous=True)
         add_class(root, "bar-full")
         root.set_size_request(-1, 34)
         self.add(root)
@@ -750,12 +751,12 @@ class BottomDock(Layer):
         self.monitor = monitor
         self.dock_buttons = []
 
-        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, homogeneous=True)
         add_class(root, "dock-full")
         root.set_size_request(-1, 46)
         self.add(root)
 
-        # ----------------- Left: Start Button + Search + Quick Launch -----------------
+        # ----------------- Left: Start Button + Search -----------------
         left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         left.set_halign(Gtk.Align.START)
 
@@ -780,7 +781,8 @@ class BottomDock(Layer):
         center = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         center.set_halign(Gtk.Align.CENTER)
         self.dock_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        center.pack_start(self.dock_box, False, False, 0)
+        self.dock_box.set_halign(Gtk.Align.CENTER)
+        center.pack_start(self.dock_box, True, True, 0)
         root.pack_start(center, True, True, 0)
 
         # ----------------- Right: Utilities (Clipboard, Snip, Keys, Welcome) + Show Desktop -----------------
