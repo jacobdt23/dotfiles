@@ -30,6 +30,13 @@ def send_command(argv, silent=False):
 
 # Client mode is handled before importing GTK so keybinds stay instant.
 if len(sys.argv) > 1:
+    cmd = sys.argv[1]
+    if cmd == "restart":
+        send_command(["quit"], silent=True)
+        import time, subprocess
+        time.sleep(0.3)
+        subprocess.Popen([sys.argv[0]], start_new_session=True)
+        sys.exit(0)
     sys.exit(send_command(sys.argv[1:]))
 
 import json
@@ -63,36 +70,41 @@ CSS = f"""
 window.transparent {{ background-color: transparent; }}
 button {{ background-image: none; box-shadow: none; text-shadow: none; border-image: none; outline-style: none; }}
 
-/* Full Length Floating Bars (Floating off edges) */
+/* Full Length Floating Bars (Floating off edges with Frosted Glass Blur) */
 .bar-full {{
-    background-color: rgba(20, 21, 32, 0.94);
-    border: 1px solid rgba(122, 162, 247, 0.22);
+    background-color: rgba(20, 22, 34, 0.74);
+    border: 1px solid rgba(122, 162, 247, 0.28);
     border-radius: 12px;
     padding: 0 10px;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }}
 .bar-full:hover {{
-    border-color: rgba(122, 162, 247, 0.35);
+    border-color: rgba(122, 162, 247, 0.45);
 }}
 
 .dock-full {{
-    background-color: rgba(20, 21, 32, 0.94);
-    border: 1px solid rgba(122, 162, 247, 0.22);
+    background-color: rgba(20, 22, 34, 0.74);
+    border: 1px solid rgba(122, 162, 247, 0.28);
     border-radius: 14px;
     padding: 0 12px;
-    box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
 }}
 .dock-full:hover {{
-    border-color: rgba(122, 162, 247, 0.35);
+    border-color: rgba(122, 162, 247, 0.45);
 }}
 
 /* Branding Chip */
 .brand-chip {{
-    background-color: #1a1b26;
-    border: 1px solid #292e42;
-    border-radius: 7px;
-    padding: 2px 8px;
-    min-height: 20px;
+    background: linear-gradient(135deg, rgba(31, 35, 53, 0.8) 0%, rgba(36, 40, 59, 0.8) 100%);
+    border: 1px solid rgba(122, 162, 247, 0.3);
+    border-radius: 8px;
+    padding: 2px 10px;
+    min-height: 22px;
+}}
+.brand-chip:hover {{
+    background: linear-gradient(135deg, #24283b 0%, #2f354f 100%);
+    border-color: #7aa2f7;
+    box-shadow: 0 0 10px rgba(122, 162, 247, 0.35);
 }}
 .brand-label {{
     font-weight: 900;
@@ -102,11 +114,11 @@ button {{ background-image: none; box-shadow: none; text-shadow: none; border-im
 
 /* Workspaces */
 .ws {{
-    background-color: #1a1b26;
-    border: 1px solid #292e42;
+    background-color: rgba(26, 27, 38, 0.7);
+    border: 1px solid rgba(41, 46, 66, 0.8);
     border-radius: 7px;
     padding: 2px 0;
-    min-width: 22px;
+    min-width: 24px;
     min-height: 20px;
     font-weight: bold;
     font-size: 10px;
@@ -116,10 +128,10 @@ button {{ background-image: none; box-shadow: none; text-shadow: none; border-im
     border-color: #7aa2f7;
 }}
 .ws-active {{
-    background-color: #7aa2f7;
-    border-color: #7aa2f7;
-    min-width: 28px;
-    box-shadow: 0 0 8px rgba(122, 162, 247, 0.45);
+    background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%);
+    border: 1px solid #7aa2f7;
+    min-width: 30px;
+    box-shadow: 0 0 10px rgba(122, 162, 247, 0.45);
 }}
 .ws-active label {{
     color: #14161f;
@@ -128,9 +140,9 @@ button {{ background-image: none; box-shadow: none; text-shadow: none; border-im
 
 /* Window title pill */
 .win-pill {{
-    background-color: #1a1b26;
-    border: 1px solid #292e42;
-    border-radius: 7px;
+    background-color: rgba(26, 27, 38, 0.7);
+    border: 1px solid rgba(41, 46, 66, 0.8);
+    border-radius: 8px;
     padding: 2px 10px;
     min-height: 20px;
 }}
@@ -141,15 +153,16 @@ button {{ background-image: none; box-shadow: none; text-shadow: none; border-im
 
 /* Top Status Pills */
 .pill {{
-    background-color: #1a1b26;
-    border: 1px solid #292e42;
-    border-radius: 7px;
-    padding: 2px 8px;
+    background-color: rgba(26, 27, 38, 0.7);
+    border: 1px solid rgba(41, 46, 66, 0.8);
+    border-radius: 8px;
+    padding: 2px 9px;
     min-height: 20px;
 }}
 button.pill:hover {{
     background-color: #24283b;
     border-color: #7aa2f7;
+    box-shadow: 0 0 8px rgba(122, 162, 247, 0.25);
 }}
 .clock-pill {{
     border-color: rgba(122, 162, 247, 0.35);
@@ -164,13 +177,13 @@ button.pill:hover {{
     background: linear-gradient(135deg, #1f2335 0%, #24283b 100%);
     border: 1px solid rgba(122, 162, 247, 0.35);
     border-radius: 9px;
-    padding: 3px 10px;
+    padding: 3px 12px;
     min-height: 26px;
 }}
 .dock-start:hover {{
     background: linear-gradient(135deg, #24283b 0%, #2f354f 100%);
     border-color: #7aa2f7;
-    box-shadow: 0 0 10px rgba(122, 162, 247, 0.35);
+    box-shadow: 0 0 12px rgba(122, 162, 247, 0.4);
 }}
 .start-label {{
     font-weight: bold;
@@ -1869,6 +1882,13 @@ class Shell:
                 self.toggle(argv[1])
         elif argv[0] == "close":
             self.close_all()
+        elif argv[0] in ("reload", "refresh"):
+            self.refresh_docks()
+            for b in self.bars:
+                b.tick_stats()
+                b.tick_clock()
+        elif argv[0] == "quit":
+            Gtk.main_quit()
         elif argv[0] == "volume" and len(argv) > 1:
             self.volume(argv[1])
 

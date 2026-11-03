@@ -84,4 +84,9 @@ hl.layer_rule({
     no_anim = true,
 })
 
+hl.layer_rule({
+    match = { namespace = "jacob-.*" },
+    blur  = true,
+})
+
 
