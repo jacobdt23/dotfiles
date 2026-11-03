@@ -386,10 +386,6 @@ class TopBar(Layer):
         left.set_margin_start(10)
         left.set_halign(Gtk.Align.START)
 
-        # Jacob Arch Logo App Launcher button
-        logo_btn = flat_button(make_icon(LOGO, 16), "pill", cb=lambda: shell.toggle("launcher"))
-        left.pack_start(logo_btn, False, False, 0)
-
         for wid in self.ws_ids:
             b = flat_button(str(wid), "ws", cb=lambda w=wid: spawn(f"hyprctl dispatch workspace {w}"))
             self.ws_buttons[wid] = b
