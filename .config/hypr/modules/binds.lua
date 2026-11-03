@@ -15,6 +15,19 @@ hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("notify-send 'Jacob Shell' 'Active!'"
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("sh -c 'hyprctl reload && notify-send \"Hyprland\" \"Reloaded!\"'"))
 hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd("kitty -e btop"))
 
+-- Screenshot Utility (grim + slurp + swappy)
+hl.bind("Print", hl.dsp.exec_cmd("/home/jacob/.local/bin/hypr-screenshot area"))
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd("/home/jacob/.local/bin/hypr-screenshot full"))
+hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("/home/jacob/.local/bin/hypr-screenshot window"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("/home/jacob/.local/bin/hypr-screenshot area"))
+
+-- Live Environment Installer (active only when live ISO installer exists)
+local calamares_fd = io.open("/usr/local/bin/launch-calamares", "r")
+if calamares_fd ~= nil then
+    calamares_fd:close()
+    hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd("/usr/local/bin/launch-calamares"))
+end
+
 -- jacob-shell Menus
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("jacob-shell toggle keybinds"))
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("jacob-shell toggle power"))
@@ -44,7 +57,7 @@ for i = 1, 10 do
 end
 
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
+hl.bind(mainMod .. " + ALT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- Mouse Window Interactions
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })

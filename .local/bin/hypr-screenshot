@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Hyprland Screenshot Utility (grim + slurp + swappy)
+# Fast, elegant screenshot tool with interactive snipping & annotation editor
+# =============================================================================
+
+set -eo pipefail
+
+SHOT_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+mkdir -p "$SHOT_DIR"
+
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+TARGET_FILE="$SHOT_DIR/Screenshot_${TIMESTAMP}.png"
+
+notify() {
+    local file="$1"
+    local mode_name="$2"
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -a "Screenshot" -i "$file" \
+            "Screenshot Captured ($mode_name)" \
+            "Saved to $(basename "$file")\nCopied to clipboard."
+    fi
+}
+
+copy_to_clip() {
+    local file="$1"
+    if command -v wl-copy >/dev/null 2>&1; then
+        wl-copy --type image/png < "$file" 2>/dev/null || true
+    fi
+}
+
+take_full() {
+    grim "$TARGET_FILE"
+    copy_to_clip "$TARGET_FILE"
+    notify "$TARGET_FILE" "Full Screen"
+}
+
+take_window() {
+    local geo
+    geo=$(hyprctl activewindow -j 2>/dev/null | python3 -c '
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    at = d.get("at", [0, 0])
+    sz = d.get("size", [0, 0])
+    if sz[0] > 0 and sz[1] > 0:
+        print(f"{at[0]},{at[1]} {sz[0]}x{sz[1]}")
+        sys.exit(0)
+except Exception:
+    pass
+sys.exit(1)
+' 2>/dev/null)
+
+    if [ -n "$geo" ]; then
+        grim -g "$geo" "$TARGET_FILE"
+    else
+        take_area_copy
+        return
+    fi
+    copy_to_clip "$TARGET_FILE"
+    notify "$TARGET_FILE" "Active Window"
+}
+
+take_area_copy() {
+    local geo
+    geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
+    [ -z "$geo" ] && exit 0
+    grim -g "$geo" "$TARGET_FILE"
+    copy_to_clip "$TARGET_FILE"
+    notify "$TARGET_FILE" "Selected Area"
+}
+
+take_area_edit() {
+    local geo
+    geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
+    [ -z "$geo" ] && exit 0
+    grim -g "$geo" - | swappy -f -
+}
+
+show_menu() {
+    if command -v zenity >/dev/null 2>&1; then
+        choice=$(zenity --list --title="Screenshot Utility" --text="Select screenshot mode:" \
+            --radiolist --column="" --column="Mode" --column="Description" \
+            TRUE "area" "Select area and annotate in Swappy" \
+            FALSE "snip" "Quick select area (Save & Copy)" \
+            FALSE "full" "Entire screen (Save & Copy)" \
+            FALSE "window" "Active window (Save & Copy)" \
+            FALSE "folder" "Open Screenshots directory" \
+            --height=280 --width=440 2>/dev/null) || exit 0
+        case "$choice" in
+            area) take_area_edit ;;
+            snip) take_area_copy ;;
+            full) take_full ;;
+            window) take_window ;;
+            folder) thunar "$SHOT_DIR" >/dev/null 2>&1 & ;;
+            *) exit 0 ;;
+        esac
+    else
+        take_area_edit
+    fi
+}
+
+case "${1:-}" in
+    area|snip-edit|edit|"")
+        take_area_edit
+        ;;
+    copy|snip|area-copy)
+        take_area_copy
+        ;;
+    full|screen)
+        take_full
+        ;;
+    window|active)
+        take_window
+        ;;
+    menu|gui)
+        show_menu
+        ;;
+    folder|open)
+        thunar "$SHOT_DIR" >/dev/null 2>&1 &
+        ;;
+    *)
+        echo "Usage: hypr-screenshot [area|copy|full|window|menu|folder]"
+        exit 1
+        ;;
+esac

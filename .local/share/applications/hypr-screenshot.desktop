@@ -1,0 +1,26 @@
+[Desktop Entry]
+Name=Screenshot Utility
+Comment=Capture screen region, active window, or full screen with annotation tools
+Exec=/home/jacob/.local/bin/hypr-screenshot menu
+Icon=accessories-screenshot
+Terminal=false
+Type=Application
+Categories=Utility;Graphics;
+Keywords=screenshot;snip;swappy;grim;slurp;capture;
+Actions=Area;Full;Window;Folder;
+
+[Desktop Action Area]
+Name=Capture Area & Annotate
+Exec=/home/jacob/.local/bin/hypr-screenshot area
+
+[Desktop Action Full]
+Name=Capture Full Screen
+Exec=/home/jacob/.local/bin/hypr-screenshot full
+
+[Desktop Action Window]
+Name=Capture Active Window
+Exec=/home/jacob/.local/bin/hypr-screenshot window
+
+[Desktop Action Folder]
+Name=Open Screenshots Folder
+Exec=/home/jacob/.local/bin/hypr-screenshot folder

@@ -304,6 +304,9 @@ calendar.header, calendar.button {{ color: #7aa2f7; }}
 
 KEYBINDS = [
     ("Right Click Desktop", "Open Desktop Actions Context Menu"),
+    ("Print / SUPER + SHIFT + S", "Capture Region & Annotate (Swappy)"),
+    ("SHIFT + Print", "Full Screen Capture (Save & Copy)"),
+    ("SUPER + Print", "Active Window Capture (Save & Copy)"),
     ("SUPER + W", "Open / Close Welcome Hub & Cheat Sheet"),
     ("SUPER + SHIFT + ESC", "Launch System Monitor (btop++)"),
     ("SUPER", "Open Application Launcher"),
@@ -317,6 +320,7 @@ KEYBINDS = [
     ("SUPER + 1 – 0", "Switch to Workspace 1 – 10"),
     ("SUPER + SHIFT + 1 – 0", "Move Window to Workspace 1 – 10"),
     ("SUPER + S", "Toggle Special Scratchpad Workspace"),
+    ("SUPER + ALT + S", "Move Window to Special Workspace"),
     ("SUPER + I", "Open System Control Center"),
     ("SUPER + K", "Toggle Quick Keybinds Popup"),
     ("SUPER + N", "Toggle Notification Center"),
@@ -328,6 +332,7 @@ KEYBINDS = [
 ]
 
 ESSENTIAL_APPS = [
+    ("Screenshot Utility", "Capture Region, Window or Full Screen with Swappy", "/usr/share/icons/Papirus/48x48/apps/accessories-screenshot.svg", "/home/jacob/.local/bin/hypr-screenshot menu"),
     ("Steam Gaming Client", "Play Linux & Windows Proton Games", f"{HICOLOR}/256x256/apps/steam.png", "steam"),
     ("Timeshift Btrfs Snapshots", "Create & Restore Bootable GRUB Snapshots", f"{HICOLOR}/128x128/apps/timeshift.png", "/usr/local/bin/timeshift-launcher"),
     ("Firefox Web Browser", "Fast, Private Web Browser", f"{HICOLOR}/256x256/apps/firefox.png", "firefox"),
@@ -339,6 +344,25 @@ ESSENTIAL_APPS = [
     ("Media Player (mpv)", "High Performance Video & Audio Player", f"{HICOLOR}/64x64/apps/mpv.png", "mpv --player-operation-mode=pseudo-gui"),
     ("System Monitor (btop++)", "Live CPU, Memory, Disk & Process Viewer", f"{HICOLOR}/scalable/apps/btop.svg", "kitty -e btop"),
 ]
+
+CALAMARES_BIN = "/usr/local/bin/launch-calamares"
+
+def get_essential_apps():
+    apps = list(ESSENTIAL_APPS)
+    if os.path.isfile(CALAMARES_BIN):
+        apps.insert(0, (
+            "Install System (Calamares)",
+            "Graphical Btrfs/GPT/MBR OS Installer",
+            f"{HICOLOR}/scalable/apps/calamares.svg",
+            CALAMARES_BIN,
+        ))
+    return apps
+
+def get_keybinds():
+    keys = list(KEYBINDS)
+    if os.path.isfile(CALAMARES_BIN):
+        keys.insert(2, ("SUPER + SHIFT + I", "Launch Calamares Graphical Installer"))
+    return keys
 
 DOCK_CONFIG = os.path.expanduser("~/.config/jacob-dock-apps.json")
 
@@ -750,17 +774,6 @@ class BottomDock(Layer):
         search_btn.set_tooltip_text("Search applications (Super)")
         left.pack_start(search_btn, False, False, 0)
 
-        left.pack_start(add_class(Gtk.Box(), "sep-v"), False, False, 2)
-
-        # Quick terminal & files shortcuts
-        term_btn = flat_button(make_icon(f"{HICOLOR}/256x256/apps/kitty.png", 22), "dock-app-btn", cb=lambda: spawn("kitty"))
-        term_btn.set_tooltip_text("Terminal (Super + Return)")
-        left.pack_start(term_btn, False, False, 0)
-
-        files_btn = flat_button(make_icon(f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", 22), "dock-app-btn", cb=lambda: spawn("thunar"))
-        files_btn.set_tooltip_text("File Manager (Super + E)")
-        left.pack_start(files_btn, False, False, 0)
-
         root.pack_start(left, True, True, 0)
 
         # ----------------- Center: Main Pinned & Running Apps -----------------
@@ -770,13 +783,17 @@ class BottomDock(Layer):
         center.pack_start(self.dock_box, False, False, 0)
         root.pack_start(center, True, True, 0)
 
-        # ----------------- Right: Utilities (Clipboard, Keys, Welcome) + Show Desktop -----------------
+        # ----------------- Right: Utilities (Clipboard, Snip, Keys, Welcome) + Show Desktop -----------------
         right = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         right.set_halign(Gtk.Align.END)
 
         clip_btn = flat_button(f"{G_CLIP}  Clipboard", "pill", cb=lambda: self.shell.toggle("clipboard"))
         clip_btn.set_tooltip_text("Clipboard History (Super + Shift + V)")
         right.pack_start(clip_btn, False, False, 0)
+
+        snip_btn = flat_button("󰄀  Snip", "pill", cb=lambda: spawn("/home/jacob/.local/bin/hypr-screenshot area"))
+        snip_btn.set_tooltip_text("Take Screenshot / Snip (Print / Super + Shift + S)")
+        right.pack_start(snip_btn, False, False, 0)
 
         keys_btn = flat_button(f"{G_KEY}  Keys", "pill", cb=lambda: self.shell.toggle("keybinds"))
         keys_btn.set_tooltip_text("Keyboard Shortcuts (Super + K)")
@@ -845,6 +862,13 @@ class BottomDock(Layer):
 
             btn.connect("button-press-event", make_press_cb())
             self.dock_box.pack_start(btn, False, False, 0)
+
+        # Calamares installer (if running in live environment)
+        if os.path.isfile(CALAMARES_BIN):
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 18), False, False, 0)
+            row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
+            self.dock_box.pack_start(flat_button(row, "dock-install", cb=lambda: spawn(CALAMARES_BIN)), False, False, 0)
 
         self.dock_box.show_all()
 
@@ -1383,7 +1407,7 @@ class WelcomeCenter(Popup):
 
     def _apps_page(self):
         grid = Gtk.Grid(column_spacing=10, row_spacing=8, column_homogeneous=True)
-        for i, (title, subtitle, icon, cmd) in enumerate(ESSENTIAL_APPS):
+        for i, (title, subtitle, icon, cmd) in enumerate(get_essential_apps()):
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
             row.pack_start(make_icon(icon, 32), False, False, 0)
             text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -1396,7 +1420,7 @@ class WelcomeCenter(Popup):
 
     def _keys_page(self):
         grid = Gtk.Grid(column_spacing=10, row_spacing=6, column_homogeneous=True)
-        for i, (key, desc) in enumerate(KEYBINDS):
+        for i, (key, desc) in enumerate(get_keybinds()):
             grid.attach(keybind_row(key, desc), i % 2, i // 2, 1, 1)
         return scrolled(grid, height=300)
 
@@ -1525,9 +1549,10 @@ class ContextMenu(Popup):
 
         card.pack_start(hline(), False, False, 3)
 
-        # 3. Open in Terminal / Open in Files (Windows 11)
+        # 3. Open in Terminal / Open in Files / Take Screenshot
         add_item("\U000F04F2", "Open in Terminal", cmd="kitty")
         add_item("\U000F024B", "Open in Files", cmd="thunar")
+        add_item("󰄀", "Take Screenshot", cmd="/home/jacob/.local/bin/hypr-screenshot menu")
 
         card.pack_start(hline(), False, False, 3)
 
