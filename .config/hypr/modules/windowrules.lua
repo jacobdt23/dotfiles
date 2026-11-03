@@ -83,3 +83,5 @@ hl.layer_rule({
     match   = { namespace = "nwg-dock" },
     no_anim = true,
 })
+
+

@@ -62,65 +62,244 @@ CSS = f"""
 * {{ font-family: "{FONT}", monospace; font-size: 11px; color: #c0caf5; }}
 window.transparent {{ background-color: transparent; }}
 button {{ background-image: none; box-shadow: none; text-shadow: none; border-image: none; outline-style: none; }}
-.topbar {{ background-color: #1a1b26; border-bottom: 1px solid #292e42; }}
-.pill {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 1px 7px; min-height: 18px; }}
-button.pill:hover {{ background-color: #3b4261; }}
-.pill-active {{ border-color: #7aa2f7; }}
-.ws {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 1px 0; min-width: 20px; min-height: 18px; font-weight: bold; }}
-.ws:hover {{ background-color: #3b4261; }}
-.ws-active {{ background-color: #7aa2f7; border-color: #7aa2f7; min-width: 26px; }}
-.ws-active label {{ color: #1a1b26; }}
-.dock {{ background-color: #1a1b26; border: 1px solid #3b4261; border-radius: 10px; padding: 3px 8px; }}
-.dock-btn {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 6px; padding: 3px; min-width: 20px; min-height: 20px; }}
-.dock-btn:hover {{ background-color: #3b4261; }}
-.dock-install {{ background-color: #24283b; border: 1px solid #7aa2f7; border-radius: 6px; padding: 3px 8px; }}
-.dock-install label {{ color: #7aa2f7; font-weight: bold; }}
-.dock-install:hover {{ background-color: #3b4261; }}
-.card {{ background-color: #1a1b26; border: 1px solid #3b4261; border-radius: 12px; padding: 16px; }}
+
+/* Full Length Floating Bars (Floating off edges) */
+.bar-full {{
+    background-color: rgba(20, 21, 32, 0.94);
+    border: 1px solid rgba(122, 162, 247, 0.22);
+    border-radius: 12px;
+    padding: 0 10px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}}
+.bar-full:hover {{
+    border-color: rgba(122, 162, 247, 0.35);
+}}
+
+.dock-full {{
+    background-color: rgba(20, 21, 32, 0.94);
+    border: 1px solid rgba(122, 162, 247, 0.22);
+    border-radius: 14px;
+    padding: 0 12px;
+    box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5);
+}}
+.dock-full:hover {{
+    border-color: rgba(122, 162, 247, 0.35);
+}}
+
+/* Branding Chip */
+.brand-chip {{
+    background-color: #1a1b26;
+    border: 1px solid #292e42;
+    border-radius: 7px;
+    padding: 2px 8px;
+    min-height: 20px;
+}}
+.brand-label {{
+    font-weight: 900;
+    font-size: 11px;
+    color: #7aa2f7;
+}}
+
+/* Workspaces */
+.ws {{
+    background-color: #1a1b26;
+    border: 1px solid #292e42;
+    border-radius: 7px;
+    padding: 2px 0;
+    min-width: 22px;
+    min-height: 20px;
+    font-weight: bold;
+    font-size: 10px;
+}}
+.ws:hover {{
+    background-color: #2f354f;
+    border-color: #7aa2f7;
+}}
+.ws-active {{
+    background-color: #7aa2f7;
+    border-color: #7aa2f7;
+    min-width: 28px;
+    box-shadow: 0 0 8px rgba(122, 162, 247, 0.45);
+}}
+.ws-active label {{
+    color: #14161f;
+    font-weight: 900;
+}}
+
+/* Window title pill */
+.win-pill {{
+    background-color: #1a1b26;
+    border: 1px solid #292e42;
+    border-radius: 7px;
+    padding: 2px 10px;
+    min-height: 20px;
+}}
+.win-pill label {{
+    color: #7dcfff;
+    font-size: 10px;
+}}
+
+/* Top Status Pills */
+.pill {{
+    background-color: #1a1b26;
+    border: 1px solid #292e42;
+    border-radius: 7px;
+    padding: 2px 8px;
+    min-height: 20px;
+}}
+button.pill:hover {{
+    background-color: #24283b;
+    border-color: #7aa2f7;
+}}
+.clock-pill {{
+    border-color: rgba(122, 162, 247, 0.35);
+}}
+.clock-pill:hover {{
+    background-color: #24283b;
+    border-color: #7aa2f7;
+}}
+
+/* Bottom Dock Buttons */
+.dock-start {{
+    background: linear-gradient(135deg, #1f2335 0%, #24283b 100%);
+    border: 1px solid rgba(122, 162, 247, 0.35);
+    border-radius: 9px;
+    padding: 3px 10px;
+    min-height: 26px;
+}}
+.dock-start:hover {{
+    background: linear-gradient(135deg, #24283b 0%, #2f354f 100%);
+    border-color: #7aa2f7;
+    box-shadow: 0 0 10px rgba(122, 162, 247, 0.35);
+}}
+.start-label {{
+    font-weight: bold;
+    font-size: 11px;
+    color: #c0caf5;
+}}
+
+.search-pill {{
+    background-color: #1a1b26;
+    border: 1px solid #292e42;
+    border-radius: 8px;
+    padding: 3px 10px;
+    min-height: 22px;
+}}
+.search-pill label {{
+    color: #7982a9;
+    font-size: 10px;
+}}
+.search-pill:hover {{
+    background-color: #24283b;
+    border-color: #7aa2f7;
+}}
+.search-pill:hover label {{
+    color: #c0caf5;
+}}
+
+.dock-app-btn {{
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 3px 6px;
+    min-width: 28px;
+    min-height: 28px;
+}}
+.dock-app-btn:hover {{
+    background-color: #24283b;
+    border-color: #3b4261;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}}
+.app-indicator {{
+    min-height: 2px;
+    min-width: 14px;
+    border-radius: 2px;
+    background-color: transparent;
+    margin-top: 1px;
+}}
+.app-indicator-running {{
+    background-color: #7aa2f7;
+    box-shadow: 0 0 6px #7aa2f7;
+}}
+
+.dock-install {{
+    background-color: #1a1b26;
+    border: 1px solid #7aa2f7;
+    border-radius: 8px;
+    padding: 2px 10px;
+}}
+.dock-install label {{
+    color: #7aa2f7;
+    font-weight: bold;
+    font-size: 10px;
+}}
+.dock-install:hover {{
+    background-color: #283457;
+}}
+
+.show-desktop-btn {{
+    background-color: #292e42;
+    border-radius: 4px;
+    min-width: 6px;
+    min-height: 28px;
+    margin-left: 4px;
+}}
+.show-desktop-btn:hover {{
+    background-color: #7aa2f7;
+    box-shadow: 0 0 8px #7aa2f7;
+}}
+
+/* Cards & Popups */
+.card {{
+    background-color: rgba(20, 21, 32, 0.97);
+    border: 1px solid #292e42;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+}}
 .card-welcome {{ padding: 22px; }}
-.card-blue {{ border: 2px solid #7aa2f7; }}
-.card-red {{ border-color: #f7768e; }}
-.card-yellow {{ border-color: #e0af68; }}
-.card-purple {{ border-color: #bb9af7; }}
+.card-blue {{ border: 2px solid rgba(122, 162, 247, 0.6); }}
+.card-red {{ border-color: rgba(247, 118, 142, 0.6); }}
+.card-yellow {{ border-color: rgba(224, 175, 104, 0.6); }}
+.card-purple {{ border-color: rgba(187, 154, 247, 0.6); }}
 .title {{ font-weight: bold; font-size: 13px; }}
-.muted {{ color: #9aa5ce; font-size: 10px; }}
-.sep {{ background-color: #3b4261; min-height: 1px; }}
-.row {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; padding: 6px 10px; }}
-.row:hover {{ background-color: #3b4261; }}
+.muted {{ color: #7982a9; font-size: 10px; }}
+.sep {{ background-color: #292e42; min-height: 1px; }}
+.sep-v {{ background-color: #292e42; min-width: 1px; margin: 4px 6px; }}
+.row {{ background-color: #1a1b26; border: 1px solid #292e42; border-radius: 8px; padding: 6px 10px; }}
+.row:hover {{ background-color: #24283b; border-color: #3b4261; }}
 .row-title {{ font-weight: bold; }}
 .row-desc {{ color: #565f89; font-size: 10px; }}
-.key {{ color: #7aa2f7; font-weight: bold; background-color: #1a1b26; border: 1px solid #7aa2f7; border-radius: 5px; padding: 2px 7px; font-size: 10px; }}
-.tab {{ background-color: #16161e; border: 1px solid #3b4261; border-radius: 8px; padding: 8px; font-weight: bold; }}
+.key {{ color: #7aa2f7; font-weight: bold; background-color: #14161f; border: 1px solid #7aa2f7; border-radius: 5px; padding: 2px 7px; font-size: 10px; }}
+.tab {{ background-color: #16161e; border: 1px solid #292e42; border-radius: 8px; padding: 8px; font-weight: bold; }}
 .tab:hover {{ background-color: #24283b; }}
 .tab-active {{ background-color: #283457; border-color: #7aa2f7; }}
-.btn-open {{ background-color: #1a1b26; border: 1px solid #7aa2f7; border-radius: 6px; padding: 3px 12px; font-size: 10px; font-weight: bold; color: #7aa2f7; }}
+.btn-open {{ background-color: #14161f; border: 1px solid #7aa2f7; border-radius: 6px; padding: 3px 12px; font-size: 10px; font-weight: bold; color: #7aa2f7; }}
 .btn-open:hover {{ background-color: #7aa2f7; }}
-.btn-open:hover label {{ color: #1a1b26; }}
+.btn-open:hover label {{ color: #14161f; }}
 .btn-red {{ border-color: #f7768e; }}
 .btn-red label {{ color: #f7768e; }}
 .btn-yellow {{ border-color: #e0af68; }}
 .btn-yellow label {{ color: #e0af68; }}
 .glyph {{ font-size: 15px; }}
 .glyph-media {{ font-size: 17px; }}
-entry {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; padding: 7px 10px; color: #c0caf5; }}
-entry:focus {{ border-color: #7aa2f7; }}
+entry, entry text {{ background-color: #161722; border: 1px solid #3b4261; border-radius: 8px; padding: 7px 12px; color: #ffffff; font-size: 13px; caret-color: #7aa2f7; }}
+entry:focus, entry:focus text {{ border-color: #7aa2f7; background-color: #1a1b26; color: #ffffff; }}
+entry text selection {{ background-color: #7aa2f7; color: #14161f; }}
 scrolledwindow, viewport, list, listbox {{ background-color: transparent; }}
 list row, listbox row {{ background-color: transparent; padding: 2px 0; }}
 list row:selected, listbox row:selected {{ background-color: transparent; }}
 list row:selected .row, listbox row:selected .row {{ border-color: #7aa2f7; background-color: #283457; }}
-calendar {{ background-color: #24283b; border: 1px solid #3b4261; border-radius: 8px; color: #c0caf5; }}
-calendar:selected {{ background-color: #7aa2f7; color: #1a1b26; }}
+calendar {{ background-color: #1a1b26; border: 1px solid #292e42; border-radius: 8px; color: #c0caf5; }}
+calendar:selected {{ background-color: #7aa2f7; color: #14161f; }}
 calendar.header, calendar.button {{ color: #7aa2f7; }}
-.toast {{ background-color: #1a1b26; border: 1px solid #7aa2f7; border-radius: 10px; padding: 10px 14px; }}
-.card-context {{ background-color: rgba(26, 27, 38, 0.96); border: 1px solid #3b4261; border-radius: 12px; padding: 8px 10px; }}
+.toast {{ background-color: rgba(20, 21, 32, 0.96); border: 1px solid #7aa2f7; border-radius: 10px; padding: 10px 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }}
+.card-context {{ background-color: rgba(20, 21, 32, 0.96); border: 1px solid #292e42; border-radius: 12px; padding: 8px 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }}
 .menu-section-title {{ color: #7aa2f7; font-size: 9px; font-weight: bold; letter-spacing: 0.8px; padding: 4px 6px 2px 6px; }}
 .menu-icon {{ font-size: 14px; color: #7aa2f7; min-width: 18px; }}
 .menu-item {{ border-radius: 6px; padding: 4px 8px; background-color: transparent; border: 1px solid transparent; }}
-.menu-item:hover {{ background-color: #24283b; border-color: #3b4261; }}
+.menu-item:hover {{ background-color: #1a1b26; border-color: #3b4261; }}
 .menu-item-accent:hover {{ background-color: #283457; border-color: #7aa2f7; }}
-.menu-shortcut {{ color: #7aa2f7; font-size: 9px; font-weight: bold; background-color: #16161e; border: 1px solid #292e42; border-radius: 4px; padding: 1px 6px; }}
-.win-pill {{ background-color: #1f2335; border: 1px solid #3b4261; border-radius: 6px; padding: 1px 8px; }}
-.win-pill label {{ color: #7dcfff; font-size: 10px; }}
 """
 
 KEYBINDS = [
@@ -364,11 +543,12 @@ class Popup(Layer):
 
 
 # ----------------------------------------------------------------------------
-# Top Bar
+# Top Bar (Full Length Floating Glass Bar)
 # ----------------------------------------------------------------------------
 class TopBar(Layer):
     def __init__(self, shell, monitor, index):
         super().__init__("topbar", GtkLayerShell.Layer.TOP, (E.TOP, E.LEFT, E.RIGHT),
+                         margins={E.TOP: 6, E.LEFT: 12, E.RIGHT: 12},
                          exclusive=True, monitor=monitor)
         self.shell = shell
         self.monitor = monitor
@@ -377,53 +557,77 @@ class TopBar(Layer):
         self.ws_buttons = {}
         self._last_cpu = None
 
-        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, homogeneous=True)
-        add_class(root, "topbar")
-        root.set_size_request(-1, 30)
+        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        add_class(root, "bar-full")
+        root.set_size_request(-1, 34)
         self.add(root)
 
-        left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
-        left.set_margin_start(10)
+        # ----------------- Left: Branding + Workspaces + Window Title -----------------
+        left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         left.set_halign(Gtk.Align.START)
 
+        # Branding chip
+        brand = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        brand.pack_start(make_icon(LOGO, 18), False, False, 0)
+        brand.pack_start(make_label("JacobOS", "brand-label"), False, False, 0)
+        brand_btn = flat_button(brand, "brand-chip", cb=lambda: shell.toggle("welcome"))
+        brand_btn.set_tooltip_text("JacobOS Hub (Super + W)")
+        left.pack_start(brand_btn, False, False, 0)
+
+        left.pack_start(add_class(Gtk.Box(), "sep-v"), False, False, 2)
+
+        # Workspaces
+        ws_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
         for wid in self.ws_ids:
             b = flat_button(str(wid), "ws", cb=lambda w=wid: spawn(f"hyprctl dispatch workspace {w}"))
             self.ws_buttons[wid] = b
-            left.pack_start(b, False, False, 0)
+            ws_box.pack_start(b, False, False, 0)
+        left.pack_start(ws_box, False, False, 0)
 
-        # Active Window Title Pill
+        left.pack_start(add_class(Gtk.Box(), "sep-v"), False, False, 2)
+
+        # Active Window Title
         self.win_title_pill = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         add_class(self.win_title_pill, "win-pill")
         self.win_title_label = Gtk.Label()
         self.win_title_label.set_ellipsize(Pango.EllipsizeMode.END)
-        self.win_title_label.set_max_width_chars(30)
+        self.win_title_label.set_max_width_chars(35)
         self.win_title_pill.pack_start(self.win_title_label, False, False, 0)
         self.win_title_pill.set_no_show_all(True)
-        left.pack_start(self.win_title_pill, False, False, 4)
+        left.pack_start(self.win_title_pill, False, False, 2)
 
         root.pack_start(left, True, True, 0)
 
-        center = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        # ----------------- Center: Live Clock & Media Chip -----------------
+        center = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         center.set_halign(Gtk.Align.CENTER)
         self.clock = Gtk.Label()
-        clock_btn = flat_button(self.clock, "pill", cb=lambda: shell.toggle("calendar"))
+        clock_btn = flat_button(self.clock, "pill", "clock-pill", cb=lambda: shell.toggle("calendar"))
         center.pack_start(clock_btn, False, False, 0)
+
+        media_chip = flat_button(f"{G_MEDIA}  Media", "pill", cb=lambda: shell.toggle("media"))
+        media_chip.set_tooltip_text("Audio & Media Player (Super + M)")
+        center.pack_start(media_chip, False, False, 0)
+
         root.pack_start(center, True, True, 0)
 
+        # ----------------- Right: Stats + Tray + Power -----------------
         right = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        right.set_margin_end(10)
         right.set_halign(Gtk.Align.END)
+
         self.cpu_l, self.ram_l, self.dsk_l, self.vol_l = (Gtk.Label() for _ in range(4))
         for lbl in (self.cpu_l, self.ram_l, self.dsk_l):
             pill = add_class(Gtk.Box(), "pill")
             pill.add(lbl)
             right.pack_start(pill, False, False, 0)
+
         right.pack_start(flat_button(self.vol_l, "pill", cb=lambda: shell.toggle("media")), False, False, 0)
         right.pack_start(flat_button(G_BELL, "pill", cb=lambda: shell.toggle("notifications")), False, False, 0)
+        right.pack_start(flat_button("󰒓", "pill", cb=lambda: shell.toggle("controlcenter")), False, False, 0)
         right.pack_start(flat_button(G_POWER, "pill", "btn-red", cb=lambda: shell.toggle("power")), False, False, 0)
         root.pack_start(right, True, True, 0)
 
-        # Right-click on top bar opens context menu
+        # Right-click on top bar opens desktop context menu
         self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.connect("button-press-event", self._on_bar_click)
 
@@ -436,12 +640,12 @@ class TopBar(Layer):
 
     def _on_bar_click(self, _w, ev):
         if ev.button == 3:
-            self.shell.show_context_menu(self.monitor, ev.x, 35)
+            self.shell.show_context_menu(self.monitor, ev.x, 48)
             return True
         return False
 
     def tick_clock(self):
-        self.clock.set_text(f"{G_CAL}  {time.strftime('%b %d • %I:%M %p')}")
+        self.clock.set_text(f"{G_CAL}  {time.strftime('%a, %b %d • %I:%M %p')}")
         return True
 
     @staticmethod
@@ -498,10 +702,9 @@ class TopBar(Layer):
         try:
             rw = subprocess.run(["hyprctl", "-j", "activewindow"], stdout=subprocess.PIPE,
                                 stderr=subprocess.DEVNULL, text=True, timeout=1)
-            win_data = json.loads(rw.stdout)
-            title = win_data.get("title", "").strip()
-            mon_id = win_data.get("monitor", -1)
-            if title and mon_id == self.mon_index:
+            wdata = json.loads(rw.stdout)
+            title = wdata.get("title") or wdata.get("class") or ""
+            if title:
                 self.win_title_label.set_text(title)
                 self.win_title_pill.show_all()
             else:
@@ -512,63 +715,134 @@ class TopBar(Layer):
 
 
 # ----------------------------------------------------------------------------
-# Bottom Dock
+# Bottom Dock (Full Length Floating Glass Taskbar)
 # ----------------------------------------------------------------------------
 class BottomDock(Layer):
     def __init__(self, shell, monitor):
-        super().__init__("dock", GtkLayerShell.Layer.TOP, (E.BOTTOM,), {E.BOTTOM: 5},
+        super().__init__("dock", GtkLayerShell.Layer.TOP, (E.BOTTOM, E.LEFT, E.RIGHT),
+                         margins={E.BOTTOM: 6, E.LEFT: 12, E.RIGHT: 12},
                          exclusive=True, monitor=monitor)
         self.shell = shell
         self.monitor = monitor
-        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        add_class(self.box, "dock")
-        self.add(self.box)
+        self.dock_buttons = []
+
+        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        add_class(root, "dock-full")
+        root.set_size_request(-1, 46)
+        self.add(root)
+
+        # ----------------- Left: Start Button + Search + Quick Launch -----------------
+        left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        left.set_halign(Gtk.Align.START)
+
+        # Start Button
+        start_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        start_box.pack_start(make_icon(LOGO, 22), False, False, 0)
+        start_lbl = Gtk.Label(label="Start")
+        add_class(start_lbl, "start-label")
+        start_box.pack_start(start_lbl, False, False, 0)
+        start_btn = flat_button(start_box, "dock-start", cb=lambda: self.shell.toggle("launcher"))
+        start_btn.set_tooltip_text("Start / App Drawer (Super)")
+        left.pack_start(start_btn, False, False, 0)
+
+        # Search Pill Trigger
+        search_btn = flat_button("󰍏  Search apps...", "search-pill", cb=lambda: self.shell.toggle("launcher"))
+        search_btn.set_tooltip_text("Search applications (Super)")
+        left.pack_start(search_btn, False, False, 0)
+
+        left.pack_start(add_class(Gtk.Box(), "sep-v"), False, False, 2)
+
+        # Quick terminal & files shortcuts
+        term_btn = flat_button(make_icon(f"{HICOLOR}/256x256/apps/kitty.png", 22), "dock-app-btn", cb=lambda: spawn("kitty"))
+        term_btn.set_tooltip_text("Terminal (Super + Return)")
+        left.pack_start(term_btn, False, False, 0)
+
+        files_btn = flat_button(make_icon(f"{HICOLOR}/128x128/apps/org.xfce.thunar.png", 22), "dock-app-btn", cb=lambda: spawn("thunar"))
+        files_btn.set_tooltip_text("File Manager (Super + E)")
+        left.pack_start(files_btn, False, False, 0)
+
+        root.pack_start(left, True, True, 0)
+
+        # ----------------- Center: Main Pinned & Running Apps -----------------
+        center = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        center.set_halign(Gtk.Align.CENTER)
+        self.dock_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        center.pack_start(self.dock_box, False, False, 0)
+        root.pack_start(center, True, True, 0)
+
+        # ----------------- Right: Utilities (Clipboard, Keys, Welcome) + Show Desktop -----------------
+        right = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        right.set_halign(Gtk.Align.END)
+
+        clip_btn = flat_button(f"{G_CLIP}  Clipboard", "pill", cb=lambda: self.shell.toggle("clipboard"))
+        clip_btn.set_tooltip_text("Clipboard History (Super + Shift + V)")
+        right.pack_start(clip_btn, False, False, 0)
+
+        keys_btn = flat_button(f"{G_KEY}  Keys", "pill", cb=lambda: self.shell.toggle("keybinds"))
+        keys_btn.set_tooltip_text("Keyboard Shortcuts (Super + K)")
+        right.pack_start(keys_btn, False, False, 0)
+
+        # Calamares installer (if exists)
+        if os.path.isfile("/usr/local/bin/launch-calamares"):
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 18), False, False, 0)
+            row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
+            right.pack_start(flat_button(row, "dock-install", cb=lambda: spawn("/usr/local/bin/launch-calamares")), False, False, 0)
+
+        # Show desktop bar at far right
+        show_dt = flat_button("", "show-desktop-btn", cb=lambda: spawn("hyprctl dispatch workspace special:magic"))
+        show_dt.set_tooltip_text("Show Desktop / Scratchpad (Super + S)")
+        right.pack_start(show_dt, False, False, 0)
+
+        root.pack_start(right, True, True, 0)
+
         self.rebuild()
 
-        # Right-click on dock background opens taskbar context menu
         self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.connect("button-press-event", self._on_dock_click)
+
+        GLib.timeout_add(1000, self.tick_running)
 
     def _on_dock_click(self, _w, ev):
         if ev.button == 3:
             geom = self.monitor.get_geometry()
-            self.shell.show_taskbar_context_menu(self.monitor, ev.x, max(35, geom.height - 180))
+            self.shell.show_taskbar_context_menu(self.monitor, ev.x, max(35, geom.height - 230))
             return True
         return False
 
     def rebuild(self):
-        for c in self.box.get_children():
-            self.box.remove(c)
-
-        # Start / App Launcher Button
-        launcher_btn = flat_button(make_icon(LOGO, 18), "dock-btn", cb=lambda: self.shell.toggle("launcher"))
-        launcher_btn.set_tooltip_text("Start / App Launcher (Super)")
-        self.box.pack_start(launcher_btn, False, False, 0)
+        for c in self.dock_box.get_children():
+            self.dock_box.remove(c)
+        self.dock_buttons.clear()
 
         # Dynamic Pinned Apps
         for app in self.shell.pinned_apps:
             icon_path = app.get("icon", LOGO)
             cmd = app.get("cmd") or f"gtk-launch '{app.get('desktop_id')}'"
             name = app.get("name", app.get("desktop_id", "App"))
+            desktop_id = app.get("desktop_id", "").lower()
 
             btn = Gtk.Button()
             btn.set_relief(Gtk.ReliefStyle.NONE)
             btn.set_focus_on_click(False)
-            btn.add(make_icon(icon_path, 20))
-            add_class(btn, "dock-btn")
+            add_class(btn, "dock-app-btn")
             btn.set_tooltip_text(name)
-            btn.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+
+            col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+            col.pack_start(make_icon(icon_path, 24), False, False, 0)
+            indicator = Gtk.Box()
+            add_class(indicator, "app-indicator")
+            col.pack_start(indicator, False, False, 0)
+            btn.add(col)
+
+            self.dock_buttons.append((desktop_id, indicator))
 
             def make_press_cb(a=app, c=cmd):
                 def _press(_w, ev):
                     if ev.button == 3:  # Right-click app context menu!
                         geom = self.monitor.get_geometry()
-                        alloc = _w.get_allocation()
-                        win_alloc = self.get_allocation()
-                        dock_x = (geom.width - win_alloc.width) // 2
-                        btn_x = dock_x + alloc.x + (alloc.width // 2)
-                        menu_y = geom.height - win_alloc.height - 210
-                        self.shell.show_app_context_menu(self.monitor, a, btn_x, menu_y, is_pinned=True)
+                        menu_x = min(max(10, int(ev.x)), geom.width - 260)
+                        self.shell.show_app_context_menu(self.monitor, a, menu_x, geom.height - 260, is_pinned=True)
                         return True
                     elif ev.button == 1:  # Left-click launch
                         spawn(c)
@@ -577,32 +851,37 @@ class BottomDock(Layer):
                 return _press
 
             btn.connect("button-press-event", make_press_cb())
-            self.box.pack_start(btn, False, False, 0)
+            self.dock_box.pack_start(btn, False, False, 0)
 
-        # System Settings
-        gear = Gtk.Label()
-        gear.set_markup("<span size='large'>\u2699</span>")
-        gear_btn = flat_button(gear, "dock-btn", cb=lambda: self.shell.toggle("controlcenter"))
-        gear_btn.set_tooltip_text("System Settings (Super + I)")
-        self.box.pack_start(gear_btn, False, False, 0)
+        self.dock_box.show_all()
 
-        # Calamares installer (if exists)
-        if os.path.isfile("/usr/local/bin/launch-calamares"):
-            self.box.pack_start(add_class(Gtk.Box(), "sep"), False, False, 2)
-            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            row.pack_start(make_icon(f"{HICOLOR}/scalable/apps/calamares.svg", 18), False, False, 0)
-            row.pack_start(Gtk.Label(label="Install Arch"), False, False, 0)
-            self.box.pack_start(flat_button(row, "dock-install", cb=lambda: spawn("/usr/local/bin/launch-calamares")), False, False, 0)
-
-        self.box.show_all()
-
+    def tick_running(self):
+        if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            return True
+        try:
+            rc = subprocess.run(["hyprctl", "-j", "clients"], stdout=subprocess.PIPE,
+                                stderr=subprocess.DEVNULL, text=True, timeout=1)
+            clients = json.loads(rc.stdout)
+            running_classes = {c.get("class", "").lower() for c in clients}
+            running_initial = {c.get("initialClass", "").lower() for c in clients}
+            all_running = running_classes.union(running_initial)
+            for did, ind in self.dock_buttons:
+                is_running = any(did in r or r in did for r in all_running if r)
+                ctx = ind.get_style_context()
+                if is_running:
+                    ctx.add_class("app-indicator-running")
+                else:
+                    ctx.remove_class("app-indicator-running")
+        except Exception:
+            pass
+        return True
 
 # ----------------------------------------------------------------------------
 # Application Launcher
 # ----------------------------------------------------------------------------
 class Launcher(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "launcher", keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        super().__init__(shell, "launcher", anchors=(E.BOTTOM, E.LEFT), margins={E.BOTTOM: 60, E.LEFT: 14}, keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
         card = card_box(10, 16)
         add_class(card, "card", "card-blue")
         card.set_size_request(540, 480)
@@ -694,7 +973,7 @@ class Launcher(Popup):
         q = self.entry.get_text().strip().lower()
         if not q or not hasattr(row, "app"):
             return True
-        name, desc, did = row.app
+        name, desc, did = row.app[:3]
         return q in name.lower() or q in desc.lower() or q in did.lower()
 
     def _on_changed(self, *_):
@@ -934,7 +1213,7 @@ class NotificationDaemon:
 # ----------------------------------------------------------------------------
 class ClipboardPopup(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "clipboard", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 36, E.RIGHT: 14},
+        super().__init__(shell, "clipboard", anchors=(E.BOTTOM, E.RIGHT), margins={E.BOTTOM: 60, E.RIGHT: 14},
                          keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
         card = card_box(10, 16)
         add_class(card, "card", "card-yellow")
@@ -1020,7 +1299,7 @@ def keybind_row(key, desc):
 
 class KeybindsPopup(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "keybinds", anchors=(E.TOP, E.LEFT), margins={E.TOP: 36, E.LEFT: 16},
+        super().__init__(shell, "keybinds", anchors=(E.BOTTOM, E.RIGHT), margins={E.BOTTOM: 60, E.RIGHT: 80},
                          keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
         card = card_box(10, 16)
         add_class(card, "card", "card-yellow")
@@ -1422,6 +1701,7 @@ class Shell:
         }
         self.notifier = NotificationDaemon(self)
         self._start_ipc()
+        self._start_cpp_monitor()
         if not os.path.exists(WELCOME_FLAG):
             GLib.timeout_add(1500, lambda: (self.toggle("welcome"), False)[-1])
 
@@ -1593,6 +1873,48 @@ class Shell:
             return True
 
         GLib.io_add_watch(srv.fileno(), GLib.IO_IN, on_accept)
+
+    def _start_cpp_monitor(self):
+        """Connect to high-performance C++ Hyprland event listener."""
+        bin_path = os.path.expanduser("~/.local/bin/hypr-monitor")
+        if not os.path.isfile(bin_path):
+            return
+        try:
+            self._cpp_proc = subprocess.Popen(
+                [bin_path], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1
+            )
+            def on_line(_fd, _cond):
+                line = self._cpp_proc.stdout.readline()
+                if not line:
+                    return False
+                parts = line.strip().split()
+                if not parts:
+                    return True
+                if parts[0] == "STATS" and len(parts) >= 4:
+                    cpu, ram, dsk = parts[1], parts[2], parts[3]
+                    for b in self.bars:
+                        b.cpu_l.set_text(f"{G_CPU} {cpu}%")
+                        b.ram_l.set_text(f"{G_RAM} {ram}%")
+                        b.dsk_l.set_text(f"{G_DISK} {dsk}%")
+                elif parts[0] == "EVENT" and len(parts) >= 2:
+                    ev = parts[1]
+                    if ev.startswith("workspace>>"):
+                        try:
+                            wid = int(ev.split(">>")[1])
+                            for b in self.bars:
+                                for w_id, btn in b.ws_buttons.items():
+                                    ctx = btn.get_style_context()
+                                    (ctx.add_class if w_id == wid else ctx.remove_class)("ws-active")
+                        except Exception:
+                            pass
+                    elif ev.startswith("activewindow>>"):
+                        for d in self.docks:
+                            d.tick_running()
+                return True
+
+            GLib.io_add_watch(self._cpp_proc.stdout.fileno(), GLib.IO_IN, on_line)
+        except Exception:
+            pass
 
 
 def main():
