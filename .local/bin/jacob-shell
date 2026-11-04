@@ -53,7 +53,7 @@ gi.require_version("GtkLayerShell", "0.1")
 from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, GtkLayerShell, Pango  # noqa: E402
 
 FONT = "JetBrainsMono Nerd Font"
-LOGO = "/usr/share/pixmaps/jacob-arch-logo.png"
+LOGO = "/usr/share/pixmaps/archlinux-logo.svg" if os.path.isfile("/usr/share/pixmaps/archlinux-logo.svg") else "/usr/share/pixmaps/archlinux-logo.png"
 HICOLOR = "/usr/share/icons/hicolor"
 WELCOME_FLAG = os.path.expanduser("~/.config/jacob-welcome-disabled")
 
