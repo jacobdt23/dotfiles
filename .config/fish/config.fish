@@ -6,7 +6,6 @@ if status is-interactive
 
     # Aliases
     alias v="nvim"
-    alias vim="nvim"
     alias nv="neovide"
     alias gs="git status"
     alias ll="ls -lah"
