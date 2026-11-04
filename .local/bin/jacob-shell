@@ -61,6 +61,7 @@ WELCOME_FLAG = os.path.expanduser("~/.config/jacob-welcome-disabled")
 G_CPU, G_RAM, G_DISK = "\U000F0EE0", "\U000F035B", "\U000F02CA"
 G_VOL, G_BELL, G_POWER, G_CAL = "\U000F057E", "\U000F009A", "\U000F0425", "\U000F00ED"
 G_LOCK, G_REBOOT, G_CLIP, G_KEY, G_MEDIA = "\U000F033E", "\U000F0709", "\U000F0147", "\U000F030C", "\U000F057E"
+G_LOGOUT, G_SLEEP, G_CLOSE = "\U000F0343", "\U000F0485", "\U000F0156"
 G_PREV, G_PLAY, G_NEXT, G_VDN, G_VUP, G_MUTE = (
     "\U000F04AE", "\U000F040E", "\U000F04AD", "\U000F057F", "\U000F057E", "\U000F075F",
 )
@@ -314,6 +315,101 @@ calendar.header, calendar.button {{ color: #7aa2f7; }}
 .menu-item {{ border-radius: 6px; padding: 4px 8px; background-color: transparent; border: 1px solid transparent; }}
 .menu-item:hover {{ background-color: #1a1b26; border-color: #3b4261; }}
 .menu-item-accent:hover {{ background-color: #283457; border-color: #7aa2f7; }}
+
+/* Fullscreen Power Menu Overlay */
+.power-backdrop {{
+    background-color: rgba(15, 17, 26, 0.72);
+}}
+.power-dialog {{
+    padding: 30px;
+}}
+.power-clock {{
+    font-size: 54px;
+    font-weight: 900;
+    color: #c0caf5;
+    letter-spacing: -1px;
+}}
+.power-date {{
+    font-size: 14px;
+    font-weight: 600;
+    color: #7aa2f7;
+}}
+.power-user {{
+    font-size: 11px;
+    color: #565f89;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}}
+.power-tile {{
+    background-color: rgba(26, 27, 38, 0.82);
+    border: 2px solid rgba(41, 46, 66, 0.85);
+    border-radius: 16px;
+    padding: 20px 14px;
+    min-width: 115px;
+    min-height: 125px;
+    transition: all 150ms ease-in-out;
+}}
+.power-tile:hover, .power-tile:focus {{
+    background-color: rgba(36, 40, 59, 0.95);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}}
+.power-tile-lock:hover, .power-tile-lock:focus {{
+    border-color: #7aa2f7;
+    box-shadow: 0 0 16px rgba(122, 162, 247, 0.45);
+}}
+.power-tile-sleep:hover, .power-tile-sleep:focus {{
+    border-color: #7dcfff;
+    box-shadow: 0 0 16px rgba(125, 207, 255, 0.45);
+}}
+.power-tile-logout:hover, .power-tile-logout:focus {{
+    border-color: #e0af68;
+    box-shadow: 0 0 16px rgba(224, 175, 104, 0.45);
+}}
+.power-tile-reboot:hover, .power-tile-reboot:focus {{
+    border-color: #bb9af7;
+    box-shadow: 0 0 16px rgba(187, 154, 247, 0.45);
+}}
+.power-tile-shutdown:hover, .power-tile-shutdown:focus {{
+    border-color: #f7768e;
+    box-shadow: 0 0 16px rgba(247, 118, 142, 0.45);
+}}
+.power-glyph {{
+    font-size: 34px;
+    margin-bottom: 6px;
+}}
+.power-title {{
+    font-size: 13px;
+    font-weight: 800;
+    color: #c0caf5;
+}}
+.power-key {{
+    font-size: 10px;
+    font-weight: bold;
+    color: #7982a9;
+    background-color: rgba(20, 22, 34, 0.8);
+    border: 1px solid rgba(41, 46, 66, 0.8);
+    border-radius: 5px;
+    padding: 2px 7px;
+    margin-top: 6px;
+}}
+.power-tile:hover .power-key, .power-tile:focus .power-key {{
+    color: #c0caf5;
+    border-color: #7aa2f7;
+}}
+.power-cancel-btn {{
+    background-color: rgba(26, 27, 38, 0.85);
+    border: 1px solid rgba(122, 162, 247, 0.35);
+    border-radius: 9px;
+    padding: 7px 22px;
+    color: #c0caf5;
+    font-size: 11px;
+    font-weight: bold;
+}}
+.power-cancel-btn:hover {{
+    background-color: #24283b;
+    border-color: #7aa2f7;
+    box-shadow: 0 0 12px rgba(122, 162, 247, 0.35);
+}}
 """
 
 KEYBINDS = [
@@ -341,7 +437,7 @@ KEYBINDS = [
     ("SUPER + SHIFT + V", "Toggle Clipboard History (cliphist)"),
     ("SUPER + M", "Toggle Media & Audio Player"),
     ("SUPER + L", "Toggle Calendar & Clock Dropdown"),
-    ("SUPER + Q", "Open Power Menu (Lock / Reboot / Off)"),
+    ("SUPER + Q", "Open Fullscreen Power Menu (Lock / Sleep / Logout / Reboot / Poweroff)"),
     ("SUPER + = / - / BS", "Volume Up / Down / Mute Audio"),
 ]
 
@@ -446,6 +542,25 @@ def run_out(cmd, timeout=3):
         r = subprocess.run(["sh", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                            text=True, timeout=timeout)
         return r.stdout.strip()
+    except Exception:
+        return ""
+
+
+def get_uptime():
+    try:
+        with open("/proc/uptime", "r") as f:
+            secs = int(float(f.readline().split()[0]))
+            h, rem = divmod(secs, 3600)
+            m, _ = divmod(rem, 60)
+            d, h = divmod(h, 24)
+            parts = []
+            if d:
+                parts.append(f"{d}d")
+            if h:
+                parts.append(f"{h}h")
+            if m:
+                parts.append(f"{m}m")
+            return " ".join(parts) or "< 1m"
     except Exception:
         return ""
 
@@ -607,9 +722,9 @@ class TopBar(Layer):
         # Branding chip
         brand = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         brand.pack_start(make_icon(LOGO, 18), False, False, 0)
-        brand.pack_start(make_label("JacobOS", "brand-label"), False, False, 0)
+        brand.pack_start(make_label("HyprFrost", "brand-label"), False, False, 0)
         brand_btn = flat_button(brand, "brand-chip", cb=lambda: shell.toggle("welcome"))
-        brand_btn.set_tooltip_text("JacobOS Hub (Super + W)")
+        brand_btn.set_tooltip_text("HyprFrost Hub (Super + W)")
         left.pack_start(brand_btn, False, False, 0)
 
         left.pack_start(add_class(Gtk.Box(), "sep-v"), False, False, 2)
@@ -1074,28 +1189,123 @@ class Launcher(Popup):
 
 
 # ----------------------------------------------------------------------------
-# Power Menu
+# Fullscreen Power Menu
 # ----------------------------------------------------------------------------
 class PowerMenu(Popup):
     def __init__(self, shell):
-        super().__init__(shell, "power", anchors=(E.TOP, E.RIGHT), margins={E.TOP: 36, E.RIGHT: 14},
-                         keyboard=GtkLayerShell.KeyboardMode.ON_DEMAND)
-        card = card_box(10, 16)
-        add_class(card, "card", "card-red")
-        card.set_size_request(230, -1)
-        self.add(card)
-        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        head.pack_start(add_class(make_label(G_POWER), "glyph"), False, False, 0)
-        head.pack_start(make_label("Session & Power", "title"), False, False, 0)
-        card.pack_start(head, False, False, 0)
-        card.pack_start(hline(), False, False, 0)
-        for glyph, label, cmd in ((G_LOCK, "Lock Screen", "hyprlock"),
-                                  (G_REBOOT, "Reboot System", "systemctl reboot"),
-                                  (G_POWER, "Power Off", "systemctl poweroff")):
-            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-            row.pack_start(add_class(make_label(glyph), "glyph"), False, False, 0)
-            row.pack_start(make_label(label, "row-title"), False, False, 0)
-            card.pack_start(flat_button(row, "row", cb=lambda c=cmd: (self.close_popup(), spawn(c))), False, False, 0)
+        super().__init__(
+            shell, "power",
+            anchors=(E.TOP, E.BOTTOM, E.LEFT, E.RIGHT),
+            keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE,
+        )
+
+        # Fullscreen backdrop event box (clicking empty space closes menu)
+        self.backdrop = Gtk.EventBox()
+        add_class(self.backdrop, "power-backdrop")
+        self.backdrop.connect("button-press-event", self._on_backdrop_clicked)
+        self.add(self.backdrop)
+
+        # Center alignment box
+        center_align = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        center_align.set_halign(Gtk.Align.CENTER)
+        center_align.set_valign(Gtk.Align.CENTER)
+        self.backdrop.add(center_align)
+
+        # Inner container that absorbs clicks so clicking inside dialog does not close it
+        inner_box = Gtk.EventBox()
+        inner_box.connect("button-press-event", lambda *_: True)
+        center_align.pack_start(inner_box, False, False, 0)
+
+        dialog = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=26)
+        add_class(dialog, "power-dialog")
+        dialog.set_halign(Gtk.Align.CENTER)
+        inner_box.add(dialog)
+
+        # Header: Clock, Date, Uptime & System info
+        header = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        header.set_halign(Gtk.Align.CENTER)
+
+        self.clock_lbl = make_label("", "power-clock", xalign=0.5)
+        self.date_lbl = make_label("", "power-date", xalign=0.5)
+        user = os.environ.get("USER", "jacob")
+        self.user_lbl = make_label(f"HyprFrost Linux • {user}", "power-user", xalign=0.5)
+
+        header.pack_start(self.clock_lbl, False, False, 0)
+        header.pack_start(self.date_lbl, False, False, 0)
+        header.pack_start(self.user_lbl, False, False, 0)
+        dialog.pack_start(header, False, False, 0)
+
+        # Action Tiles Row
+        actions_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        actions_box.set_halign(Gtk.Align.CENTER)
+        dialog.pack_start(actions_box, False, False, 0)
+
+        actions = [
+            (G_LOCK, "Lock", "L", "hyprlock", "power-tile-lock", "#7aa2f7"),
+            (G_SLEEP, "Sleep", "U", "systemctl suspend", "power-tile-sleep", "#7dcfff"),
+            (G_LOGOUT, "Logout", "E", "hyprctl dispatch exit", "power-tile-logout", "#e0af68"),
+            (G_REBOOT, "Reboot", "R", "systemctl reboot", "power-tile-reboot", "#bb9af7"),
+            (G_POWER, "Shutdown", "S", "systemctl poweroff", "power-tile-shutdown", "#f7768e"),
+        ]
+
+        for glyph, label, key_hint, cmd, css_class, color in actions:
+            btn_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            btn_box.set_halign(Gtk.Align.CENTER)
+            btn_box.set_valign(Gtk.Align.CENTER)
+
+            glyph_lbl = make_label(glyph, "power-glyph", xalign=0.5)
+            glyph_lbl.set_markup(f'<span font_size="38000" foreground="{color}">{glyph}</span>')
+
+            title_lbl = make_label(label, "power-title", xalign=0.5)
+            key_lbl = make_label(f"[ {key_hint} ]", "power-key", xalign=0.5)
+
+            btn_box.pack_start(glyph_lbl, False, False, 0)
+            btn_box.pack_start(title_lbl, False, False, 0)
+            btn_box.pack_start(key_lbl, False, False, 0)
+
+            tile_btn = flat_button(btn_box, "power-tile", css_class,
+                                   cb=lambda c=cmd: (self.close_popup(), spawn(c)))
+            actions_box.pack_start(tile_btn, False, False, 0)
+
+        # Footer: Cancel Button
+        footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        footer.set_halign(Gtk.Align.CENTER)
+        cancel_btn = flat_button(f"{G_CLOSE}  Cancel (ESC)", "power-cancel-btn", cb=self.close_popup)
+        footer.pack_start(cancel_btn, False, False, 0)
+        dialog.pack_start(footer, False, False, 0)
+
+    def _on_backdrop_clicked(self, widget, event):
+        self.close_popup()
+        return True
+
+    def on_open(self):
+        now = time.localtime()
+        self.clock_lbl.set_text(time.strftime("%I:%M %p", now))
+        self.date_lbl.set_text(f"{time.strftime('%A, %B %d, %Y', now)} • Uptime: {get_uptime()}")
+
+    def handle_key(self, ev):
+        k = ev.keyval
+        if k in (Gdk.KEY_l, Gdk.KEY_L):
+            self.close_popup()
+            spawn("hyprlock")
+            return True
+        elif k in (Gdk.KEY_u, Gdk.KEY_U, Gdk.KEY_z, Gdk.KEY_Z):
+            self.close_popup()
+            spawn("systemctl suspend")
+            return True
+        elif k in (Gdk.KEY_e, Gdk.KEY_E):
+            self.close_popup()
+            spawn("hyprctl dispatch exit")
+            return True
+        elif k in (Gdk.KEY_r, Gdk.KEY_R):
+            self.close_popup()
+            spawn("systemctl reboot")
+            return True
+        elif k in (Gdk.KEY_s, Gdk.KEY_S, Gdk.KEY_p, Gdk.KEY_P):
+            self.close_popup()
+            spawn("systemctl poweroff")
+            return True
+        return False
 
 
 # ----------------------------------------------------------------------------
@@ -1409,7 +1619,7 @@ class WelcomeCenter(Popup):
         head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
         head.pack_start(make_icon(LOGO, 42), False, False, 0)
         titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        titles.pack_start(add_class(make_label("Welcome to Jacob's Custom Arch Linux"), "title"), False, False, 0)
+        titles.pack_start(add_class(make_label("Welcome to HyprFrost Linux"), "title"), False, False, 0)
         sub = make_label("Hyprland + Python/GTK Shell (TokyoNight) • Btrfs + Timeshift Rollback • UEFI & BIOS Ready", "muted")
         titles.pack_start(sub, False, False, 0)
         head.pack_start(titles, False, False, 0)
