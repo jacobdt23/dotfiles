@@ -85,7 +85,7 @@ hl.layer_rule({
 })
 
 hl.layer_rule({
-    match = { namespace = "jacob-.*" },
+    match = { namespace = "jacob-(topbar|dock|launcher|clipboard|power|calendar|notifications|toast|media|keybinds|welcome|contextmenu|appcontextmenu|taskbarmenu)" },
     blur  = true,
 })
 
