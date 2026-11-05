@@ -1,0 +1,51 @@
+#!/bin/bash
+# =============================================================================
+# fix-boot-branding: Apply HyprFrost branding to GRUB, TTY, and early boot
+# =============================================================================
+set -euo pipefail
+
+if [ "$EUID" -ne 0 ]; then
+    echo -e "\033[1;31m[-] This script requires root privileges. Please run with sudo: sudo fix-boot-branding\033[0m"
+    exit 1
+fi
+
+echo -e "\033[1;34m:: Updating early boot & GRUB branding to HyprFrost...\033[0m"
+
+# 1. Update GRUB distributor
+if [ -f /etc/default/grub ]; then
+    echo "   Updating /etc/default/grub (GRUB_DISTRIBUTOR='HyprFrost')..."
+    sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="HyprFrost"/' /etc/default/grub
+fi
+
+# 2. Update grub-btrfs snapshot submenu name
+if [ -f /etc/default/grub-btrfs/config ]; then
+    echo "   Updating /etc/default/grub-btrfs/config (HyprFrost Snapshots)..."
+    sed -i 's/^#*GRUB_BTRFS_SUBMENUNAME=.*/GRUB_BTRFS_SUBMENUNAME="HyprFrost Snapshots"/' /etc/default/grub-btrfs/config
+fi
+
+# 3. Update /etc/issue (TTY / console login greeting shown before desktop)
+echo "   Updating /etc/issue..."
+echo -e "\e[1;38;2;122;162;247mHyprFrost (Arch Linux Rolling)\e[0m (\l)\n" > /etc/issue
+
+# 4. Update /etc/motd (message of the day)
+echo "   Updating /etc/motd..."
+cat > /etc/motd << 'EOF'
+===============================================================================
+  HyprFrost (Arch Linux Rolling)
+===============================================================================
+EOF
+
+# 5. Update /etc/os-release IDs
+if [ -f /etc/os-release ]; then
+    echo "   Updating /etc/os-release IDs..."
+    sed -i 's/^ID=.*/ID=hyprfrost/' /etc/os-release
+    sed -i 's/^IMAGE_ID=.*/IMAGE_ID=hyprfrost/' /etc/os-release
+fi
+
+# 6. Regenerate GRUB bootloader configuration
+echo ""
+echo -e "\033[1;36m:: Regenerating /boot/grub/grub.cfg with HyprFrost entries...\033[0m"
+grub-mkconfig -o /boot/grub/grub.cfg
+
+echo ""
+echo -e "\033[1;32m✔ Early boot and GRUB branding updated successfully to HyprFrost!\033[0m"
