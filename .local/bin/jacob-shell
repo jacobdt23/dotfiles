@@ -39,6 +39,8 @@ if len(sys.argv) > 1:
         sys.exit(0)
     sys.exit(send_command(sys.argv[1:]))
 
+import configparser
+import glob
 import json
 import shutil
 import subprocess
@@ -490,10 +492,10 @@ DEFAULT_PINNED_APPS = [
         "cmd": "thunar",
     },
     {
-        "name": "Firefox Browser",
-        "desktop_id": "firefox",
-        "icon": f"{HICOLOR}/256x256/apps/firefox.png",
-        "cmd": "firefox",
+        "name": "Brave Browser",
+        "desktop_id": "brave-browser",
+        "icon": f"{HICOLOR}/256x256/apps/brave-desktop.png",
+        "cmd": "brave",
     },
     {
         "name": "Steam",
@@ -867,6 +869,62 @@ class TopBar(Layer):
         return True
 
 
+DESKTOP_LOOKUP = {}
+
+
+def get_app_metadata(app_class):
+    global DESKTOP_LOOKUP
+    if not DESKTOP_LOOKUP:
+        search_dirs = [
+            "/usr/share/icons/hicolor/256x256/apps",
+            "/usr/share/icons/hicolor/128x128/apps",
+            "/usr/share/icons/hicolor/scalable/apps",
+            "/usr/share/icons/Papirus-Dark/48x48/apps",
+            "/usr/share/icons/Papirus/48x48/apps",
+            "/usr/share/pixmaps",
+        ]
+        files = glob.glob("/usr/share/applications/*.desktop") + glob.glob(
+            os.path.expanduser("~/.local/share/applications/*.desktop")
+        )
+        for f in files:
+            did = os.path.splitext(os.path.basename(f))[0].lower()
+            try:
+                cp = configparser.ConfigParser(interpolation=None, strict=False)
+                cp.read(f, encoding="utf-8")
+                if "Desktop Entry" not in cp:
+                    continue
+                sec = cp["Desktop Entry"]
+                name = sec.get("Name", did)
+                icon_raw = sec.get("Icon", "")
+                wmclass = sec.get("StartupWMClass", "").lower()
+                icon_path = ""
+                if icon_raw:
+                    if os.path.isfile(icon_raw):
+                        icon_path = icon_raw
+                    else:
+                        for d in search_dirs:
+                            for ext in (".png", ".svg"):
+                                p = os.path.join(d, icon_raw + ext)
+                                if os.path.isfile(p):
+                                    icon_path = p
+                                    break
+                            if icon_path:
+                                break
+                entry = {"name": name, "icon": icon_path or LOGO, "desktop_id": did}
+                DESKTOP_LOOKUP[did] = entry
+                if wmclass:
+                    DESKTOP_LOOKUP[wmclass] = entry
+            except Exception:
+                pass
+    q = (app_class or "").lower()
+    if q in DESKTOP_LOOKUP:
+        return DESKTOP_LOOKUP[q]
+    for k, v in DESKTOP_LOOKUP.items():
+        if k in q or q in k:
+            return v
+    return {"name": app_class.capitalize(), "icon": LOGO, "desktop_id": q}
+
+
 # ----------------------------------------------------------------------------
 # Bottom Dock (Full Length Floating Glass Taskbar)
 # ----------------------------------------------------------------------------
@@ -878,6 +936,7 @@ class BottomDock(Layer):
         self.shell = shell
         self.monitor = monitor
         self.dock_buttons = []
+        self.unpinned_classes = tuple()
 
         root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, homogeneous=True)
         add_class(root, "dock-full")
@@ -965,6 +1024,21 @@ class BottomDock(Layer):
         for c in self.dock_box.get_children():
             self.dock_box.remove(c)
         self.dock_buttons.clear()
+        self.unpinned_classes = tuple()
+
+        self.pinned_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        self.pinned_box.set_valign(Gtk.Align.CENTER)
+        self.dock_box.pack_start(self.pinned_box, False, False, 0)
+
+        self.sep = add_class(Gtk.Box(), "sep-v")
+        self.sep.set_size_request(1, 24)
+        self.sep.set_valign(Gtk.Align.CENTER)
+        self.sep.set_no_show_all(True)
+        self.dock_box.pack_start(self.sep, False, False, 2)
+
+        self.unpinned_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        self.unpinned_box.set_valign(Gtk.Align.CENTER)
+        self.dock_box.pack_start(self.unpinned_box, False, False, 0)
 
         # Dynamic Pinned Apps
         for app in self.shell.pinned_apps:
@@ -1012,7 +1086,7 @@ class BottomDock(Layer):
                 return _press
 
             btn.connect("button-press-event", make_press_cb())
-            self.dock_box.pack_start(btn, False, False, 0)
+            self.pinned_box.pack_start(btn, False, False, 0)
 
         # Calamares installer (if running in live environment)
         if os.path.isfile(CALAMARES_BIN):
@@ -1030,16 +1104,92 @@ class BottomDock(Layer):
             rc = subprocess.run(["hyprctl", "-j", "clients"], stdout=subprocess.PIPE,
                                 stderr=subprocess.DEVNULL, text=True, timeout=1)
             clients = json.loads(rc.stdout)
-            running_classes = {c.get("class", "").lower() for c in clients}
-            running_initial = {c.get("initialClass", "").lower() for c in clients}
+            running_classes = {c.get("class", "").lower() for c in clients if c.get("class")}
+            running_initial = {c.get("initialClass", "").lower() for c in clients if c.get("initialClass")}
             all_running = running_classes.union(running_initial)
+
+            pinned_dids = set()
             for did, ind in self.dock_buttons:
+                pinned_dids.add(did)
                 is_running = any(did in r or r in did for r in all_running if r)
                 ctx = ind.get_style_context()
                 if is_running:
                     ctx.add_class("app-indicator-running")
                 else:
                     ctx.remove_class("app-indicator-running")
+
+            # Track unpinned running windows
+            unpinned_map = {}
+            for c in clients:
+                cls = c.get("class", "")
+                if not cls:
+                    continue
+                cls_lower = cls.lower()
+                init_lower = c.get("initialClass", "").lower()
+                if any(did in cls_lower or cls_lower in did or (init_lower and (did in init_lower or init_lower in did)) for did in pinned_dids):
+                    continue
+                if cls_lower.startswith("jacob-") or cls_lower in ("hyprlock", "swappy", "slurp"):
+                    continue
+                if cls_lower not in unpinned_map:
+                    unpinned_map[cls_lower] = c
+
+            current_unpinned_classes = tuple(sorted(unpinned_map.keys()))
+            if current_unpinned_classes != self.unpinned_classes:
+                self.unpinned_classes = current_unpinned_classes
+                for child in self.unpinned_box.get_children():
+                    self.unpinned_box.remove(child)
+
+                if current_unpinned_classes:
+                    self.sep.show()
+                else:
+                    self.sep.hide()
+
+                for cls_name in current_unpinned_classes:
+                    client = unpinned_map[cls_name]
+                    meta = get_app_metadata(cls_name)
+                    app_name = meta.get("name") or client.get("title") or cls_name.capitalize()
+                    app_icon = meta.get("icon") or LOGO
+                    raw_cls = client.get("class") or cls_name
+
+                    btn = Gtk.Button()
+                    btn.set_relief(Gtk.ReliefStyle.NONE)
+                    btn.set_focus_on_click(False)
+                    btn.set_valign(Gtk.Align.CENTER)
+                    add_class(btn, "dock-app-btn")
+                    btn.set_tooltip_text(app_name)
+
+                    col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                    col.set_valign(Gtk.Align.CENTER)
+                    col.set_halign(Gtk.Align.CENTER)
+
+                    top_spacer = Gtk.Box()
+                    top_spacer.set_size_request(16, 3)
+                    col.pack_start(top_spacer, False, False, 0)
+
+                    col.pack_start(make_icon(app_icon, 26), False, False, 0)
+                    indicator = Gtk.Box()
+                    add_class(indicator, "app-indicator", "app-indicator-running")
+                    indicator.set_size_request(16, 3)
+                    col.pack_start(indicator, False, False, 0)
+                    btn.add(col)
+
+                    def make_unpinned_press_cb(app_data=meta, target_class=raw_cls):
+                        def _press(_w, ev):
+                            if ev.button == 3:
+                                geom = self.monitor.get_geometry()
+                                menu_x = min(max(10, int(ev.x)), geom.width - 260)
+                                self.shell.show_app_context_menu(self.monitor, app_data, menu_x, geom.height - 260, is_pinned=False)
+                                return True
+                            elif ev.button == 1:
+                                spawn(f"hyprctl dispatch focuswindow class:'{target_class}'")
+                                return True
+                            return False
+                        return _press
+
+                    btn.connect("button-press-event", make_unpinned_press_cb())
+                    self.unpinned_box.pack_start(btn, False, False, 0)
+
+                self.unpinned_box.show_all()
         except Exception:
             pass
         return True

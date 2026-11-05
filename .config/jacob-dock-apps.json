@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Terminal (Kitty)",
+    "desktop_id": "kitty",
+    "icon": "/usr/share/icons/hicolor/256x256/apps/kitty.png",
+    "cmd": "command -v kitty >/dev/null && exec kitty || exec alacritty"
+  },
+  {
+    "name": "File Manager (Thunar)",
+    "desktop_id": "thunar",
+    "icon": "/usr/share/icons/hicolor/128x128/apps/org.xfce.thunar.png",
+    "cmd": "thunar"
+  },
+  {
+    "name": "Brave Browser",
+    "desktop_id": "brave-browser",
+    "icon": "/usr/share/icons/hicolor/256x256/apps/brave-desktop.png",
+    "cmd": "brave"
+  },
+  {
+    "name": "Steam",
+    "desktop_id": "steam",
+    "icon": "/usr/share/icons/hicolor/256x256/apps/steam.png",
+    "cmd": "steam"
+  },
+  {
+    "name": "Audio Mixer (Pavucontrol)",
+    "desktop_id": "pavucontrol",
+    "icon": "/usr/share/icons/hicolor/scalable/apps/org.pulseaudio.pavucontrol.svg",
+    "cmd": "pavucontrol"
+  },
+  {
+    "name": "Timeshift",
+    "desktop_id": "timeshift-gtk",
+    "icon": "/usr/share/icons/hicolor/128x128/apps/timeshift.png",
+    "cmd": "/usr/local/bin/timeshift-launcher"
+  }
+]
