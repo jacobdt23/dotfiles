@@ -1,0 +1,53 @@
+#!/bin/bash
+# =============================================================================
+# setup-zram: Configure high-performance zram compressed swap on HyprFrost
+# =============================================================================
+set -euo pipefail
+
+if [ "$EUID" -ne 0 ]; then
+    echo -e "\033[1;31m[-] This script requires root privileges. Please run with sudo: sudo setup-zram\033[0m"
+    exit 1
+fi
+
+echo -e "\033[1;34m:: Setting up zram-generator on HyprFrost...\033[0m"
+
+# 1. Install zram-generator
+echo "   Installing zram-generator..."
+pacman -S --needed --noconfirm zram-generator
+
+# 2. Write /etc/systemd/zram-generator.conf
+echo "   Writing /etc/systemd/zram-generator.conf..."
+cat > /etc/systemd/zram-generator.conf << 'EOF'
+# HyprFrost zram Configuration (systemd-zram-generator)
+[zram0]
+zram-size = min(ram, 32768)
+compression-algorithm = zstd
+swap-priority = 100
+fs-type = swap
+EOF
+
+# 3. Write kernel virtual memory sysctl optimizations
+echo "   Writing /etc/sysctl.d/99-vm-zram.conf..."
+cat > /etc/sysctl.d/99-vm-zram.conf << 'EOF'
+# Virtual Memory tuning for high-performance zram
+vm.swappiness = 180
+vm.watermark_boost_factor = 0
+vm.watermark_scale_factor = 125
+vm.page-cluster = 0
+EOF
+
+# 4. Apply sysctl settings immediately
+echo "   Applying sysctl parameters..."
+sysctl --system >/dev/null
+
+# 5. Reload systemd and start zram device
+echo "   Starting zram swap device..."
+systemctl daemon-reload
+systemctl start /dev/zram0
+
+echo ""
+echo -e "\033[1;32m✔ zram successfully configured and active!\033[0m"
+echo ""
+zramctl
+echo ""
+swapon --show
