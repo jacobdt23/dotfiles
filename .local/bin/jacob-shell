@@ -498,6 +498,12 @@ DEFAULT_PINNED_APPS = [
         "cmd": "brave",
     },
     {
+        "name": "Antigravity",
+        "desktop_id": "antigravity",
+        "icon": "/usr/share/pixmaps/antigravity.png",
+        "cmd": "antigravity",
+    },
+    {
         "name": "Steam",
         "desktop_id": "steam",
         "icon": f"{HICOLOR}/256x256/apps/steam.png",
@@ -876,12 +882,17 @@ def get_app_metadata(app_class):
     global DESKTOP_LOOKUP
     if not DESKTOP_LOOKUP:
         search_dirs = [
+            os.path.expanduser("~/.local/share/icons/hicolor/512x512/apps"),
+            os.path.expanduser("~/.local/share/icons/hicolor/256x256/apps"),
+            os.path.expanduser("~/.local/share/icons/hicolor/scalable/apps"),
             "/usr/share/icons/hicolor/256x256/apps",
             "/usr/share/icons/hicolor/128x128/apps",
             "/usr/share/icons/hicolor/scalable/apps",
+            "/usr/share/pixmaps",
+            os.path.expanduser("~/.local/share/icons/Papirus-Dark/48x48/apps"),
+            os.path.expanduser("~/.local/share/icons/Papirus/48x48/apps"),
             "/usr/share/icons/Papirus-Dark/48x48/apps",
             "/usr/share/icons/Papirus/48x48/apps",
-            "/usr/share/pixmaps",
         ]
         files = glob.glob("/usr/share/applications/*.desktop") + glob.glob(
             os.path.expanduser("~/.local/share/applications/*.desktop")

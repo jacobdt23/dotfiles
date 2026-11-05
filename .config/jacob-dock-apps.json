@@ -18,6 +18,12 @@
     "cmd": "brave"
   },
   {
+    "name": "Antigravity",
+    "desktop_id": "antigravity",
+    "icon": "/usr/share/pixmaps/antigravity.png",
+    "cmd": "antigravity"
+  },
+  {
     "name": "Steam",
     "desktop_id": "steam",
     "icon": "/usr/share/icons/hicolor/256x256/apps/steam.png",

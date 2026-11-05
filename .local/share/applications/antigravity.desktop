@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Antigravity
+Comment=Experience liftoff
+GenericName=Agentic Platform
+Exec=/usr/bin/antigravity %U
+Icon=/usr/share/pixmaps/antigravity.png
+Type=Application
+StartupNotify=false
+StartupWMClass=antigravity
+Categories=Development;Utility;
