@@ -1,0 +1,71 @@
+#!/bin/bash
+# =============================================================================
+# pkg-save: Export explicitly installed native (repo) and AUR packages
+# =============================================================================
+set -euo pipefail
+
+PKG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/packages"
+NATIVE_FILE="$PKG_DIR/native.txt"
+AUR_FILE="$PKG_DIR/aur.txt"
+
+mkdir -p "$PKG_DIR"
+
+show_list() {
+    echo -e "\033[1;34m:: Native Packages (Official Repos)\033[0m"
+    if [ -f "$NATIVE_FILE" ]; then
+        nl -w3 -s". " "$NATIVE_FILE"
+    else
+        echo "No native package list found. Run pkg-save first."
+    fi
+
+    echo ""
+    echo -e "\033[1;35m:: AUR Packages (Foreign / AUR)\033[0m"
+    if [ -f "$AUR_FILE" ]; then
+        nl -w3 -s". " "$AUR_FILE"
+    else
+        echo "No AUR package list found. Run pkg-save first."
+    fi
+}
+
+case "${1:-}" in
+    -l|--list)
+        show_list
+        exit 0
+        ;;
+    -h|--help)
+        echo "Usage: pkg-save [OPTIONS]"
+        echo "Export current explicitly installed native and AUR packages to ~/.config/packages/"
+        echo ""
+        echo "Options:"
+        echo "  -l, --list     Show current saved package lists"
+        echo "  -g, --git      Commit updated package lists to dotfiles repo"
+        echo "  -h, --help     Show this help message"
+        exit 0
+        ;;
+esac
+
+echo -e "\033[1;36m:: Scanning installed packages...\033[0m"
+
+# Export native explicitly installed packages
+pacman -Qenq | sort -u > "$NATIVE_FILE"
+NATIVE_COUNT="$(wc -l < "$NATIVE_FILE")"
+
+# Export foreign / AUR explicitly installed packages
+pacman -Qemq | sort -u > "$AUR_FILE"
+AUR_COUNT="$(wc -l < "$AUR_FILE")"
+
+TOTAL_COUNT=$((NATIVE_COUNT + AUR_COUNT))
+
+echo -e "\033[1;32m✔ Package lists updated successfully in $PKG_DIR\033[0m"
+echo -e "  \033[1;34m• Native packages:\033[0m $NATIVE_COUNT"
+echo -e "  \033[1;35m• AUR packages:\033[0m    $AUR_COUNT"
+echo -e "  \033[1;37m• Total explicit:\033[0m  $TOTAL_COUNT"
+
+if [ "${1:-}" = "-g" ] || [ "${1:-}" = "--git" ]; then
+    if [ -d "$HOME/.dotfiles" ]; then
+        echo -e "\033[1;33m:: Committing package lists to dotfiles repository...\033[0m"
+        /usr/bin/git --git-dir="$HOME/.dotfiles/" --work-tree="$HOME" add "$NATIVE_FILE" "$AUR_FILE"
+        /usr/bin/git --git-dir="$HOME/.dotfiles/" --work-tree="$HOME" commit -m "chore(packages): update native ($NATIVE_COUNT) and aur ($AUR_COUNT) package lists" || true
+        echo -e "\033[1;32m✔ Dotfiles updated!\033[0m"
+    fi
+fi

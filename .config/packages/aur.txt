@@ -1,0 +1,12 @@
+antigravity
+artcraft-launcher-bin
+brave-bin
+calamares
+davinci-resolve-studio
+google-chrome
+paru
+paru-debug
+protonup-qt
+timeshift-autosnap
+waypaper
+xpadneo-dkms

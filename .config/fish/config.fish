@@ -11,6 +11,12 @@ if status is-interactive
     alias ll="ls -lah"
     alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
+    # Package management
+    alias pkg-save='~/.local/bin/pkg-save'
+    alias pkg-list='~/.local/bin/pkg-save --list'
+    alias pkg-install='~/.local/bin/pkg-install'
+    alias paru-clean='paru -Sc'
+
     # Fastfetch system info on startup
     if type -q fastfetch
         fastfetch

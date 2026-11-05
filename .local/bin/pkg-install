@@ -1,0 +1,55 @@
+#!/bin/bash
+# =============================================================================
+# pkg-install: Restore/sync native and AUR packages from ~/.config/packages/
+# =============================================================================
+set -euo pipefail
+
+PKG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/packages"
+NATIVE_FILE="$PKG_DIR/native.txt"
+AUR_FILE="$PKG_DIR/aur.txt"
+
+DO_NATIVE=true
+DO_AUR=true
+
+case "${1:-}" in
+    --native-only|-n)
+        DO_AUR=false
+        ;;
+    --aur-only|-a)
+        DO_NATIVE=false
+        ;;
+    -h|--help)
+        echo "Usage: pkg-install [OPTIONS]"
+        echo "Restore or sync packages listed in ~/.config/packages/"
+        echo ""
+        echo "Options:"
+        echo "  -n, --native-only   Install only native packages via pacman"
+        echo "  -a, --aur-only      Install only AUR packages via paru"
+        echo "  -h, --help          Show this help message"
+        exit 0
+        ;;
+esac
+
+if [ "$DO_NATIVE" = true ]; then
+    if [ -f "$NATIVE_FILE" ]; then
+        echo -e "\033[1;34m:: Installing/verifying native packages via pacman...\033[0m"
+        sudo pacman -S --needed - < "$NATIVE_FILE"
+        echo -e "\033[1;32m✔ Native packages up to date.\033[0m"
+    else
+        echo -e "\033[1;31m[-] Native package list $NATIVE_FILE not found.\033[0m"
+    fi
+fi
+
+if [ "$DO_AUR" = true ]; then
+    if [ -f "$AUR_FILE" ]; then
+        echo -e "\033[1;35m:: Installing/verifying AUR packages via paru...\033[0m"
+        if command -v paru >/dev/null 2>&1; then
+            paru -S --needed - < "$AUR_FILE"
+            echo -e "\033[1;32m✔ AUR packages up to date.\033[0m"
+        else
+            echo -e "\033[1;31m[-] paru is not installed. Please install paru first.\033[0m"
+        fi
+    else
+        echo -e "\033[1;31m[-] AUR package list $AUR_FILE not found.\033[0m"
+    fi
+fi
