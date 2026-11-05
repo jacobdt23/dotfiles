@@ -40,10 +40,10 @@ EOF
 echo "   Applying sysctl parameters..."
 sysctl --system >/dev/null
 
-# 5. Reload systemd and start zram device
-echo "   Starting zram swap device..."
+# 5. Reload systemd and start zram service
+echo "   Starting zram swap service..."
 systemctl daemon-reload
-systemctl start /dev/zram0
+systemctl start systemd-zram-setup@zram0.service
 
 echo ""
 echo -e "\033[1;32m✔ zram successfully configured and active!\033[0m"
