@@ -11,6 +11,12 @@ fi
 
 echo -e "\033[1;34m:: Updating early boot & GRUB branding to HyprFrost...\033[0m"
 
+# 0. Ensure script is available in /usr/local/bin for sudo path lookup
+if [ ! -f /usr/local/bin/fix-boot-branding ]; then
+    cp -f "$0" /usr/local/bin/fix-boot-branding
+    chmod +x /usr/local/bin/fix-boot-branding
+fi
+
 # 1. Update GRUB distributor
 if [ -f /etc/default/grub ]; then
     echo "   Updating /etc/default/grub (GRUB_DISTRIBUTOR='HyprFrost')..."
