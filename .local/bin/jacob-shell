@@ -554,6 +554,23 @@ def run_out(cmd, timeout=3):
         return ""
 
 
+def compositor_dispatch_workspace(wid):
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        spawn(f"hyprctl dispatch workspace {wid}")
+    else:
+        spawn(f"qtile cmd-obj -o group {wid} -f toscreen")
+
+
+def compositor_logout():
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        spawn("hyprctl dispatch exit")
+    elif os.environ.get("QTILE_SOCKET") or shutil.which("qtile"):
+        spawn("qtile cmd-obj -o cmd -f shutdown")
+    else:
+        spawn("loginctl terminate-session self")
+
+
+
 def get_uptime():
     try:
         with open("/proc/uptime", "r") as f:
@@ -740,7 +757,7 @@ class TopBar(Layer):
         # Workspaces
         ws_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
         for wid in self.ws_ids:
-            b = flat_button(str(wid), "ws", cb=lambda w=wid: spawn(f"hyprctl dispatch workspace {w}"))
+            b = flat_button(str(wid), "ws", cb=lambda w=wid: compositor_dispatch_workspace(w))
             self.ws_buttons[wid] = b
             ws_box.pack_start(b, False, False, 0)
         left.pack_start(ws_box, False, False, 0)
@@ -848,30 +865,52 @@ class TopBar(Layer):
         return True
 
     def tick_workspace(self):
-        if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        active = None
+        title = ""
+        if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            try:
+                r = subprocess.run(["hyprctl", "-j", "activeworkspace"], stdout=subprocess.PIPE,
+                                   stderr=subprocess.DEVNULL, text=True, timeout=1)
+                active = json.loads(r.stdout).get("id")
+            except Exception:
+                pass
+            try:
+                rw = subprocess.run(["hyprctl", "-j", "activewindow"], stdout=subprocess.PIPE,
+                                    stderr=subprocess.DEVNULL, text=True, timeout=1)
+                wdata = json.loads(rw.stdout)
+                title = wdata.get("title") or wdata.get("class") or ""
+            except Exception:
+                pass
+        elif os.environ.get("QTILE_SOCKET") or shutil.which("qtile"):
+            try:
+                r = subprocess.run(["qtile", "cmd-obj", "-o", "group", "-f", "info"],
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, timeout=1)
+                gdata = json.loads(r.stdout)
+                name = gdata.get("name")
+                if name and str(name).isdigit():
+                    active = int(name)
+            except Exception:
+                pass
+            try:
+                rw = subprocess.run(["qtile", "cmd-obj", "-o", "window", "-f", "info"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, timeout=1)
+                wdata = json.loads(rw.stdout)
+                title = wdata.get("name") or ""
+            except Exception:
+                pass
+        else:
             return True
-        try:
-            r = subprocess.run(["hyprctl", "-j", "activeworkspace"], stdout=subprocess.PIPE,
-                               stderr=subprocess.DEVNULL, text=True, timeout=1)
-            active = json.loads(r.stdout).get("id")
-        except Exception:
-            return True
-        for wid, btn in self.ws_buttons.items():
-            ctx = btn.get_style_context()
-            (ctx.add_class if wid == active else ctx.remove_class)("ws-active")
 
-        try:
-            rw = subprocess.run(["hyprctl", "-j", "activewindow"], stdout=subprocess.PIPE,
-                                stderr=subprocess.DEVNULL, text=True, timeout=1)
-            wdata = json.loads(rw.stdout)
-            title = wdata.get("title") or wdata.get("class") or ""
-            if title:
-                self.win_title_label.set_text(title)
-                self.win_title_pill.show_all()
-            else:
-                self.win_title_pill.hide()
-        except Exception:
-            pass
+        if active is not None:
+            for wid, btn in self.ws_buttons.items():
+                ctx = btn.get_style_context()
+                (ctx.add_class if wid == active else ctx.remove_class)("ws-active")
+
+        if title:
+            self.win_title_label.set_text(title)
+            self.win_title_pill.show_all()
+        else:
+            self.win_title_pill.hide()
         return True
 
 
@@ -1109,14 +1148,30 @@ class BottomDock(Layer):
         self.dock_box.show_all()
 
     def tick_running(self):
-        if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-            return True
         try:
-            rc = subprocess.run(["hyprctl", "-j", "clients"], stdout=subprocess.PIPE,
-                                stderr=subprocess.DEVNULL, text=True, timeout=1)
-            clients = json.loads(rc.stdout)
-            running_classes = {c.get("class", "").lower() for c in clients if c.get("class")}
-            running_initial = {c.get("initialClass", "").lower() for c in clients if c.get("initialClass")}
+            running_classes = set()
+            running_initial = set()
+            clients = []
+            if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+                rc = subprocess.run(["hyprctl", "-j", "clients"], stdout=subprocess.PIPE,
+                                    stderr=subprocess.DEVNULL, text=True, timeout=1)
+                clients = json.loads(rc.stdout)
+                running_classes = {c.get("class", "").lower() for c in clients if c.get("class")}
+                running_initial = {c.get("initialClass", "").lower() for c in clients if c.get("initialClass")}
+            elif os.environ.get("QTILE_SOCKET") or shutil.which("qtile"):
+                rc = subprocess.run(["qtile", "cmd-obj", "-o", "cmd", "-f", "windows"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, timeout=1)
+                raw_wins = json.loads(rc.stdout)
+                for w in raw_wins:
+                    wm_class = w.get("wm_class") or []
+                    for c in wm_class:
+                        if c:
+                            running_classes.add(c.lower())
+                    cls_name = wm_class[0] if wm_class else w.get("name", "")
+                    clients.append({"class": cls_name, "initialClass": cls_name, "title": w.get("name", "")})
+            else:
+                return True
+
             all_running = running_classes.union(running_initial)
 
             pinned_dids = set()
@@ -1192,7 +1247,10 @@ class BottomDock(Layer):
                                 self.shell.show_app_context_menu(self.monitor, app_data, menu_x, geom.height - 260, is_pinned=False)
                                 return True
                             elif ev.button == 1:
-                                spawn(f"hyprctl dispatch focuswindow class:'{target_class}'")
+                                if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+                                    spawn(f"hyprctl dispatch focuswindow class:'{target_class}'")
+                                else:
+                                    spawn(f"qtile cmd-obj -o group -f toscreen")
                                 return True
                             return False
                         return _press
@@ -1404,7 +1462,7 @@ class PowerMenu(Popup):
         actions = [
             (G_LOCK, "Lock", "L", "hyprlock", "power-tile-lock", "#7aa2f7"),
             (G_SLEEP, "Sleep", "U", "systemctl suspend", "power-tile-sleep", "#7dcfff"),
-            (G_LOGOUT, "Logout", "E", "hyprctl dispatch exit", "power-tile-logout", "#e0af68"),
+            (G_LOGOUT, "Logout", "E", compositor_logout, "power-tile-logout", "#e0af68"),
             (G_REBOOT, "Reboot", "R", "systemctl reboot", "power-tile-reboot", "#bb9af7"),
             (G_POWER, "Shutdown", "S", "systemctl poweroff", "power-tile-shutdown", "#f7768e"),
         ]
@@ -1425,7 +1483,7 @@ class PowerMenu(Popup):
             btn_box.pack_start(key_lbl, False, False, 0)
 
             tile_btn = flat_button(btn_box, "power-tile", css_class,
-                                   cb=lambda c=cmd: (self.close_popup(), spawn(c)))
+                                   cb=lambda c=cmd: (self.close_popup(), c() if callable(c) else spawn(c)))
             actions_box.pack_start(tile_btn, False, False, 0)
 
         # Footer: Cancel Button
@@ -1456,7 +1514,7 @@ class PowerMenu(Popup):
             return True
         elif k in (Gdk.KEY_e, Gdk.KEY_E):
             self.close_popup()
-            spawn("hyprctl dispatch exit")
+            compositor_logout()
             return True
         elif k in (Gdk.KEY_r, Gdk.KEY_R):
             self.close_popup()
