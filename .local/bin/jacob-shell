@@ -540,6 +540,7 @@ def spawn(cmd):
             ["sh", "-c", cmd],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             start_new_session=True,
+            env=os.environ.copy(),
         )
     except OSError:
         pass
