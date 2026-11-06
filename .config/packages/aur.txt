@@ -3,8 +3,11 @@ artcraft-launcher-bin
 brave-bin
 calamares
 davinci-resolve-studio
+jellyfin-desktop
+jellyfin-git
 paru
 paru-debug
+proton-pass
 protonup-qt
 timeshift-autosnap
 waypaper

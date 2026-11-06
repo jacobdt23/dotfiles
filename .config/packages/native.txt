@@ -106,10 +106,13 @@ playerctl
 polkit
 pv
 python
+python-dbus-fast
 python-gobject
+python-psutil
 qt5-wayland
 qt6-svg
 qt6-wayland
+qtile
 reflector
 ripgrep
 rsync
@@ -128,6 +131,7 @@ ttf-jetbrains-mono
 ttf-nerd-fonts-symbols-mono
 tumbler
 vim
+vlc
 vulkan-icd-loader
 vulkan-intel
 vulkan-radeon
@@ -142,4 +146,5 @@ xorg-server
 xorg-xhost
 xorg-xinit
 xorg-xwayland
+zram-generator
 zsh
