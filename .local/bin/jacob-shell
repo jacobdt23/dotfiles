@@ -2161,13 +2161,14 @@ class Shell:
             mon = display.get_monitor(i)
             bar = TopBar(self, mon, i)
             dock = BottomDock(self, mon)
-            desk = DesktopSurface(self, mon)
             bar.show_all()
             dock.show_all()
-            desk.show_all()
             self.bars.append(bar)
             self.docks.append(dock)
-            self.desktops.append(desk)
+            if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+                desk = DesktopSurface(self, mon)
+                desk.show_all()
+                self.desktops.append(desk)
 
         self.popups = {
             "launcher": Launcher(self),

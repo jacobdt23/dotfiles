@@ -9,6 +9,19 @@ from libqtile import hook, layout, qtile
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 
+# ---------------------------------------------
+# ---- NVIDIA & WAYLAND ENVIRONMENT VARIABLES -
+# ---------------------------------------------
+# Prevents cursor flickering / disappearing on NVIDIA GPUs (RTX 5070)
+os.environ["WLR_NO_HARDWARE_CURSORS"] = "1"
+os.environ["XCURSOR_SIZE"] = "24"
+os.environ["HYPRCURSOR_SIZE"] = "24"
+os.environ["GDK_BACKEND"] = "wayland,x11,*"
+os.environ["QT_QPA_PLATFORM"] = "wayland;xcb"
+os.environ["QT_WAYLAND_DISABLE_WINDOWDECORATION"] = "1"
+os.environ["SDL_VIDEODRIVER"] = "wayland"
+os.environ["CLUTTER_BACKEND"] = "wayland"
+
 # ----------------------------
 # ---- MODIFIER & APPS ----
 # ----------------------------
@@ -40,10 +53,6 @@ keys = [
     Key([mod], "Right", lazy.layout.right(), desc="Move focus to right"),
     Key([mod], "Down", lazy.layout.down(), desc="Move focus down"),
     Key([mod], "Up", lazy.layout.up(), desc="Move focus up"),
-
-    # Move Focus (Vim keys)
-    Key([mod], "h", lazy.layout.left(), desc="Move focus left"),
-    Key([mod], "l", lazy.layout.right(), desc="Move focus right"),
 
     # Shuffle Windows
     Key([mod, "shift"], "Left", lazy.layout.shuffle_left(), desc="Move window left"),
@@ -91,13 +100,23 @@ keys = [
 # ----------------------------------------
 # ---- WORKSPACES / GROUPS (1-10) ----
 # ----------------------------------------
-# Groups 1-5 for HDMI-A-1, Groups 6-10 for DP-1
+# Workspaces 1-5 dedicated to Screen 0 (HDMI-A-1)
+# Workspaces 6-10 dedicated to Screen 1 (DP-1)
 groups = [Group(str(i), label=str(i)) for i in range(1, 11)]
+
+def switch_workspace(group_name):
+    def _inner(qtile_inst):
+        idx = int(group_name)
+        screen_idx = 0 if idx <= 5 else 1
+        if len(qtile_inst.screens) > screen_idx:
+            qtile_inst.to_screen(screen_idx)
+        qtile_inst.groups_map[group_name].toscreen()
+    return _inner
 
 for i in groups:
     key_name = "0" if i.name == "10" else i.name
     keys.extend([
-        Key([mod], key_name, lazy.group[i.name].toscreen(), desc=f"Switch to workspace {i.name}"),
+        Key([mod], key_name, lazy.function(switch_workspace(i.name)), desc=f"Switch to workspace {i.name}"),
         Key([mod, "shift"], key_name, lazy.window.togroup(i.name, switch_group=False),
             desc=f"Move focused window to workspace {i.name}"),
     ])
@@ -181,6 +200,7 @@ except ImportError:
 @hook.subscribe.startup_once
 def autostart():
     home = os.path.expanduser("~")
+
     # Session Environment
     subprocess.Popen(["dbus-update-activation-environment", "--systemd", "WAYLAND_DISPLAY", "XDG_CURRENT_DESKTOP"])
     subprocess.Popen(["gnome-keyring-daemon", "--start", "--components=secrets"])
@@ -193,6 +213,10 @@ def autostart():
 
     # Clipboard Daemon
     subprocess.Popen(["wl-paste", "--type", "text", "--watch", "cliphist", "store"])
+
+    # Clean up any lingering wallpaper or shell processes from previous sessions
+    subprocess.run(["killall", "-q", "jacob-shell"], check=False)
+    subprocess.run(["killall", "-q", "awww-daemon"], check=False)
 
     # Wallpaper Daemon (awww)
     subprocess.Popen(["awww-daemon"])
