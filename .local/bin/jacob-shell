@@ -562,12 +562,13 @@ def compositor_dispatch_workspace(wid):
 
 
 def compositor_logout():
+    user = os.environ.get("USER", "jacob")
     if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        spawn("hyprctl dispatch exit")
+        spawn(f"hyprctl dispatch exit; sleep 0.3; loginctl terminate-user {user}")
     elif os.environ.get("QTILE_SOCKET") or shutil.which("qtile"):
-        spawn("qtile cmd-obj -o cmd -f shutdown")
+        spawn(f"qtile cmd-obj -o cmd -f shutdown; sleep 0.3; loginctl terminate-user {user}")
     else:
-        spawn("loginctl terminate-session self")
+        spawn(f"loginctl terminate-user {user}")
 
 
 
@@ -1462,10 +1463,17 @@ class PowerMenu(Popup):
         actions = [
             (G_LOCK, "Lock", "L", "hyprlock", "power-tile-lock", "#7aa2f7"),
             (G_SLEEP, "Sleep", "U", "systemctl suspend", "power-tile-sleep", "#7dcfff"),
-            (G_LOGOUT, "Logout", "E", compositor_logout, "power-tile-logout", "#e0af68"),
+            (G_LOGOUT, "Logout", "E", "logout", "power-tile-logout", "#e0af68"),
             (G_REBOOT, "Reboot", "R", "systemctl reboot", "power-tile-reboot", "#bb9af7"),
             (G_POWER, "Shutdown", "S", "systemctl poweroff", "power-tile-shutdown", "#f7768e"),
         ]
+
+        def handle_action(act):
+            self.close_popup()
+            if act == "logout":
+                compositor_logout()
+            else:
+                spawn(act)
 
         for glyph, label, key_hint, cmd, css_class, color in actions:
             btn_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
@@ -1483,7 +1491,7 @@ class PowerMenu(Popup):
             btn_box.pack_start(key_lbl, False, False, 0)
 
             tile_btn = flat_button(btn_box, "power-tile", css_class,
-                                   cb=lambda c=cmd: (self.close_popup(), c() if callable(c) else spawn(c)))
+                                   cb=lambda c=cmd: handle_action(c))
             actions_box.pack_start(tile_btn, False, False, 0)
 
         # Footer: Cancel Button
