@@ -1328,6 +1328,7 @@ class Launcher(Popup):
         self.listbox.connect("row-activated", lambda _lb, row: self._launch(row))
         card.pack_start(scrolled(self.listbox), True, True, 0)
         self.rows = []
+        self._populate()
 
     def _populate(self):
         for r in self.rows:
@@ -1438,7 +1439,8 @@ class Launcher(Popup):
 
     def on_open(self):
         self.entry.set_text("")
-        self._populate()
+        if not self.rows:
+            self._populate()
         vis = self._visible_rows()
         if vis:
             self.listbox.select_row(vis[0])
@@ -2394,6 +2396,8 @@ class Shell:
             self.close_all()
         elif argv[0] in ("reload", "refresh"):
             self.refresh_docks()
+            if "launcher" in self.popups:
+                self.popups["launcher"]._populate()
             for b in self.bars:
                 b.tick_stats()
                 b.tick_clock()
