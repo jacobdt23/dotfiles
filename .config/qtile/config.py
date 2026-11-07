@@ -31,7 +31,7 @@ wallpaper_path = os.path.expanduser("~/Pictures/Wallpapers/default.png")
 # ---- TOKYO NIGHT FROSTED PALETTE --------------
 # -----------------------------------------------
 colors = {
-    "bar_bg": "#141622",          # rgba(20, 22, 34) deep glass
+    "bar_bg": "#141622e6",        # rgba(20, 22, 34, 0.90) deep glass
     "bg_alt": "#1f2335",          # Slightly lighter pill surface
     "pill_bg": "#1a1b26",         # Standard pill container background
     "pill_border": "#292e42",     # Subtle dark pill border
@@ -331,7 +331,7 @@ def build_top_bar(screen_index):
         widgets,
         34,
         background=colors["bar_bg"],
-        opacity=0.96,
+        opacity=0.92,
         margin=[6, 12, 0, 12],
         border_width=[1, 1, 1, 1],
         border_color=colors["bar_border"],
@@ -418,7 +418,7 @@ def build_bottom_dock():
         widgets,
         42,
         background=colors["bar_bg"],
-        opacity=0.96,
+        opacity=0.92,
         margin=[0, 12, 6, 12],
         border_width=[1, 1, 1, 1],
         border_color=colors["bar_border"],
