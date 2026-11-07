@@ -446,6 +446,59 @@ screens = [
 # ----------------------------
 # ---- MOUSE INTERACTIONS ----
 # ----------------------------
+# Seamless Drag & Drop: Move windows with either holding down the scroll wheel
+# (Button2, matching Hyprland) or Super + Left Click (Button1).
+# Once moved and dropped, windows automatically snap back to full screen.
+try:
+    import libqtile.core.manager as manager
+
+    _orig_process_button_click = manager.Qtile.process_button_click
+    _orig_process_button_release = manager.Qtile.process_button_release
+
+    def _auto_fullscreen_click(self, button_code, modmask, x, y):
+        win = self.current_window
+        was_fullscreen = False
+        if win and getattr(win, "fullscreen", False):
+            was_fullscreen = True
+            win.fullscreen = False
+            win.floating = True
+            win._was_drag_fullscreen = True
+
+        handled = _orig_process_button_click(self, button_code, modmask, x, y)
+        if self._drag is not None and win:
+            self._dragged_window = win
+            if was_fullscreen:
+                win._was_drag_fullscreen = True
+        elif was_fullscreen and self._drag is None and win:
+            win.fullscreen = True
+            win._was_drag_fullscreen = False
+        return handled
+
+    def _auto_fullscreen_release(self, button_code, modmask):
+        dragged_win = getattr(self, "_dragged_window", None)
+        was_drag_active = (self._drag is not None)
+        handled = _orig_process_button_release(self, button_code, modmask)
+        if was_drag_active and dragged_win:
+            self._dragged_window = None
+            try:
+                # Utility dialogs and popups remain floating; regular windows go back full screen
+                wm_classes = [c.lower() for c in (dragged_win.get_wm_class() or [])]
+                dialogs = {
+                    "pavucontrol", "blueman-manager", "pinentry", "ssh-askpass",
+                    "confirmreset", "makebranch", "maketag", "branchdialog",
+                    "file_progress", "dialog", "download", "error", "notification"
+                }
+                if not any(d in wm_classes for d in dialogs):
+                    dragged_win.fullscreen = True
+            except Exception:
+                pass
+        return handled
+
+    manager.Qtile.process_button_click = _auto_fullscreen_click
+    manager.Qtile.process_button_release = _auto_fullscreen_release
+except Exception:
+    pass
+
 mouse = [
     # 1. Holding down the Scroll Wheel (Button2) - direct move anywhere (Hyprland style)
     Drag([], "Button2", lazy.window.set_position_floating(), start=lazy.window.get_position()),
