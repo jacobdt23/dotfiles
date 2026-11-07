@@ -298,73 +298,7 @@ def build_top_bar(screen_index=0):
         # Right Expander Spacer
         widget.Spacer(),
 
-        # 7. Hardware & System Status (Adapted from DT)
-        # CPU
-        widget.TextBox(text="󰻠", foreground=colors["blue"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
-        widget.CPU(
-            format="{load_percent}%",
-            foreground=colors["fg"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            padding=4,
-            mouse_callbacks={"Button1": lazy.spawn("kitty -e btop")},
-        ),
-        widget.Sep(linewidth=0, padding=4),
-
-        # Memory (MB/GB format)
-        widget.TextBox(text="󰍛", foreground=colors["purple"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
-        widget.Memory(
-            format="{MemUsed: .0f}{mm}",
-            foreground=colors["fg"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            padding=4,
-            mouse_callbacks={"Button1": lazy.spawn("kitty -e btop")},
-        ),
-        widget.Sep(linewidth=0, padding=4),
-
-        # Disk Free
-        widget.TextBox(text="󰋊", foreground=colors["yellow"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
-        widget.DF(
-            format="{uf:.0f}{m} free",
-            foreground=colors["fg"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            padding=4,
-            partition="/",
-            visible_on_warn=False,
-            mouse_callbacks={"Button1": lazy.spawn("kitty -e df -h")},
-        ),
-        widget.Sep(linewidth=0, padding=4),
-
-        # Audio Volume
-        widget.TextBox(text="", foreground=colors["green"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
-        widget.Volume(
-            foreground=colors["fg"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            padding=4,
-            mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
-        ),
-        widget.Sep(linewidth=0, padding=4),
-
-        # Ethernet
-        widget.TextBox(
-            text="",
-            foreground=colors["cyan"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font Bold",
-            fontsize=12,
-            padding=8,
-            mouse_callbacks={"Button1": lazy.spawn("nm-connection-editor")},
-        ),
-        widget.Sep(linewidth=0, padding=6),
-
-        # 8. Open Windows Taskbar at Top Right (Clickable icon tabs for all running apps)
+        # Open Windows Taskbar at Top Right (Clickable icon tabs for running apps)
         widget.TaskList(
             font="JetBrainsMono Nerd Font",
             fontsize=10,
@@ -378,7 +312,7 @@ def build_top_bar(screen_index=0):
             margin_y=2,
             padding_y=3,
             padding_x=8,
-            max_title_width=150,
+            max_title_width=160,
             icon_size=18,
             spacing=4,
             stretch=False,
@@ -389,7 +323,7 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=6),
 
-        # 9. Power Button
+        # Power Button
         widget.TextBox(
             text=" ⏻ ",
             foreground=colors["red"],
