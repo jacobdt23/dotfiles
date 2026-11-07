@@ -354,7 +354,7 @@ def build_top_bar(screen_index=0):
 
         # Ethernet / Network
         widget.TextBox(
-            text="",
+            text="󰈀",
             foreground=colors["cyan"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font Bold",

@@ -69,8 +69,8 @@
             "on-click": "pavucontrol"
         },
         "network": {
-            "format-ethernet": "",
-            "format-wifi": "",
+            "format-ethernet": "󰈀",
+            "format-wifi": "󰖩",
             "format-disconnected": "󰈂",
             "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
             "on-click": "nm-connection-editor"
