@@ -260,31 +260,6 @@ def init_widgets_list(include_tray=True):
             fontsize=10,
             padding=8,
         ),
-        widget.Sep(linewidth=0, padding=6),
-
-        # Open Windows Taskbar (Clickable icon tabs for running apps across both screens)
-        AllWindowsTaskList(
-            font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            foreground=colors["fg"],
-            background=colors["bar_bg"],
-            border=colors["border_active"],
-            unfocused_border=colors["pill_bg"],
-            highlight_method="border",
-            borderwidth=1,
-            rounded=True,
-            margin_y=2,
-            padding_y=3,
-            padding_x=8,
-            max_title_width=160,
-            icon_size=18,
-            spacing=4,
-            stretch=False,
-            parse_text=clean_task_title,
-            txt_floating="󰉈 ",
-            txt_maximized="󰊓 ",
-            txt_minimized="󰍶 ",
-        ),
         widget.Spacer(),
 
         # Center Clock Pill (DT style with day, date, time)
@@ -382,11 +357,35 @@ def init_widgets_list(include_tray=True):
             padding=8,
             mouse_callbacks={"Button1": lazy.spawn("nm-connection-editor")},
         ),
+        widget.Sep(linewidth=0, padding=6),
+
+        # Open Windows Taskbar at Top Right (Clickable icon tabs for running apps across both screens)
+        AllWindowsTaskList(
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            foreground=colors["fg"],
+            background=colors["bar_bg"],
+            border=colors["border_active"],
+            unfocused_border=colors["pill_bg"],
+            highlight_method="border",
+            borderwidth=1,
+            rounded=True,
+            margin_y=2,
+            padding_y=3,
+            padding_x=8,
+            max_title_width=160,
+            icon_size=18,
+            spacing=4,
+            stretch=False,
+            parse_text=clean_task_title,
+            txt_floating="󰉈 ",
+            txt_maximized="󰊓 ",
+            txt_minimized="󰍶 ",
+        ),
         widget.Sep(linewidth=0, padding=4),
     ]
 
-    # DT Multi-Monitor Systray Strategy:
-    # Screen 1 includes the tray; Screen 2 excludes it to prevent X11 tray collisions.
+    # Systray (if enabled on primary bar)
     if include_tray:
         widgets_list.extend([
             tray_widget(),
@@ -410,7 +409,7 @@ def init_widgets_list(include_tray=True):
     return widgets_list
 
 def init_widgets_screen1():
-    return init_widgets_list(include_tray=True)
+    return init_widgets_list(include_tray=False)
 
 def init_widgets_screen2():
     return init_widgets_list(include_tray=False)
@@ -493,6 +492,16 @@ def build_bottom_dock(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
     ]
+
+    # Systray in Primary Bottom Dock (keeps top bars symmetrical & clean)
+    if screen_index == 0:
+        try:
+            widgets.extend([
+                tray_widget(),
+                widget.Sep(linewidth=0, padding=4),
+            ])
+        except Exception:
+            pass
 
     # Layout Pill
     widgets.extend([
