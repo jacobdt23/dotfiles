@@ -352,9 +352,9 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Ethernet / Network
+        # Ethernet / Network (GNOME-style wired network icon)
         widget.TextBox(
-            text="󰈀",
+            text="󰌗",
             foreground=colors["cyan"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font Bold",
