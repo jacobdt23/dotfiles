@@ -94,9 +94,7 @@
             "custom/start",
             "custom/search"
         ],
-        "modules-center": [
-            "wlr/taskbar"
-        ],
+        "modules-center": [],
         "modules-right": [
             "custom/clipboard",
             "custom/snip",

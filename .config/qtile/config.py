@@ -347,25 +347,6 @@ def build_bottom_dock():
         ),
         widget.Spacer(),
 
-        # Center TaskList (Exact Dock taskbar of open running apps)
-        widget.TaskList(
-            font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            foreground=colors["fg"],
-            background=colors["bar_bg"],
-            border=colors["border_active"],
-            selected_border=colors["border_active"],
-            unfocused_border=colors["pill_bg"],
-            highlight_method="block",
-            title_width_method="uniform",
-            max_title_width=140,
-            padding_x=8,
-            padding_y=3,
-            margin_y=3,
-            rounded=True,
-        ),
-        widget.Spacer(),
-
         # Right Dock Utilities: Clipboard
         widget.TextBox(
             text="󰅍 Clipboard",
