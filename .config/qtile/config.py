@@ -212,39 +212,17 @@ except ImportError:
 # -------------------
 @hook.subscribe.startup_once
 def autostart():
-    import time
-    home = os.path.expanduser("~")
+    script = os.path.expanduser("~/.config/qtile/autostart.sh")
+    if os.path.isfile(script) and os.access(script, os.X_OK):
+        subprocess.Popen([script])
 
-    # 1. Update systemd & D-Bus environment with full active session vars
-    env_vars = ["WAYLAND_DISPLAY", "DISPLAY", "XDG_CURRENT_DESKTOP", "XDG_SESSION_TYPE"]
-    export_args = [f"{v}={os.environ[v]}" for v in env_vars if v in os.environ]
-    if export_args:
-        subprocess.run(["dbus-update-activation-environment", "--systemd", *export_args], check=False)
-        subprocess.run(["systemctl", "--user", "import-environment", *[v for v in env_vars if v in os.environ]], check=False)
-
-    # 2. Keyring & Network Applet
-    subprocess.Popen(["gnome-keyring-daemon", "--start", "--components=secrets"])
-    subprocess.Popen(["nm-applet"])
-    if os.environ.get("WAYLAND_DISPLAY"):
-        subprocess.Popen(["wl-paste", "--type", "text", "--watch", "cliphist", "store"])
-
-    # 3. Clean up and launch Jacob Shell reliably with replacement
-    subprocess.run(["pkill", "-9", "-f", "jacob-shell"], check=False)
-    time.sleep(0.3)
+@hook.subscribe.startup
+def check_shell():
     sock = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "jacob-shell.sock")
-    if os.path.exists(sock):
-        try:
-            os.unlink(sock)
-        except OSError:
-            pass
-
-    jacob_shell = os.path.join(home, ".local/bin/jacob-shell")
-    log_dir = os.path.expanduser("~/.local/share/qtile")
-    os.makedirs(log_dir, exist_ok=True)
-    log_out = open(os.path.join(log_dir, "jacob-shell.log"), "a")
-    bin_target = jacob_shell if os.path.exists(jacob_shell) and os.access(jacob_shell, os.X_OK) else "/usr/local/bin/jacob-shell"
-    if os.path.exists(bin_target):
-        subprocess.Popen([bin_target, "--replace"], stdout=log_out, stderr=log_out)
+    if not os.path.exists(sock):
+        script = os.path.expanduser("~/.config/qtile/autostart.sh")
+        if os.path.isfile(script) and os.access(script, os.X_OK):
+            subprocess.Popen([script])
 
 # --------------------------
 # ---- GENERAL BEHAVIOR ----
