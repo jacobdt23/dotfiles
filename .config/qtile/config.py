@@ -450,8 +450,11 @@ screens = [
 # (Button2, matching Hyprland) or Super + Left Click (Button1).
 # Once moved and dropped, windows automatically snap back to full screen.
 try:
+    import importlib
     import libqtile.core.manager as manager
 
+    # Always reload to retrieve pristine unpatched methods (prevents live-reload recursion)
+    importlib.reload(manager)
     _orig_process_button_click = manager.Qtile.process_button_click
     _orig_process_button_release = manager.Qtile.process_button_release
 
