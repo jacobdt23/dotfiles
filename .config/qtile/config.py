@@ -62,6 +62,26 @@ def go_to_group(name):
         qtile_inst.groups_map[name].toscreen()
     return _inner
 
+def toggle_floating_or_tile(qtile_inst):
+    win = qtile_inst.current_window
+    if not win:
+        return
+    if win.fullscreen:
+        win.fullscreen = False
+        win.floating = True
+    else:
+        win.toggle_floating()
+
+def toggle_fullscreen_clean(qtile_inst):
+    win = qtile_inst.current_window
+    if not win:
+        return
+    if win.fullscreen:
+        win.fullscreen = False
+        win.floating = False
+    else:
+        win.fullscreen = True
+
 # -----------------------------
 # ---- KEYBINDINGS ------------
 # -----------------------------
@@ -79,8 +99,8 @@ keys = [
     Key([mod], "c", lazy.window.kill(), desc="Close focused window"),
 
     # Window State
-    Key([mod], "v", lazy.window.toggle_floating(), desc="Toggle floating window"),
-    Key([mod], "f", lazy.window.toggle_fullscreen(), desc="Toggle fullscreen"),
+    Key([mod], "v", lazy.function(toggle_floating_or_tile), desc="Toggle floating / tile window"),
+    Key([mod], "f", lazy.function(toggle_fullscreen_clean), desc="Toggle fullscreen / tile"),
     Key([mod], "Tab", lazy.next_screen(), desc="Focus next monitor"),
 
     # Tiling Layout Controls
@@ -484,7 +504,7 @@ follow_mouse_focus = True
 bring_front_click = False
 floats_kept_above = True
 cursor_warp = False
-auto_fullscreen = True
+auto_fullscreen = False
 focus_on_window_activation = "smart"
 reconfigure_screens = True
 auto_minimize = True
