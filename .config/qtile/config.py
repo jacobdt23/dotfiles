@@ -38,7 +38,8 @@ colors = {
 # ---- KEYBINDINGS ------------
 # -----------------------------
 keys = [
-    # App Launcher (Super + Space, Super + R, Super + D)
+    # App Launcher (Super tap via keyd, or Super + Space, Super + R, Super + D)
+    Key([], "F24", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super tap"),
     Key([mod], "space", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super+Space"),
     Key([mod], "r", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super+R"),
     Key([mod], "d", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super+D"),
