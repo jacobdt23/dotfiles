@@ -10,6 +10,7 @@ flock -n 200 || exit 0
 # 1. Sync D-Bus and systemd user session environment
 dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE 2>/dev/null || true
 systemctl --user import-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE 2>/dev/null || true
+export _JAVA_AWT_WM_NONREPARENTING=1
 
 # 2. Keyring & Network Applet
 pgrep -x gnome-keyring-d >/dev/null || gnome-keyring-daemon --start --components=secrets &
