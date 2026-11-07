@@ -1,10 +1,9 @@
 /**
- * HyprFrost Tokyo Night Rofi Theme
- * Matching Exact Jacob Shell Launcher Card
+ * HyprFrost Rofi Master Configuration
  **/
 
 configuration {
-    modi:                       "drun,run";
+    modes:                      [ drun, run ];
     show-icons:                 true;
     display-drun:               " 󰣇  Launcher ";
     display-run:                "   Run ";
@@ -12,120 +11,4 @@ configuration {
     font:                       "JetBrainsMono Nerd Font 11";
 }
 
-* {
-    bg:                         rgba(20, 21, 32, 0.97);
-    bg-alt:                     #161722;
-    bg-selected:                #283457;
-    fg:                         #c0caf5;
-    fg-dim:                     #565f89;
-    blue:                       #7aa2f7;
-    purple:                     #bb9af7;
-    cyan:                       #7dcfff;
-    border-col:                 rgba(122, 162, 247, 0.7);
-    border-subtle:              #3b4261;
-    
-    background-color:           transparent;
-    text-color:                 @fg;
-    margin:                     0;
-    padding:                    0;
-}
-
-window {
-    transparency:               "real";
-    location:                   center;
-    anchor:                     center;
-    fullscreen:                 false;
-    width:                      560px;
-    height:                     480px;
-
-    enabled:                    true;
-    border-radius:              14px;
-    border:                     2px solid;
-    border-color:               @border-col;
-    background-color:           @bg;
-    cursor:                     "default";
-}
-
-mainbox {
-    enabled:                    true;
-    spacing:                    12px;
-    padding:                    18px;
-    orientation:                vertical;
-    children:                   [ "inputbar", "listview" ];
-    background-color:           transparent;
-}
-
-inputbar {
-    enabled:                    true;
-    spacing:                    10px;
-    padding:                    8px 14px;
-    border-radius:              8px;
-    border:                     1px solid;
-    border-color:               @border-subtle;
-    background-color:           @bg-alt;
-    text-color:                 @fg;
-    children:                   [ "prompt", "entry" ];
-}
-
-prompt {
-    enabled:                    true;
-    background-color:           inherit;
-    text-color:                 @blue;
-    font:                       "JetBrainsMono Nerd Font Bold 11";
-}
-
-entry {
-    enabled:                    true;
-    background-color:           inherit;
-    text-color:                 #ffffff;
-    cursor:                     text;
-    placeholder:                "Search applications...";
-    placeholder-color:          @fg-dim;
-}
-
-listview {
-    enabled:                    true;
-    columns:                    1;
-    lines:                      8;
-    cycle:                      true;
-    dynamic:                    true;
-    scrollbar:                  false;
-    layout:                     vertical;
-    reverse:                    false;
-    fixed-height:               true;
-    fixed-columns:              true;
-    spacing:                    6px;
-    background-color:           transparent;
-}
-
-element {
-    enabled:                    true;
-    spacing:                    12px;
-    padding:                    8px 12px;
-    border-radius:              8px;
-    background-color:           transparent;
-    text-color:                 @fg;
-    cursor:                     pointer;
-    border:                     1px solid transparent;
-}
-
-element selected.normal {
-    background-color:           @bg-selected;
-    text-color:                 @blue;
-    border-color:               @blue;
-}
-
-element-icon {
-    background-color:           transparent;
-    text-color:                 inherit;
-    size:                       26px;
-    cursor:                     inherit;
-}
-
-element-text {
-    background-color:           transparent;
-    text-color:                 inherit;
-    cursor:                     inherit;
-    vertical-align:             0.5;
-    horizontal-align:           0.0;
-}
+@theme "~/.config/rofi/theme.rasi"

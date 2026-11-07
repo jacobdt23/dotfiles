@@ -1,0 +1,123 @@
+/**
+ * HyprFrost Tokyo Night Rofi Theme
+ * Matching Exact Jacob Shell Launcher Card
+ **/
+
+* {
+    bg:                         rgba ( 20, 21, 32, 97 % );
+    bg-alt:                     #161722;
+    bg-selected:                #283457;
+    fg:                         #c0caf5;
+    fg-dim:                     #565f89;
+    blue:                       #7aa2f7;
+    purple:                     #bb9af7;
+    cyan:                       #7dcfff;
+    border-col:                 rgba ( 122, 162, 247, 70 % );
+    border-subtle:              #3b4261;
+    
+    background-color:           transparent;
+    text-color:                 var(fg);
+    margin:                     0;
+    padding:                    0;
+}
+
+window {
+    transparency:               "real";
+    location:                   center;
+    anchor:                     center;
+    fullscreen:                 false;
+    width:                      560px;
+    height:                     480px;
+
+    enabled:                    true;
+    border-radius:              14px;
+    border:                     2px;
+    border-color:               var(border-col);
+    background-color:           var(bg);
+    cursor:                     "default";
+}
+
+mainbox {
+    enabled:                    true;
+    spacing:                    12px;
+    padding:                    18px;
+    orientation:                vertical;
+    children:                   [ "inputbar", "listview" ];
+    background-color:           transparent;
+}
+
+inputbar {
+    enabled:                    true;
+    spacing:                    10px;
+    padding:                    8px 14px;
+    border-radius:              8px;
+    border:                     1px;
+    border-color:               var(border-subtle);
+    background-color:           var(bg-alt);
+    text-color:                 var(fg);
+    children:                   [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                    true;
+    background-color:           inherit;
+    text-color:                 var(blue);
+    font:                       "JetBrainsMono Nerd Font Bold 11";
+}
+
+entry {
+    enabled:                    true;
+    background-color:           inherit;
+    text-color:                 #ffffff;
+    cursor:                     text;
+    placeholder:                "Search applications...";
+    placeholder-color:          var(fg-dim);
+}
+
+listview {
+    enabled:                    true;
+    columns:                    1;
+    lines:                      8;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               true;
+    fixed-columns:              true;
+    spacing:                    6px;
+    background-color:           transparent;
+}
+
+element {
+    enabled:                    true;
+    spacing:                    12px;
+    padding:                    8px 12px;
+    border-radius:              8px;
+    background-color:           transparent;
+    text-color:                 var(fg);
+    cursor:                     pointer;
+    border:                     1px;
+    border-color:               transparent;
+}
+
+element selected.normal {
+    background-color:           var(bg-selected);
+    text-color:                 var(blue);
+    border-color:               var(blue);
+}
+
+element-icon {
+    background-color:           transparent;
+    text-color:                 inherit;
+    size:                       26px;
+    cursor:                     inherit;
+}
+
+element-text {
+    background-color:           transparent;
+    text-color:                 inherit;
+    cursor:                     inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.0;
+}
