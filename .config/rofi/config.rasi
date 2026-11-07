@@ -1,27 +1,28 @@
 /**
  * HyprFrost Tokyo Night Rofi Theme
- * Fast, elegant, cross-compatible application launcher
+ * Matching Exact Jacob Shell Launcher Card
  **/
 
 configuration {
-    modi:                       "drun,run,filebrowser";
+    modi:                       "drun,run";
     show-icons:                 true;
-    display-drun:               "   Apps ";
+    display-drun:               " 󰣇  Launcher ";
     display-run:                "   Run ";
-    display-filebrowser:        "   Files ";
     drun-display-format:        "{name}";
     font:                       "JetBrainsMono Nerd Font 11";
 }
 
 * {
-    bg:                         #1a1b26;
-    bg-alt:                     #24283b;
+    bg:                         rgba(20, 21, 32, 0.97);
+    bg-alt:                     #161722;
+    bg-selected:                #283457;
     fg:                         #c0caf5;
     fg-dim:                     #565f89;
     blue:                       #7aa2f7;
     purple:                     #bb9af7;
     cyan:                       #7dcfff;
-    border-col:                 #7aa2f7;
+    border-col:                 rgba(122, 162, 247, 0.7);
+    border-subtle:              #3b4261;
     
     background-color:           transparent;
     text-color:                 @fg;
@@ -34,13 +35,11 @@ window {
     location:                   center;
     anchor:                     center;
     fullscreen:                 false;
-    width:                      620px;
-    height:                     460px;
-    x-offset:                   0px;
-    y-offset:                   0px;
+    width:                      560px;
+    height:                     480px;
 
     enabled:                    true;
-    border-radius:              12px;
+    border-radius:              14px;
     border:                     2px solid;
     border-color:               @border-col;
     background-color:           @bg;
@@ -50,7 +49,7 @@ window {
 mainbox {
     enabled:                    true;
     spacing:                    12px;
-    padding:                    20px;
+    padding:                    18px;
     orientation:                vertical;
     children:                   [ "inputbar", "listview" ];
     background-color:           transparent;
@@ -59,8 +58,10 @@ mainbox {
 inputbar {
     enabled:                    true;
     spacing:                    10px;
-    padding:                    10px 14px;
+    padding:                    8px 14px;
     border-radius:              8px;
+    border:                     1px solid;
+    border-color:               @border-subtle;
     background-color:           @bg-alt;
     text-color:                 @fg;
     children:                   [ "prompt", "entry" ];
@@ -76,7 +77,7 @@ prompt {
 entry {
     enabled:                    true;
     background-color:           inherit;
-    text-color:                 @fg;
+    text-color:                 #ffffff;
     cursor:                     text;
     placeholder:                "Search applications...";
     placeholder-color:          @fg-dim;
@@ -105,13 +106,13 @@ element {
     background-color:           transparent;
     text-color:                 @fg;
     cursor:                     pointer;
+    border:                     1px solid transparent;
 }
 
 element selected.normal {
-    background-color:           @bg-alt;
+    background-color:           @bg-selected;
     text-color:                 @blue;
-    border:                     1px solid;
-    border-color:               @border-col;
+    border-color:               @blue;
 }
 
 element-icon {

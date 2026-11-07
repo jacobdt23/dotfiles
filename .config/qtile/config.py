@@ -1,7 +1,7 @@
 # =============================================================================
 # HyprFrost Native Qtile Configuration
 # 100% Cross-Compatible, Self-Contained Native Python Desktop
-# Top Bar + Bottom Dock/Taskbar in Tokyo Night Aesthetic
+# Matching Exact Jacob Shell Aesthetics (Tokyo Night Glass Floating Bars)
 # =============================================================================
 
 import os
@@ -27,22 +27,25 @@ file_manager = "thunar"
 browser = "brave"
 wallpaper_path = os.path.expanduser("~/Pictures/Wallpapers/default.png")
 
-# ----------------------------
-# ---- TOKYO NIGHT PALETTE ---
-# ----------------------------
+# -----------------------------------------------
+# ---- TOKYO NIGHT FROSTED PALETTE --------------
+# -----------------------------------------------
 colors = {
-    "bg": "#1a1b26",          # Deep dark background
-    "bg_alt": "#24283b",      # Slightly lighter surface
-    "fg": "#c0caf5",          # Primary foreground text
-    "fg_dim": "#565f89",      # Dim / muted text
-    "blue": "#7aa2f7",        # Tokyo Night blue (primary accent)
-    "purple": "#bb9af7",      # Purple accent
-    "cyan": "#7dcfff",        # Cyan accent
-    "green": "#9ece6a",       # Green accent
-    "yellow": "#e0af68",      # Yellow
-    "red": "#f7768e",         # Red / Warning
+    "bar_bg": "#141622",          # rgba(20, 22, 34) deep glass
+    "bg_alt": "#1f2335",          # Slightly lighter pill surface
+    "pill_bg": "#1a1b26",         # Standard pill container background
+    "pill_border": "#292e42",     # Subtle dark pill border
+    "fg": "#c0caf5",              # Primary text
+    "fg_dim": "#565f89",          # Dim / muted text
+    "blue": "#7aa2f7",            # Tokyo Night blue accent
+    "purple": "#bb9af7",          # Purple accent
+    "cyan": "#7dcfff",            # Cyan accent
+    "green": "#9ece6a",           # Green accent
+    "yellow": "#e0af68",          # Yellow
+    "red": "#f7768e",             # Red / Warning
     "border_active": "#7aa2f7",
     "border_inactive": "#3b4261",
+    "bar_border": "#3b4261",
 }
 
 # ----------------------------------------
@@ -117,6 +120,10 @@ keys = [
     Key([mod], "Print", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot window"), desc="Window screenshot"),
     Key([mod, "shift"], "s", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot area"), desc="Snip area"),
 
+    # Clipboard & Keybind Help
+    Key([mod, "shift"], "v", lazy.spawn("sh -c 'cliphist list | rofi -dmenu | cliphist decode | wl-copy'"), desc="Clipboard history"),
+    Key([mod], "k", lazy.spawn("notify-send 'Keybinds' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window\nSuper+Shift+Q: Exit'"), desc="Show keybinds"),
+
     # Session Management
     Key([mod, "shift"], "r", lazy.reload_config(), desc="Reload Qtile Configuration"),
     Key([mod, "shift"], "q", lazy.shutdown(), desc="Logout / Exit Qtile"),
@@ -155,187 +162,260 @@ def build_top_bar(screen_index):
     visible_groups = [str(n) for n in (range(1, 6) if screen_index == 0 else range(6, 11))]
 
     widgets = [
-        # Logo / Launcher Trigger
+        # Left Margin Spacer
+        widget.Sep(linewidth=0, padding=4),
+
+        # Brand Chip (Exact Jacob Shell styling)
         widget.TextBox(
-            text=" 󰣇 HyprFrost ",
+            text="󰣇 HyprFrost",
             foreground=colors["blue"],
             background=colors["bg_alt"],
             font="JetBrainsMono Nerd Font Bold",
-            fontsize=12,
+            fontsize=11,
             padding=8,
             mouse_callbacks={"Button1": lazy.spawn("rofi -show drun")},
         ),
-        widget.Sep(linewidth=0, padding=6, background=colors["bg"]),
+        widget.Sep(linewidth=0, padding=6),
 
-        # Clickable Workspaces
+        # Workspaces
         widget.GroupBox(
-            font="JetBrainsMono Nerd Font",
-            fontsize=12,
+            font="JetBrainsMono Nerd Font Bold",
+            fontsize=10,
             margin_y=3,
-            margin_x=0,
-            padding_y=4,
-            padding_x=8,
-            borderwidth=2,
+            margin_x=1,
+            padding_y=3,
+            padding_x=6,
+            borderwidth=1,
             active=colors["blue"],
             inactive=colors["fg_dim"],
             rounded=True,
             highlight_color=[colors["bg_alt"], colors["bg_alt"]],
             highlight_method="block",
             this_current_screen_border=colors["border_active"],
-            block_highlight_text_color=colors["blue"],
+            block_highlight_text_color=colors["bar_bg"],
             visible_groups=visible_groups,
             disable_drag=True,
         ),
-        widget.Sep(linewidth=0, padding=8, background=colors["bg"]),
+        widget.Sep(linewidth=0, padding=6),
 
-        # Active Window Name
+        # Active Window Name Pill
         widget.WindowName(
             font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            foreground=colors["fg"],
-            max_chars=45,
-            padding=6,
+            fontsize=10,
+            foreground=colors["cyan"],
+            background=colors["pill_bg"],
+            max_chars=38,
+            padding=8,
         ),
         widget.Spacer(),
 
-        # CPU Usage
-        widget.TextBox(text="󰻠", foreground=colors["blue"], font="JetBrainsMono Nerd Font", fontsize=13),
+        # Center Clock Pill
+        widget.TextBox(
+            text="󰥔 ",
+            foreground=colors["cyan"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font Bold",
+            fontsize=12,
+            padding=4,
+        ),
+        widget.Clock(
+            format="%a %b %d  %I:%M %p",
+            foreground=colors["cyan"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font Bold",
+            fontsize=10,
+            padding=6,
+        ),
+        widget.Sep(linewidth=0, padding=6),
+
+        # Media Chip
+        widget.TextBox(
+            text="󰎆 Media",
+            foreground=colors["purple"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
+        ),
+        widget.Spacer(),
+
+        # Right: CPU Pill
+        widget.TextBox(text="󰻠", foreground=colors["blue"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.CPU(
             format="{load_percent}%",
             foreground=colors["fg"],
+            background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=6,
+            fontsize=10,
+            padding=4,
         ),
-        widget.Sep(linewidth=0, padding=6),
+        widget.Sep(linewidth=0, padding=4),
 
-        # RAM Usage
-        widget.TextBox(text="󰍛", foreground=colors["purple"], font="JetBrainsMono Nerd Font", fontsize=13),
+        # RAM Pill
+        widget.TextBox(text="󰍛", foreground=colors["purple"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.Memory(
             format="{MemPercent}%",
             foreground=colors["fg"],
+            background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=6,
+            fontsize=10,
+            padding=4,
         ),
-        widget.Sep(linewidth=0, padding=6),
+        widget.Sep(linewidth=0, padding=4),
 
-        # Volume
-        widget.TextBox(text="", foreground=colors["green"], font="JetBrainsMono Nerd Font", fontsize=13),
+        # Volume Pill
+        widget.TextBox(text="", foreground=colors["green"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.Volume(
             foreground=colors["fg"],
+            background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=6,
+            fontsize=10,
+            padding=4,
+            mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
         ),
-        widget.Sep(linewidth=0, padding=6),
+        widget.Sep(linewidth=0, padding=4),
     ]
 
-    # StatusNotifier for System Tray
+    # System Tray on Primary Screen
     if screen_index == 0:
         try:
             widgets.extend([
                 widget.StatusNotifier(padding=4),
-                widget.Sep(linewidth=0, padding=6),
+                widget.Sep(linewidth=0, padding=4),
             ])
         except Exception:
             pass
 
-    # Clock & Power Button
+    # Power Button Pill
     widgets.extend([
-        widget.TextBox(text="󰥔", foreground=colors["cyan"], font="JetBrainsMono Nerd Font", fontsize=13),
-        widget.Clock(
-            format="%a %b %d  %I:%M %p",
-            foreground=colors["fg"],
-            font="JetBrainsMono Nerd Font Bold",
-            fontsize=11,
-            padding=6,
-        ),
-        widget.Sep(linewidth=0, padding=6),
         widget.TextBox(
             text=" ⏻ ",
             foreground=colors["red"],
-            background=colors["bg_alt"],
+            background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font Bold",
-            fontsize=13,
+            fontsize=12,
             padding=6,
             mouse_callbacks={"Button1": lazy.shutdown()},
         ),
+        widget.Sep(linewidth=0, padding=4),
     ])
 
-    return bar.Bar(widgets, 34, background=colors["bg"], opacity=0.96, margin=[0, 0, 0, 0])
+    return bar.Bar(
+        widgets,
+        34,
+        background=colors["bar_bg"],
+        opacity=0.96,
+        margin=[6, 12, 0, 12],
+        border_width=[1, 1, 1, 1],
+        border_color=colors["bar_border"],
+    )
 
 
 def build_bottom_dock():
     widgets = [
-        # App Launcher Button
+        # Left Margin Spacer
+        widget.Sep(linewidth=0, padding=4),
+
+        # Start Button (Exact Jacob Shell styling)
         widget.TextBox(
-            text=" 󰣇 Apps ",
-            foreground=colors["blue"],
+            text=" 󰣇 Start ",
+            foreground=colors["fg"],
             background=colors["bg_alt"],
             font="JetBrainsMono Nerd Font Bold",
-            fontsize=12,
+            fontsize=11,
             padding=8,
             mouse_callbacks={"Button1": lazy.spawn("rofi -show drun")},
         ),
-        widget.Sep(linewidth=0, padding=6, background=colors["bg"]),
+        widget.Sep(linewidth=0, padding=4),
 
-        # Quick Launchers
+        # Search Pill Trigger
         widget.TextBox(
-            text="  Kitty ",
-            foreground=colors["cyan"],
+            text="󰍏  Search apps...",
+            foreground=colors["fg_dim"],
+            background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=6,
-            mouse_callbacks={"Button1": lazy.spawn(terminal)},
+            fontsize=10,
+            padding=10,
+            mouse_callbacks={"Button1": lazy.spawn("rofi -show drun")},
         ),
-        widget.TextBox(
-            text="  Files ",
-            foreground=colors["yellow"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=6,
-            mouse_callbacks={"Button1": lazy.spawn(file_manager)},
-        ),
-        widget.TextBox(
-            text=" 󰈹 Brave ",
-            foreground=colors["blue"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=6,
-            mouse_callbacks={"Button1": lazy.spawn(browser)},
-        ),
-        widget.Sep(linewidth=0, padding=8, background=colors["bg"]),
+        widget.Spacer(),
 
-        # Interactive TaskList (Running Windows Dock)
+        # Center TaskList (Exact Dock taskbar of open running apps)
         widget.TaskList(
             font="JetBrainsMono Nerd Font",
-            fontsize=11,
+            fontsize=10,
             foreground=colors["fg"],
-            background=colors["bg"],
-            border=colors["bg_alt"],
-            selected_border=colors["blue"],
-            unfocused_border=colors["bg_alt"],
+            background=colors["bar_bg"],
+            border=colors["border_active"],
+            selected_border=colors["border_active"],
+            unfocused_border=colors["pill_bg"],
             highlight_method="block",
             title_width_method="uniform",
-            max_title_width=160,
+            max_title_width=140,
             padding_x=8,
-            padding_y=2,
-            margin_y=2,
+            padding_y=3,
+            margin_y=3,
             rounded=True,
         ),
         widget.Spacer(),
 
-        # Current Layout Indicator
+        # Right Dock Utilities: Clipboard
+        widget.TextBox(
+            text="󰅍 Clipboard",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            mouse_callbacks={"Button1": lazy.spawn("sh -c 'cliphist list | rofi -dmenu | cliphist decode | wl-copy'")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+
+        # Snip
+        widget.TextBox(
+            text="󰄀 Snip",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            mouse_callbacks={"Button1": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot area")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+
+        # Keys
+        widget.TextBox(
+            text="󰌌 Keys",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            mouse_callbacks={"Button1": lazy.spawn("notify-send 'Shortcuts' 'Super+Return: Kitty\nSuper+Space: App Launcher\nSuper+E: Thunar\nSuper+B: Brave\nSuper+C: Close Window'")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+
+        # Layout Pill
         widget.CurrentLayout(
             foreground=colors["purple"],
+            background=colors["bg_alt"],
             font="JetBrainsMono Nerd Font Bold",
-            fontsize=11,
+            fontsize=10,
             padding=8,
         ),
+        widget.Sep(linewidth=0, padding=4),
     ]
 
-    return bar.Bar(widgets, 36, background=colors["bg"], opacity=0.96, margin=[0, 0, 0, 0])
+    return bar.Bar(
+        widgets,
+        42,
+        background=colors["bar_bg"],
+        opacity=0.96,
+        margin=[0, 12, 6, 12],
+        border_width=[1, 1, 1, 1],
+        border_color=colors["bar_border"],
+    )
 
 
 # ------------------------------------------------

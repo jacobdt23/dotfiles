@@ -4,24 +4,29 @@
         "layer": "top",
         "position": "top",
         "height": 34,
+        "margin-top": 6,
+        "margin-left": 12,
+        "margin-right": 12,
         "spacing": 4,
         "modules-left": [
-            "custom/distro",
-            "hyprland/workspaces"
+            "custom/brand",
+            "hyprland/workspaces",
+            "hyprland/window"
         ],
         "modules-center": [
-            "hyprland/window"
+            "clock",
+            "custom/media"
         ],
         "modules-right": [
             "cpu",
             "memory",
+            "disk",
             "wireplumber",
             "tray",
-            "clock",
             "custom/power"
         ],
-        "custom/distro": {
-            "format": " 󰣇 HyprFrost ",
+        "custom/brand": {
+            "format": "󰣇  HyprFrost",
             "tooltip": false,
             "on-click": "rofi -show drun"
         },
@@ -33,8 +38,17 @@
         },
         "hyprland/window": {
             "format": "{}",
-            "max-length": 50,
+            "max-length": 40,
             "separate-outputs": true
+        },
+        "clock": {
+            "format": "󰥔  {:%a %b %d  %I:%M %p}",
+            "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+        },
+        "custom/media": {
+            "format": "󰎆  Media",
+            "tooltip": false,
+            "on-click": "pavucontrol"
         },
         "cpu": {
             "interval": 2,
@@ -46,6 +60,11 @@
             "format": "󰍛 {percentage}%",
             "tooltip": false
         },
+        "disk": {
+            "interval": 30,
+            "format": "󰋊 {percentage_used}%",
+            "path": "/"
+        },
         "wireplumber": {
             "format": "{icon} {volume}%",
             "format-muted": "󰝟 Muted",
@@ -53,12 +72,8 @@
             "on-click": "pavucontrol"
         },
         "tray": {
-            "icon-size": 16,
+            "icon-size": 15,
             "spacing": 8
-        },
-        "clock": {
-            "format": "󰥔 {:%a %b %d  %I:%M %p}",
-            "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
         },
         "custom/power": {
             "format": " ⏻ ",
@@ -70,53 +85,63 @@
         "name": "bottom-dock",
         "layer": "top",
         "position": "bottom",
-        "height": 36,
+        "height": 44,
+        "margin-bottom": 6,
+        "margin-left": 12,
+        "margin-right": 12,
         "spacing": 6,
         "modules-left": [
-            "custom/apps",
-            "custom/kitty",
-            "custom/thunar",
-            "custom/brave",
-            "custom/discord"
+            "custom/start",
+            "custom/search"
         ],
         "modules-center": [
             "wlr/taskbar"
         ],
-        "modules-right": [],
-        "custom/apps": {
-            "format": " 󰣇 Apps ",
+        "modules-right": [
+            "custom/clipboard",
+            "custom/snip",
+            "custom/keys",
+            "custom/showdesktop"
+        ],
+        "custom/start": {
+            "format": "󰣇  Start",
             "tooltip": false,
             "on-click": "rofi -show drun"
         },
-        "custom/kitty": {
-            "format": "  Kitty ",
+        "custom/search": {
+            "format": "󰍏  Search apps...",
             "tooltip": false,
-            "on-click": "kitty"
-        },
-        "custom/thunar": {
-            "format": "  Files ",
-            "tooltip": false,
-            "on-click": "thunar"
-        },
-        "custom/brave": {
-            "format": " 󰈹 Brave ",
-            "tooltip": false,
-            "on-click": "brave"
-        },
-        "custom/discord": {
-            "format": " 󰙯 Discord ",
-            "tooltip": false,
-            "on-click": "discord"
+            "on-click": "rofi -show drun"
         },
         "wlr/taskbar": {
-            "format": "{icon} {name}",
-            "icon-size": 16,
+            "format": "{icon}",
+            "icon-size": 22,
             "tooltip-format": "{title}",
             "on-click": "activate",
             "on-click-middle": "close",
             "ignore-list": [
                 "rofi"
             ]
+        },
+        "custom/clipboard": {
+            "format": "󰅍  Clipboard",
+            "tooltip": false,
+            "on-click": "cliphist list | rofi -dmenu | cliphist decode | wl-copy"
+        },
+        "custom/snip": {
+            "format": "󰄀  Snip",
+            "tooltip": false,
+            "on-click": "/home/jacob/.local/bin/hypr-screenshot area"
+        },
+        "custom/keys": {
+            "format": "󰌌  Keys",
+            "tooltip": false,
+            "on-click": "notify-send 'Keybinds' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window\nSuper+Shift+Q: Exit'"
+        },
+        "custom/showdesktop": {
+            "format": " ",
+            "tooltip": false,
+            "on-click": "hyprctl dispatch workspace special:magic"
         }
     }
 ]
