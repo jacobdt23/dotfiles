@@ -38,16 +38,16 @@ colors = {
 # ---- KEYBINDINGS ------------
 # -----------------------------
 keys = [
-    # App Launcher (Super alone, Super + Space, Super + R)
-    Key([], "Super_L", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super"),
+    # App Launcher (Super + Space, Super + R, Super + D)
     Key([mod], "space", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super+Space"),
     Key([mod], "r", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super+R"),
+    Key([mod], "d", lazy.spawn("jacob-shell toggle launcher"), desc="Launch App Launcher with Super+D"),
 
     # Core Applications
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch Kitty Terminal"),
     Key([mod], "e", lazy.spawn(file_manager), desc="Launch Thunar File Manager"),
+    Key([mod], "b", lazy.spawn("firefox"), desc="Launch Firefox Browser"),
     Key([mod], "c", lazy.window.kill(), desc="Close focused window"),
-    Key([mod], "d", lazy.spawn("discord"), desc="Launch Discord"),
 
     # Window State
     Key([mod], "v", lazy.window.toggle_floating(), desc="Toggle floating"),
@@ -211,24 +211,37 @@ except ImportError:
 # -------------------
 @hook.subscribe.startup_once
 def autostart():
+    import time
     home = os.path.expanduser("~")
 
-    # 1. Update systemd & D-Bus environment so GTK & Portal apps launch instantly without hanging
-    subprocess.run(["dbus-update-activation-environment", "--systemd", "WAYLAND_DISPLAY", "XDG_CURRENT_DESKTOP=qtile"], check=False)
-    subprocess.run(["systemctl", "--user", "import-environment", "WAYLAND_DISPLAY", "XDG_CURRENT_DESKTOP"], check=False)
+    # 1. Update systemd & D-Bus environment with full active session vars
+    env_vars = ["WAYLAND_DISPLAY", "DISPLAY", "XDG_CURRENT_DESKTOP", "XDG_SESSION_TYPE"]
+    export_args = [f"{v}={os.environ[v]}" for v in env_vars if v in os.environ]
+    if export_args:
+        subprocess.run(["dbus-update-activation-environment", "--systemd", *export_args], check=False)
+        subprocess.run(["systemctl", "--user", "import-environment", *[v for v in env_vars if v in os.environ]], check=False)
 
     # 2. Keyring & Network Applet
     subprocess.Popen(["gnome-keyring-daemon", "--start", "--components=secrets"])
     subprocess.Popen(["nm-applet"])
-    subprocess.Popen(["wl-paste", "--type", "text", "--watch", "cliphist", "store"])
+    if os.environ.get("WAYLAND_DISPLAY"):
+        subprocess.Popen(["wl-paste", "--type", "text", "--watch", "cliphist", "store"])
 
-    # 3. Clean up and launch Jacob Shell (Top Bar + Bottom Dock + App Launcher)
-    subprocess.run(["killall", "-q", "jacob-shell"], check=False)
+    # 3. Clean up and launch Jacob Shell reliably with replacement
+    subprocess.run(["pkill", "-9", "-f", "jacob-shell"], check=False)
+    time.sleep(0.3)
+    sock = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "jacob-shell.sock")
+    if os.path.exists(sock):
+        try:
+            os.unlink(sock)
+        except OSError:
+            pass
+
     jacob_shell = os.path.join(home, ".local/bin/jacob-shell")
     if os.path.exists(jacob_shell) and os.access(jacob_shell, os.X_OK):
-        subprocess.Popen([jacob_shell])
+        subprocess.Popen([jacob_shell, "--replace"])
     elif os.path.exists("/usr/local/bin/jacob-shell"):
-        subprocess.Popen(["/usr/local/bin/jacob-shell"])
+        subprocess.Popen(["/usr/local/bin/jacob-shell", "--replace"])
 
 # --------------------------
 # ---- GENERAL BEHAVIOR ----

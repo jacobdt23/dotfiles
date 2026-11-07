@@ -31,13 +31,21 @@ def send_command(argv, silent=False):
 # Client mode is handled before importing GTK so keybinds stay instant.
 if len(sys.argv) > 1:
     cmd = sys.argv[1]
-    if cmd == "restart":
+    if cmd in ("restart", "--replace"):
         send_command(["quit"], silent=True)
         import time, subprocess
         time.sleep(0.3)
-        subprocess.Popen([sys.argv[0]], start_new_session=True)
-        sys.exit(0)
-    sys.exit(send_command(sys.argv[1:]))
+        if os.path.exists(SOCK):
+            try:
+                os.unlink(SOCK)
+            except OSError:
+                pass
+        if cmd == "restart":
+            subprocess.Popen([sys.argv[0]], start_new_session=True)
+            sys.exit(0)
+        sys.argv.remove("--replace")
+    else:
+        sys.exit(send_command(sys.argv[1:]))
 
 import configparser
 import glob
@@ -671,18 +679,24 @@ class Layer(Gtk.Window):
         visual = self.get_screen().get_rgba_visual()
         if visual:
             self.set_visual(visual)
-        GtkLayerShell.init_for_window(self)
-        GtkLayerShell.set_namespace(self, f"jacob-{name}")
-        GtkLayerShell.set_layer(self, layer)
-        for edge in (E.TOP, E.BOTTOM, E.LEFT, E.RIGHT):
-            GtkLayerShell.set_anchor(self, edge, edge in anchors)
-        for edge, px in (margins or {}).items():
-            GtkLayerShell.set_margin(self, edge, px)
-        GtkLayerShell.set_keyboard_mode(self, keyboard)
-        if exclusive:
-            GtkLayerShell.auto_exclusive_zone_enable(self)
-        if monitor is not None:
-            GtkLayerShell.set_monitor(self, monitor)
+        if GtkLayerShell.is_supported():
+            GtkLayerShell.init_for_window(self)
+            GtkLayerShell.set_namespace(self, f"jacob-{name}")
+            GtkLayerShell.set_layer(self, layer)
+            for edge in (E.TOP, E.BOTTOM, E.LEFT, E.RIGHT):
+                GtkLayerShell.set_anchor(self, edge, edge in anchors)
+            for edge, px in (margins or {}).items():
+                GtkLayerShell.set_margin(self, edge, px)
+            GtkLayerShell.set_keyboard_mode(self, keyboard)
+            if exclusive:
+                GtkLayerShell.auto_exclusive_zone_enable(self)
+            if monitor is not None:
+                GtkLayerShell.set_monitor(self, monitor)
+        else:
+            self.set_type_hint(Gdk.WindowTypeHint.DOCK if exclusive else Gdk.WindowTypeHint.UTILITY)
+            self.set_skip_taskbar_hint(True)
+            self.set_skip_pager_hint(True)
+            self.set_role(f"jacob-{name}")
         add_class(self, "transparent")
 
 
@@ -709,6 +723,18 @@ class Popup(Layer):
 
     def open_popup(self):
         self.on_open()
+        if not GtkLayerShell.is_supported():
+            display = Gdk.Display.get_default()
+            mon = display.get_monitor(0) if display else None
+            if mon:
+                geom = mon.get_geometry()
+                alloc = self.get_allocation()
+                w = alloc.width if alloc.width > 50 else 540
+                h = alloc.height if alloc.height > 50 else 480
+                if "launcher" in self.name:
+                    self.move(geom.x + 14, geom.y + geom.height - h - 60)
+                else:
+                    self.move(geom.x + (geom.width - w) // 2, geom.y + (geom.height - h) // 2)
         self.show_all()
         self.present()
 
@@ -741,6 +767,10 @@ class TopBar(Layer):
         add_class(root, "bar-full")
         root.set_size_request(-1, 34)
         self.add(root)
+        if not GtkLayerShell.is_supported():
+            geom = monitor.get_geometry()
+            self.set_default_size(geom.width - 24, 34)
+            self.move(geom.x + 12, geom.y + 6)
 
         # ----------------- Left: Branding + Workspaces + Window Title -----------------
         left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -994,6 +1024,10 @@ class BottomDock(Layer):
         add_class(root, "dock-full")
         root.set_size_request(-1, 46)
         self.add(root)
+        if not GtkLayerShell.is_supported():
+            geom = monitor.get_geometry()
+            self.set_default_size(geom.width - 24, 46)
+            self.move(geom.x + 12, geom.y + geom.height - 52)
 
         # ----------------- Left: Start Button + Search -----------------
         left = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -1307,12 +1341,13 @@ class Launcher(Popup):
             if len(parts) < 4:
                 continue
             name, desc, desktop_id, icon_path = parts[:4]
+            exec_cmd = parts[4].strip() if len(parts) > 4 and parts[4].strip() else f"gtk-launch '{desktop_id}'"
             app_dict = {
                 "name": name,
                 "desc": desc,
                 "desktop_id": desktop_id,
                 "icon": icon_path,
-                "cmd": f"gtk-launch '{desktop_id}' || gio launch '/usr/share/applications/{desktop_id}.desktop'",
+                "cmd": exec_cmd,
             }
             row = Gtk.ListBoxRow()
             row.app = (name, desc, desktop_id, icon_path)
@@ -1375,8 +1410,12 @@ class Launcher(Popup):
         if row is None or not hasattr(row, "app"):
             return
         did = row.app[2]
+        cmd = getattr(row, "app_dict", {}).get("cmd")
         self.close_popup()
-        spawn(f"gtk-launch '{did}' || gio launch '/usr/share/applications/{did}.desktop'")
+        if cmd:
+            spawn(f"{cmd} &")
+        else:
+            spawn(f"gtk-launch '{did}' || gio launch '/usr/share/applications/{did}.desktop'")
 
     def _launch_selected(self):
         row = self.listbox.get_selected_row()
@@ -1693,7 +1732,8 @@ class NotificationDaemon:
             if toast in self.toasts:
                 self.toasts.remove(toast)
             for i, t in enumerate(self.toasts):
-                GtkLayerShell.set_margin(t, E.TOP, 36 + i * 78)
+                if GtkLayerShell.is_supported():
+                    GtkLayerShell.set_margin(t, E.TOP, 36 + i * 78)
             return False
 
         GLib.timeout_add(ms, expire)
@@ -1831,7 +1871,8 @@ class WelcomeCenter(Popup):
     def __init__(self, shell):
         super().__init__(shell, "welcome", anchors=(E.TOP, E.BOTTOM, E.LEFT, E.RIGHT),
                          keyboard=GtkLayerShell.KeyboardMode.EXCLUSIVE)
-        GtkLayerShell.set_exclusive_zone(self, -1)
+        if GtkLayerShell.is_supported():
+            GtkLayerShell.set_exclusive_zone(self, -1)
         self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
         self.connect("button-press-event", self._on_backdrop)
 
@@ -2260,14 +2301,17 @@ class Shell:
             return
         if menu.get_visible():
             menu.close_popup()
-        GtkLayerShell.set_monitor(menu, monitor)
         geom = monitor.get_geometry()
         menu_w = 260
         menu_h = 420
         px = max(10, min(int(x), geom.width - menu_w - 12))
         py = max(35, min(int(y), geom.height - menu_h - 12))
-        GtkLayerShell.set_margin(menu, E.LEFT, px)
-        GtkLayerShell.set_margin(menu, E.TOP, py)
+        if GtkLayerShell.is_supported():
+            GtkLayerShell.set_monitor(menu, monitor)
+            GtkLayerShell.set_margin(menu, E.LEFT, px)
+            GtkLayerShell.set_margin(menu, E.TOP, py)
+        else:
+            menu.move(geom.x + px, geom.y + py)
         menu.open_popup()
 
     def show_app_context_menu(self, monitor, app, x, y, is_pinned=True):
@@ -2278,14 +2322,17 @@ class Shell:
         if menu.get_visible():
             menu.close_popup()
         menu.populate(app, is_pinned=is_pinned)
-        GtkLayerShell.set_monitor(menu, monitor)
         geom = monitor.get_geometry()
         menu_w = 250
         menu_h = 220
         px = max(10, min(int(x) - 100, geom.width - menu_w - 12))
         py = max(35, min(int(y), geom.height - menu_h - 12))
-        GtkLayerShell.set_margin(menu, E.LEFT, px)
-        GtkLayerShell.set_margin(menu, E.TOP, py)
+        if GtkLayerShell.is_supported():
+            GtkLayerShell.set_monitor(menu, monitor)
+            GtkLayerShell.set_margin(menu, E.LEFT, px)
+            GtkLayerShell.set_margin(menu, E.TOP, py)
+        else:
+            menu.move(geom.x + px, geom.y + py)
         menu.open_popup()
 
     def show_taskbar_context_menu(self, monitor, x, y):
@@ -2295,14 +2342,17 @@ class Shell:
             return
         if menu.get_visible():
             menu.close_popup()
-        GtkLayerShell.set_monitor(menu, monitor)
         geom = monitor.get_geometry()
         menu_w = 240
         menu_h = 180
         px = max(10, min(int(x) - 100, geom.width - menu_w - 12))
         py = max(35, min(int(y), geom.height - menu_h - 12))
-        GtkLayerShell.set_margin(menu, E.LEFT, px)
-        GtkLayerShell.set_margin(menu, E.TOP, py)
+        if GtkLayerShell.is_supported():
+            GtkLayerShell.set_monitor(menu, monitor)
+            GtkLayerShell.set_margin(menu, E.LEFT, px)
+            GtkLayerShell.set_margin(menu, E.TOP, py)
+        else:
+            menu.move(geom.x + px, geom.y + py)
         menu.open_popup()
 
     def toggle(self, name):
@@ -2376,6 +2426,8 @@ class Shell:
 
     def _start_cpp_monitor(self):
         """Connect to high-performance C++ Hyprland event listener."""
+        if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            return
         bin_path = os.path.expanduser("~/.local/bin/hypr-monitor")
         if not os.path.isfile(bin_path):
             return

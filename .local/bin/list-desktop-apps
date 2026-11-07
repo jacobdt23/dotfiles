@@ -2,6 +2,7 @@
 import configparser
 import glob
 import os
+import re
 
 # Prioritize official upstream application icons in hicolor & pixmaps first
 SEARCH_DIRS = [
@@ -128,10 +129,12 @@ for f in desktop_files:
     desc = (sec.get("Comment", "") or sec.get("GenericName", "") or "Application").strip()
     icon_raw = sec.get("Icon", "").strip()
     icon_path = resolve_icon(icon_raw)
+    raw_exec = sec.get("Exec", "").strip()
+    exec_cmd = re.sub(r"%[a-zA-Z]", "", raw_exec).strip()
     priority = PRIMARY_ORDER.get(desktop_id, 50)
-    entries.append((priority, name.lower(), name, desc, desktop_id, icon_path))
+    entries.append((priority, name.lower(), name, desc, desktop_id, icon_path, exec_cmd))
 
 entries.sort(key=lambda x: (x[0], x[1]))
 
-for _, _, name, desc, desktop_id, icon_path in entries:
-    print(f"{name}\t{desc}\t{desktop_id}\t{icon_path}")
+for _, _, name, desc, desktop_id, icon_path, exec_cmd in entries:
+    print(f"{name}\t{desc}\t{desktop_id}\t{icon_path}\t{exec_cmd}")
