@@ -22,7 +22,6 @@
             "memory",
             "wireplumber",
             "network",
-            "tray",
             "custom/power"
         ],
         "custom/brand": {
@@ -106,6 +105,7 @@
             "custom/clipboard",
             "custom/snip",
             "custom/keys",
+            "tray",
             "custom/showdesktop"
         ],
         "custom/start": {
