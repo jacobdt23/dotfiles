@@ -457,6 +457,17 @@ def setup_drag_snap(qtile_inst):
 
     orig_click = qtile_inst.process_button_click
     orig_release = qtile_inst.process_button_release
+    orig_motion = qtile_inst.process_button_motion
+
+    def patched_motion(self, x, y):
+        handled = orig_motion(x, y)
+        win = getattr(self, "_active_drag_window", None)
+        if win:
+            try:
+                win.bring_to_front()
+            except Exception:
+                pass
+        return handled
 
     def patched_click(self, button_code, modmask, x, y):
         win = self.current_window
@@ -518,6 +529,7 @@ def setup_drag_snap(qtile_inst):
 
     qtile_inst.process_button_click = types.MethodType(patched_click, qtile_inst)
     qtile_inst.process_button_release = types.MethodType(patched_release, qtile_inst)
+    qtile_inst.process_button_motion = types.MethodType(patched_motion, qtile_inst)
     qtile_inst._drag_snap_installed = True
 
 # Install on running instance immediately (if reloading) and on startup hooks
@@ -539,17 +551,17 @@ def init_drag_snap():
 
 mouse = [
     # 1. Holding down the Scroll Wheel (Button2) - direct move anywhere (Hyprland style)
-    Drag([], "Button2", lazy.window.set_position_floating(), lazy.window.bring_to_front(), start=lazy.window.get_position()),
+    Drag([], "Button2", lazy.window.set_position_floating(), start=lazy.window.get_position()),
 
     # 2. Holding Super (mod) + Left Click (Button1) to move
-    Drag([mod], "Button1", lazy.window.set_position_floating(), lazy.window.bring_to_front(), start=lazy.window.get_position()),
+    Drag([mod], "Button1", lazy.window.set_position_floating(), start=lazy.window.get_position()),
 
     # 3. Holding Super (mod) + Scroll Wheel (Button2) to move
-    Drag([mod], "Button2", lazy.window.set_position_floating(), lazy.window.bring_to_front(), start=lazy.window.get_position()),
+    Drag([mod], "Button2", lazy.window.set_position_floating(), start=lazy.window.get_position()),
 
     # 4. Holding Alt (mod1) + Left Click or Scroll Wheel to move (classic X11 fallback)
-    Drag(["mod1"], "Button1", lazy.window.set_position_floating(), lazy.window.bring_to_front(), start=lazy.window.get_position()),
-    Drag(["mod1"], "Button2", lazy.window.set_position_floating(), lazy.window.bring_to_front(), start=lazy.window.get_position()),
+    Drag(["mod1"], "Button1", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+    Drag(["mod1"], "Button2", lazy.window.set_position_floating(), start=lazy.window.get_position()),
 
     # 5. Holding Super (mod) or Alt (mod1) + Right Click (Button3) to resize
     Drag([mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()),
