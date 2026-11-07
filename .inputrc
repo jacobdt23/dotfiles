@@ -1,0 +1,27 @@
+# =============================================================================
+# HyprFrost GNU Readline Configuration (~/.inputrc)
+# =============================================================================
+
+# Include system defaults
+$include /etc/inputrc
+
+# 1. Instant & Mid-Word Tab Completion
+set show-all-if-ambiguous on
+set show-all-if-unmodified on
+set skip-completed-text on
+set completion-ignore-case on
+set completion-map-case on
+set mark-symlinked-directories on
+set match-hidden-files off
+
+# 2. Visual Feedback & Highlighting
+set colored-stats on
+set colored-completion-prefix on
+set bell-style none
+
+# 3. History Navigation with Up/Down Arrow keys (matching typed prefix)
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# 4. Shift+Tab for backward cycling if menu completion is active
+"\e[Z": menu-complete-backward
