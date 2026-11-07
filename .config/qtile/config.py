@@ -239,10 +239,12 @@ def autostart():
             pass
 
     jacob_shell = os.path.join(home, ".local/bin/jacob-shell")
-    if os.path.exists(jacob_shell) and os.access(jacob_shell, os.X_OK):
-        subprocess.Popen([jacob_shell, "--replace"])
-    elif os.path.exists("/usr/local/bin/jacob-shell"):
-        subprocess.Popen(["/usr/local/bin/jacob-shell", "--replace"])
+    log_dir = os.path.expanduser("~/.local/share/qtile")
+    os.makedirs(log_dir, exist_ok=True)
+    log_out = open(os.path.join(log_dir, "jacob-shell.log"), "a")
+    bin_target = jacob_shell if os.path.exists(jacob_shell) and os.access(jacob_shell, os.X_OK) else "/usr/local/bin/jacob-shell"
+    if os.path.exists(bin_target):
+        subprocess.Popen([bin_target, "--replace"], stdout=log_out, stderr=log_out)
 
 # --------------------------
 # ---- GENERAL BEHAVIOR ----

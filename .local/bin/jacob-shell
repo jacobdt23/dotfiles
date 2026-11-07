@@ -2199,8 +2199,10 @@ class Shell:
     def __init__(self):
         provider = Gtk.CssProvider()
         provider.load_from_data(CSS.encode())
-        Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider,
-                                                 Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        screen = Gdk.Screen.get_default()
+        if screen:
+            Gtk.StyleContext.add_provider_for_screen(screen, provider,
+                                                     Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.history = []
         self.cc_proc = None
         self.pinned_apps = self.load_pinned_apps()
@@ -2209,8 +2211,11 @@ class Shell:
         display = Gdk.Display.get_default()
         self.bars = []
         self.desktops = []
-        for i in range(max(display.get_n_monitors(), 1)):
-            mon = display.get_monitor(i)
+        n_mon = display.get_n_monitors() if display else 1
+        for i in range(max(n_mon, 1)):
+            mon = display.get_monitor(i) if display else None
+            if not mon:
+                continue
             bar = TopBar(self, mon, i)
             dock = BottomDock(self, mon)
             bar.show_all()
@@ -2477,8 +2482,25 @@ def main():
     if send_command(["close"], silent=True) == 0:
         print("jacob-shell is already running", file=sys.stderr)
         return 0
-    Shell()
-    Gtk.main()
+
+    # Wait for display server if starting alongside compositor
+    for _ in range(20):
+        if Gtk.init_check():
+            break
+        time.sleep(0.1)
+
+    display = Gdk.Display.get_default()
+    if not display:
+        print("jacob-shell: cannot open display", file=sys.stderr)
+        return 1
+
+    try:
+        Shell()
+        Gtk.main()
+    except Exception as exc:
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        return 1
     return 0
 
 
