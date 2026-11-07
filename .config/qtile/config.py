@@ -296,26 +296,8 @@ def build_top_bar(screen_index):
             mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
         ),
         widget.Sep(linewidth=0, padding=4),
-    ]
 
-    # System Tray on Primary Screen (StatusNotifier on Wayland, Systray on X11)
-    if screen_index == 0:
-        try:
-            if os.environ.get("WAYLAND_DISPLAY"):
-                widgets.extend([
-                    widget.StatusNotifier(padding=4),
-                    widget.Sep(linewidth=0, padding=4),
-                ])
-            else:
-                widgets.extend([
-                    widget.Systray(padding=4),
-                    widget.Sep(linewidth=0, padding=4),
-                ])
-        except Exception:
-            pass
-
-    # Power Button Pill
-    widgets.extend([
+        # Power Button Pill
         widget.TextBox(
             text=" ⏻ ",
             foreground=colors["red"],
@@ -326,7 +308,7 @@ def build_top_bar(screen_index):
             mouse_callbacks={"Button1": lazy.shutdown()},
         ),
         widget.Sep(linewidth=0, padding=4),
-    ])
+    ]
 
     return bar.Bar(
         widgets,
@@ -339,7 +321,7 @@ def build_top_bar(screen_index):
     )
 
 
-def build_bottom_dock():
+def build_bottom_dock(screen_index=0):
     widgets = [
         # Left Margin Spacer
         widget.Sep(linewidth=0, padding=4),
@@ -403,8 +385,26 @@ def build_bottom_dock():
             mouse_callbacks={"Button1": lazy.spawn("notify-send 'Shortcuts' 'Super+Return: Kitty\nSuper+Space: App Launcher\nSuper+E: Thunar\nSuper+B: Brave\nSuper+C: Close Window'")},
         ),
         widget.Sep(linewidth=0, padding=4),
+    ]
 
-        # Layout Pill
+    # System Tray on Primary Screen Dock (Systray on X11, StatusNotifier on Wayland)
+    if screen_index == 0:
+        try:
+            if os.environ.get("WAYLAND_DISPLAY"):
+                widgets.extend([
+                    widget.StatusNotifier(padding=4),
+                    widget.Sep(linewidth=0, padding=4),
+                ])
+            else:
+                widgets.extend([
+                    widget.Systray(padding=4),
+                    widget.Sep(linewidth=0, padding=4),
+                ])
+        except Exception:
+            pass
+
+    # Layout Pill
+    widgets.extend([
         widget.CurrentLayout(
             foreground=colors["purple"],
             background=colors["bg_alt"],
@@ -413,7 +413,7 @@ def build_bottom_dock():
             padding=8,
         ),
         widget.Sep(linewidth=0, padding=4),
-    ]
+    ])
 
     return bar.Bar(
         widgets,
@@ -432,13 +432,13 @@ def build_bottom_dock():
 screens = [
     Screen(
         top=build_top_bar(0),
-        bottom=build_bottom_dock(),
+        bottom=build_bottom_dock(0),
         wallpaper=wallpaper_path if os.path.isfile(wallpaper_path) else None,
         wallpaper_mode="fill",
     ),
     Screen(
         top=build_top_bar(1),
-        bottom=build_bottom_dock(),
+        bottom=build_bottom_dock(1),
         wallpaper=wallpaper_path if os.path.isfile(wallpaper_path) else None,
         wallpaper_mode="fill",
     ),
