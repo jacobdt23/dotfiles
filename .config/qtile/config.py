@@ -277,13 +277,19 @@ def build_top_bar(screen_index):
         widget.Sep(linewidth=0, padding=4),
     ]
 
-    # System Tray on Primary Screen
+    # System Tray on Primary Screen (StatusNotifier on Wayland, Systray on X11)
     if screen_index == 0:
         try:
-            widgets.extend([
-                widget.StatusNotifier(padding=4),
-                widget.Sep(linewidth=0, padding=4),
-            ])
+            if os.environ.get("WAYLAND_DISPLAY"):
+                widgets.extend([
+                    widget.StatusNotifier(padding=4),
+                    widget.Sep(linewidth=0, padding=4),
+                ])
+            else:
+                widgets.extend([
+                    widget.Systray(padding=4),
+                    widget.Sep(linewidth=0, padding=4),
+                ])
         except Exception:
             pass
 
