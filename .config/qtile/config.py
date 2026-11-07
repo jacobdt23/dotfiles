@@ -447,8 +447,25 @@ screens = [
 # ---- MOUSE INTERACTIONS ----
 # ----------------------------
 mouse = [
+    # 1. Holding down the Scroll Wheel (Button2) - direct move anywhere (Hyprland style)
+    Drag([], "Button2", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+
+    # 2. Holding Super (mod) + Left Click (Button1) to move
     Drag([mod], "Button1", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+
+    # 3. Holding Super (mod) + Scroll Wheel (Button2) to move
+    Drag([mod], "Button2", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+
+    # 4. Holding Alt (mod1) + Left Click or Scroll Wheel to move (classic X11 fallback)
+    Drag(["mod1"], "Button1", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+    Drag(["mod1"], "Button2", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+
+    # 5. Holding Super (mod) or Alt (mod1) + Right Click (Button3) to resize
     Drag([mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()),
+    Drag(["mod1"], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()),
+
+    # 6. Click to bring to front
+    Click([mod], "Button1", lazy.window.bring_to_front()),
     Click([mod], "Button2", lazy.window.bring_to_front()),
 ]
 
