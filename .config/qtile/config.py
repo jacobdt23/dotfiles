@@ -103,6 +103,7 @@ keys = [
 
     # Session Management
     Key([mod, "shift"], "r", lazy.reload_config(), desc="Reload Qtile Configuration"),
+    Key([mod, "control"], "r", lazy.spawn("jacob-shell --replace"), desc="Restart Jacob Desktop Shell"),
     Key([mod, "shift"], "q", lazy.shutdown(), desc="Logout / Exit Qtile"),
 ]
 
@@ -210,19 +211,18 @@ except ImportError:
 # -------------------
 # ---- AUTOSTART ----
 # -------------------
-@hook.subscribe.startup_once
-def autostart():
+def _start_desktop_shell():
     script = os.path.expanduser("~/.config/qtile/autostart.sh")
     if os.path.isfile(script) and os.access(script, os.X_OK):
-        subprocess.Popen([script])
+        subprocess.Popen(["/bin/bash", script], start_new_session=True)
+
+@hook.subscribe.startup_complete
+def autostart_complete():
+    _start_desktop_shell()
 
 @hook.subscribe.startup
-def check_shell():
-    sock = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "jacob-shell.sock")
-    if not os.path.exists(sock):
-        script = os.path.expanduser("~/.config/qtile/autostart.sh")
-        if os.path.isfile(script) and os.access(script, os.X_OK):
-            subprocess.Popen([script])
+def autostart_fallback():
+    _start_desktop_shell()
 
 # --------------------------
 # ---- GENERAL BEHAVIOR ----

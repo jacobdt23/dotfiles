@@ -687,6 +687,10 @@ class Layer(Gtk.Window):
                 GtkLayerShell.set_anchor(self, edge, edge in anchors)
             for edge, px in (margins or {}).items():
                 GtkLayerShell.set_margin(self, edge, px)
+            if keyboard == GtkLayerShell.KeyboardMode.ON_DEMAND:
+                ver = GtkLayerShell.get_protocol_version()
+                if ver > 0 and ver < 4:
+                    keyboard = GtkLayerShell.KeyboardMode.NONE
             GtkLayerShell.set_keyboard_mode(self, keyboard)
             if exclusive:
                 GtkLayerShell.auto_exclusive_zone_enable(self)
