@@ -21,8 +21,9 @@ if [ -z "$WAYLAND_DISPLAY" ] && [ -n "$DISPLAY" ]; then
     fi
 fi
 
-# 3. Keyring & Network Applet
+# 3. Keyring, Notifications & Network Applet
 pgrep -x gnome-keyring-d >/dev/null || gnome-keyring-daemon --start --components=secrets &
+pgrep -x dunst >/dev/null || dunst &
 pgrep -x nm-applet >/dev/null || nm-applet &
 
 # 4. Wayland Clipboard History
