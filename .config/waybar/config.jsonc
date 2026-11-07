@@ -11,7 +11,7 @@
         "modules-left": [
             "custom/brand",
             "hyprland/workspaces",
-            "hyprland/window"
+            "wlr/taskbar"
         ],
         "modules-center": [
             "clock",
@@ -22,6 +22,7 @@
             "memory",
             "wireplumber",
             "network",
+            "tray",
             "custom/power"
         ],
         "custom/brand": {

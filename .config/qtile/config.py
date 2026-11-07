@@ -219,14 +219,26 @@ def build_top_bar(screen_index):
         ),
         widget.Sep(linewidth=0, padding=6),
 
-        # Active Window Name Pill
-        widget.WindowName(
+        # Open Windows Taskbar (Clickable icon tabs for running apps)
+        widget.TaskList(
             font="JetBrainsMono Nerd Font",
             fontsize=10,
-            foreground=colors["cyan"],
-            background=colors["pill_bg"],
-            max_chars=38,
-            padding=8,
+            foreground=colors["fg"],
+            background=colors["bar_bg"],
+            border=colors["border_active"],
+            unfocused_border=colors["pill_bg"],
+            highlight_method="border",
+            borderwidth=1,
+            rounded=True,
+            margin_y=2,
+            padding_y=3,
+            padding_x=8,
+            max_title_width=160,
+            icon_size=18,
+            spacing=4,
+            txt_floating="󰉈 ",
+            txt_maximized="󰊓 ",
+            txt_minimized="󰍶 ",
         ),
         widget.Spacer(),
 
@@ -308,8 +320,26 @@ def build_top_bar(screen_index):
             mouse_callbacks={"Button1": lazy.spawn("nm-connection-editor")},
         ),
         widget.Sep(linewidth=0, padding=4),
+    ]
 
-        # Power Button Pill
+    # System Tray on Primary Screen (Top Right)
+    if screen_index == 0:
+        try:
+            if os.environ.get("WAYLAND_DISPLAY"):
+                widgets.extend([
+                    widget.StatusNotifier(padding=4),
+                    widget.Sep(linewidth=0, padding=4),
+                ])
+            else:
+                widgets.extend([
+                    widget.Systray(padding=4),
+                    widget.Sep(linewidth=0, padding=4),
+                ])
+        except Exception:
+            pass
+
+    # Power Button Pill
+    widgets.extend([
         widget.TextBox(
             text=" ⏻ ",
             foreground=colors["red"],
@@ -320,7 +350,7 @@ def build_top_bar(screen_index):
             mouse_callbacks={"Button1": lazy.shutdown()},
         ),
         widget.Sep(linewidth=0, padding=4),
-    ]
+    ])
 
     return bar.Bar(
         widgets,
@@ -397,26 +427,7 @@ def build_bottom_dock(screen_index=0):
             mouse_callbacks={"Button1": lazy.spawn("notify-send 'Shortcuts' 'Super+Return: Kitty\nSuper+Space: App Launcher\nSuper+E: Thunar\nSuper+B: Brave\nSuper+C: Close Window'")},
         ),
         widget.Sep(linewidth=0, padding=4),
-    ]
-
-    # System Tray on Primary Screen Dock (Systray on X11, StatusNotifier on Wayland)
-    if screen_index == 0:
-        try:
-            if os.environ.get("WAYLAND_DISPLAY"):
-                widgets.extend([
-                    widget.StatusNotifier(padding=4),
-                    widget.Sep(linewidth=0, padding=4),
-                ])
-            else:
-                widgets.extend([
-                    widget.Systray(padding=4),
-                    widget.Sep(linewidth=0, padding=4),
-                ])
-        except Exception:
-            pass
-
-    # Layout Pill
-    widgets.extend([
+        # Layout Pill
         widget.CurrentLayout(
             foreground=colors["purple"],
             background=colors["bg_alt"],
@@ -425,7 +436,7 @@ def build_bottom_dock(screen_index=0):
             padding=8,
         ),
         widget.Sep(linewidth=0, padding=4),
-    ])
+    ]
 
     return bar.Bar(
         widgets,
