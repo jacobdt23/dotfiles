@@ -1,0 +1,130 @@
+/**
+ * HyprFrost Tokyo Night Rofi Theme
+ * Fast, elegant, cross-compatible application launcher
+ **/
+
+configuration {
+    modi:                       "drun,run,filebrowser";
+    show-icons:                 true;
+    display-drun:               "   Apps ";
+    display-run:                "   Run ";
+    display-filebrowser:        "   Files ";
+    drun-display-format:        "{name}";
+    font:                       "JetBrainsMono Nerd Font 11";
+}
+
+* {
+    bg:                         #1a1b26;
+    bg-alt:                     #24283b;
+    fg:                         #c0caf5;
+    fg-dim:                     #565f89;
+    blue:                       #7aa2f7;
+    purple:                     #bb9af7;
+    cyan:                       #7dcfff;
+    border-col:                 #7aa2f7;
+    
+    background-color:           transparent;
+    text-color:                 @fg;
+    margin:                     0;
+    padding:                    0;
+}
+
+window {
+    transparency:               "real";
+    location:                   center;
+    anchor:                     center;
+    fullscreen:                 false;
+    width:                      620px;
+    height:                     460px;
+    x-offset:                   0px;
+    y-offset:                   0px;
+
+    enabled:                    true;
+    border-radius:              12px;
+    border:                     2px solid;
+    border-color:               @border-col;
+    background-color:           @bg;
+    cursor:                     "default";
+}
+
+mainbox {
+    enabled:                    true;
+    spacing:                    12px;
+    padding:                    20px;
+    orientation:                vertical;
+    children:                   [ "inputbar", "listview" ];
+    background-color:           transparent;
+}
+
+inputbar {
+    enabled:                    true;
+    spacing:                    10px;
+    padding:                    10px 14px;
+    border-radius:              8px;
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+    children:                   [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                    true;
+    background-color:           inherit;
+    text-color:                 @blue;
+    font:                       "JetBrainsMono Nerd Font Bold 11";
+}
+
+entry {
+    enabled:                    true;
+    background-color:           inherit;
+    text-color:                 @fg;
+    cursor:                     text;
+    placeholder:                "Search applications...";
+    placeholder-color:          @fg-dim;
+}
+
+listview {
+    enabled:                    true;
+    columns:                    1;
+    lines:                      8;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               true;
+    fixed-columns:              true;
+    spacing:                    6px;
+    background-color:           transparent;
+}
+
+element {
+    enabled:                    true;
+    spacing:                    12px;
+    padding:                    8px 12px;
+    border-radius:              8px;
+    background-color:           transparent;
+    text-color:                 @fg;
+    cursor:                     pointer;
+}
+
+element selected.normal {
+    background-color:           @bg-alt;
+    text-color:                 @blue;
+    border:                     1px solid;
+    border-color:               @border-col;
+}
+
+element-icon {
+    background-color:           transparent;
+    text-color:                 inherit;
+    size:                       26px;
+    cursor:                     inherit;
+}
+
+element-text {
+    background-color:           transparent;
+    text-color:                 inherit;
+    cursor:                     inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.0;
+}
