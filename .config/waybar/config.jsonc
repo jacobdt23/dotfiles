@@ -17,7 +17,11 @@
             "custom/media"
         ],
         "modules-right": [
-            "wlr/taskbar",
+            "cpu",
+            "memory",
+            "disk",
+            "wireplumber",
+            "network",
             "custom/power"
         ],
         "custom/brand": {
