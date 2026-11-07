@@ -1,0 +1,448 @@
+#!/usr/bin/env python3
+"""
+HyprFrost Welcome Center
+Standalone, lightweight GTK3 First-Boot Hub & Keybinds Cheat Sheet.
+Compatible with both Qtile (X11 / Wayland) and Hyprland.
+"""
+
+import os
+import sys
+import subprocess
+import signal
+
+# ---------------------------------------------------------
+# Single-instance / Toggle logic
+# ---------------------------------------------------------
+PID_FILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/tmp"), "hyprfrost-welcome.pid")
+
+def check_toggle():
+    if os.path.exists(PID_FILE):
+        try:
+            with open(PID_FILE, "r") as f:
+                pid = int(f.read().strip())
+            os.kill(pid, signal.SIGTERM)
+            os.remove(PID_FILE)
+            sys.exit(0)
+        except Exception:
+            pass
+    try:
+        with open(PID_FILE, "w") as f:
+            f.write(str(os.getpid()))
+    except Exception:
+        pass
+
+check_toggle()
+
+import gi
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Gtk, Gdk, GdkPixbuf, Pango, GLib
+
+DISABLED_FLAG = os.path.expanduser("~/.config/hyprfrost-welcome-disabled")
+LOGO_ARCH = "/usr/share/icons/Papirus-Dark/48x48/apps/distributor-logo-archlinux.svg"
+if not os.path.isfile(LOGO_ARCH):
+    LOGO_ARCH = "/usr/share/pixmaps/archlinux-logo.png"
+
+# Tokyo Night Theme CSS
+CSS_DATA = b"""
+* {
+    font-family: 'JetBrainsMono Nerd Font', 'Noto Sans', sans-serif;
+    color: #c0caf5;
+}
+
+window {
+    background-color: #1a1b26;
+    border: 2px solid #7aa2f7;
+    border-radius: 14px;
+}
+
+.welcome-header {
+    background: linear-gradient(135deg, #1f2335 0%, #24283b 100%);
+    border-bottom: 1px solid #292e42;
+    padding: 16px 20px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #7aa2f7;
+}
+
+.subtitle {
+    font-size: 11px;
+    color: #7982a9;
+}
+
+.tab-btn {
+    background-color: #24283b;
+    border: 1px solid #414868;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #a9b1d6;
+    transition: all 150ms ease;
+}
+
+.tab-btn:hover {
+    background-color: #2f354f;
+    border-color: #7aa2f7;
+    color: #c0caf5;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%);
+    border: 1px solid #7aa2f7;
+    color: #15161e;
+    font-weight: 900;
+}
+
+.card {
+    background-color: #1f2335;
+    border: 1px solid #292e42;
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: all 150ms ease;
+}
+
+.card:hover {
+    background-color: #24283b;
+    border-color: #7aa2f7;
+}
+
+.app-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #c0caf5;
+}
+
+.app-desc {
+    font-size: 10px;
+    color: #7982a9;
+}
+
+.btn-open {
+    background-color: rgba(122, 162, 247, 0.18);
+    border: 1px solid #7aa2f7;
+    border-radius: 6px;
+    padding: 4px 12px;
+    color: #7aa2f7;
+    font-size: 11px;
+    font-weight: 700;
+    transition: all 120ms ease;
+}
+
+.btn-open:hover {
+    background-color: #7aa2f7;
+    color: #15161e;
+}
+
+.key-chip {
+    background-color: #24283b;
+    border: 1px solid #414868;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #7dcfff;
+}
+
+.key-desc {
+    font-size: 11px;
+    color: #c0caf5;
+}
+
+.footer {
+    background-color: #16161e;
+    border-top: 1px solid #292e42;
+    padding: 12px 20px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.close-btn {
+    background-color: transparent;
+    border: 1px solid #f7768e;
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: #f7768e;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.close-btn:hover {
+    background-color: #f7768e;
+    color: #15161e;
+}
+
+checkbutton check {
+    background-color: #24283b;
+    border: 1px solid #7aa2f7;
+    border-radius: 4px;
+}
+
+checkbutton check:checked {
+    background-color: #7aa2f7;
+    color: #15161e;
+}
+"""
+
+def spawn(cmd):
+    try:
+        subprocess.Popen(cmd, shell=True, start_new_session=True)
+    except Exception as e:
+        print(f"Error launching {cmd}: {e}")
+
+class WelcomeApp(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="HyprFrost Welcome Center")
+        self.set_wmclass("hyprfrost-welcome", "hyprfrost-welcome")
+        self.set_default_size(860, 600)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_resizable(False)
+
+        # Apply CSS
+        style_provider = Gtk.CssProvider()
+        style_provider.load_from_data(CSS_DATA)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            style_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        self.connect("destroy", self.on_close)
+        self.connect("key-press-event", self.on_key)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(main_box)
+
+        # Header
+        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        header.get_style_context().add_class("welcome-header")
+        
+        if os.path.exists(LOGO_ARCH):
+            pix = GdkPixbuf.Pixbuf.new_from_file_at_scale(LOGO_ARCH, 40, 40, True)
+            logo_img = Gtk.Image.new_from_pixbuf(pix)
+            header.pack_start(logo_img, False, False, 0)
+
+        header_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        title_lbl = Gtk.Label(label="Welcome to HyprFrost Linux", xalign=0)
+        title_lbl.get_style_context().add_class("title")
+        sub_lbl = Gtk.Label(label="Arch Linux Rolling • Tokyo Night Edition • Dual Qtile & Hyprland • Btrfs Rollback", xalign=0)
+        sub_lbl.get_style_context().add_class("subtitle")
+        header_text.pack_start(title_lbl, False, False, 0)
+        header_text.pack_start(sub_lbl, False, False, 0)
+        header.pack_start(header_text, True, True, 0)
+
+        close_btn = Gtk.Button(label="✕")
+        close_btn.get_style_context().add_class("close-btn")
+        close_btn.connect("clicked", lambda _: self.close())
+        header.pack_end(close_btn, False, False, 0)
+        main_box.pack_start(header, False, False, 0)
+
+        # Navigation Tabs
+        nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10, homogeneous=True)
+        nav_box.set_margin_top(12)
+        nav_box.set_margin_bottom(10)
+        nav_box.set_margin_start(20)
+        nav_box.set_margin_end(20)
+
+        self.btn_tab_apps = Gtk.Button(label="🚀  First-Boot Essential Apps")
+        self.btn_tab_apps.get_style_context().add_class("tab-btn")
+        self.btn_tab_apps.connect("clicked", lambda _: self.switch_tab("apps"))
+        nav_box.pack_start(self.btn_tab_apps, True, True, 0)
+
+        self.btn_tab_keys = Gtk.Button(label="⌨️  Keybindings & Controls Cheat Sheet")
+        self.btn_tab_keys.get_style_context().add_class("tab-btn")
+        self.btn_tab_keys.connect("clicked", lambda _: self.switch_tab("keys"))
+        nav_box.pack_start(self.btn_tab_keys, True, True, 0)
+
+        main_box.pack_start(nav_box, False, False, 0)
+
+        # Stack for tabs
+        self.stack = Gtk.Stack()
+        self.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        self.stack.set_transition_duration(150)
+        self.stack.set_margin_start(20)
+        self.stack.set_margin_end(20)
+        self.stack.set_margin_bottom(12)
+
+        self.stack.add_named(self.build_apps_page(), "apps")
+        self.stack.add_named(self.build_keys_page(), "keys")
+        main_box.pack_start(self.stack, True, True, 0)
+
+        # Footer
+        footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        footer.get_style_context().add_class("footer")
+
+        self.chk_autostart = Gtk.CheckButton(label="Show Welcome Center on Startup")
+        self.chk_autostart.set_active(not os.path.exists(DISABLED_FLAG))
+        self.chk_autostart.connect("toggled", self.on_autostart_toggled)
+        footer.pack_start(self.chk_autostart, False, False, 0)
+
+        tip_lbl = Gtk.Label(label="Tip: Press Super + W anytime to reopen • Esc to close", xalign=1)
+        tip_lbl.get_style_context().add_class("subtitle")
+        footer.pack_end(tip_lbl, False, False, 0)
+
+        main_box.pack_start(footer, False, False, 0)
+
+        self.switch_tab("apps")
+
+    def switch_tab(self, tab_name):
+        self.stack.set_visible_child_name(tab_name)
+        if tab_name == "apps":
+            self.btn_tab_apps.get_style_context().add_class("active")
+            self.btn_tab_keys.get_style_context().remove_class("active")
+        else:
+            self.btn_tab_keys.get_style_context().add_class("active")
+            self.btn_tab_apps.get_style_context().remove_class("active")
+
+    def on_autostart_toggled(self, btn):
+        if btn.get_active():
+            if os.path.exists(DISABLED_FLAG):
+                try:
+                    os.remove(DISABLED_FLAG)
+                except Exception:
+                    pass
+        else:
+            try:
+                os.makedirs(os.path.dirname(DISABLED_FLAG), exist_ok=True)
+                with open(DISABLED_FLAG, "w") as f:
+                    f.write("1\n")
+            except Exception:
+                pass
+
+    def on_key(self, _widget, event):
+        if event.keyval == Gdk.KEY_Escape:
+            self.close()
+            return True
+        elif event.keyval == Gdk.KEY_Tab:
+            current = self.stack.get_visible_child_name()
+            self.switch_tab("keys" if current == "apps" else "apps")
+            return True
+        return False
+
+    def on_close(self, _widget):
+        if os.path.exists(PID_FILE):
+            try:
+                os.remove(PID_FILE)
+            except Exception:
+                pass
+
+    def build_apps_page(self):
+        apps = []
+        if os.path.exists("/usr/local/bin/launch-calamares") or os.path.exists("/usr/bin/calamares"):
+            apps.append((
+                "Install System (Calamares)",
+                "Graphical Btrfs/GPT/MBR System Installer",
+                "/usr/share/icons/Papirus-Dark/48x48/apps/system-software-install.svg",
+                "/usr/local/bin/launch-calamares" if os.path.exists("/usr/local/bin/launch-calamares") else "calamares"
+            ))
+
+        apps.extend([
+            ("Steam Gaming Client", "Play Linux & Windows Proton Games", "/usr/share/icons/Papirus-Dark/48x48/apps/steam.svg", "steam"),
+            ("Timeshift Btrfs Snapshots", "Create & Restore Bootable Btrfs Snapshots", "/usr/share/icons/Papirus-Dark/48x48/apps/timeshift.svg", "/usr/local/bin/timeshift-launcher" if os.path.exists("/usr/local/bin/timeshift-launcher") else "timeshift-gtk"),
+            ("Brave Web Browser", "Fast, Private Browser with Ad-Blocking", "/usr/share/icons/Papirus-Dark/48x48/apps/brave-browser.svg", "brave" if os.path.exists("/usr/bin/brave") else "brave-browser"),
+            ("Kitty GPU Terminal", "Hardware Accelerated Tokyo Night Terminal", "/usr/share/icons/Papirus-Dark/48x48/apps/kitty.svg", "kitty"),
+            ("Thunar File Manager", "Browse Disks, Mounts & Archives", "/usr/share/icons/Papirus-Dark/48x48/apps/system-file-manager.svg", "thunar"),
+            ("Audio Mixer (Pavucontrol)", "Manage Headsets, Mic & Output Levels", "/usr/share/icons/Papirus-Dark/48x48/apps/pavucontrol.svg", "pavucontrol"),
+            ("System Monitor (btop++)", "Real-Time CPU, GPU, RAM & NVMe Monitor", "/usr/share/icons/Papirus-Dark/48x48/apps/btop.svg", "kitty -e btop"),
+            ("Antigravity AI Code Studio", "Next-Gen AI Pair Programming IDE", "/usr/share/icons/Papirus-Dark/48x48/apps/antigravity.svg", "antigravity"),
+            ("System Settings", "Configure Displays, Audio & Keyboards", "/usr/share/icons/Papirus-Dark/48x48/apps/distributor-logo-archlinux.svg", "/home/jacob/.local/bin/hypr-settings" if os.path.exists("/home/jacob/.local/bin/hypr-settings") else "systemsettings"),
+        ])
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        grid = Gtk.Grid(column_spacing=12, row_spacing=10, column_homogeneous=True)
+        grid.set_margin_top(4)
+        grid.set_margin_bottom(6)
+
+        for idx, (name, desc, icon_path, cmd) in enumerate(apps):
+            card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            card.get_style_context().add_class("card")
+
+            if os.path.exists(icon_path):
+                pix = GdkPixbuf.Pixbuf.new_from_file_at_scale(icon_path, 34, 34, True)
+                icon_img = Gtk.Image.new_from_pixbuf(pix)
+            else:
+                icon_img = Gtk.Image.new_from_icon_name("application-x-executable", Gtk.IconSize.DND)
+            card.pack_start(icon_img, False, False, 0)
+
+            text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            title_l = Gtk.Label(label=name, xalign=0)
+            title_l.get_style_context().add_class("app-title")
+            desc_l = Gtk.Label(label=desc, xalign=0)
+            desc_l.get_style_context().add_class("app-desc")
+            desc_l.set_ellipsize(Pango.EllipsizeMode.END)
+            text_box.pack_start(title_l, False, False, 0)
+            text_box.pack_start(desc_l, False, False, 0)
+            card.pack_start(text_box, True, True, 0)
+
+            open_btn = Gtk.Button(label="Open")
+            open_btn.get_style_context().add_class("btn-open")
+            open_btn.connect("clicked", lambda _, c=cmd: (self.close(), spawn(c)))
+            card.pack_end(open_btn, False, False, 0)
+
+            grid.attach(card, idx % 2, idx // 2, 1, 1)
+
+        scrolled.add(grid)
+        return scrolled
+
+    def build_keys_page(self):
+        shortcuts = [
+            ("Super / Super + Space", "Open Rofi Application Launcher"),
+            ("Super + Return", "Launch Kitty GPU Terminal"),
+            ("Super + E", "Open Thunar File Manager"),
+            ("Super + W", "Toggle HyprFrost Welcome Center Hub"),
+            ("Super + C", "Close Active Focused Window"),
+            ("Super + V", "Toggle Window Floating Mode"),
+            ("Super + F", "Toggle Fullscreen Window"),
+            ("Hold Scroll Wheel (Button 2)", "Drag Window across monitors (auto-snaps on release)"),
+            ("Super + Left Click Drag", "Drag & Move Window with Mouse"),
+            ("Super + Right Click Drag", "Resize Window with Mouse"),
+            ("Super + Arrow Keys", "Move Window Focus (Left / Right / Up / Down)"),
+            ("Super + H / J / K / L", "Vim-style Move Window Focus"),
+            ("Super + 1 – 9", "Switch to Workspace 1 – 9"),
+            ("Super + Shift + 1 – 9", "Move Active Window to Workspace 1 – 9"),
+            ("Super + Shift + V", "Open Clipboard History (cliphist)"),
+            ("Super + Shift + S / Print", "Capture Screen Region with Swappy Snipping Tool"),
+            ("Super + Ctrl + R", "Reload Window Manager Configuration"),
+            ("Super + Q", "Open System Power & Logout Menu"),
+        ]
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        grid = Gtk.Grid(column_spacing=12, row_spacing=8, column_homogeneous=True)
+        grid.set_margin_top(4)
+        grid.set_margin_bottom(6)
+
+        for idx, (keys, desc) in enumerate(shortcuts):
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.get_style_context().add_class("card")
+
+            k_lbl = Gtk.Label(label=keys, xalign=0)
+            k_lbl.get_style_context().add_class("key-chip")
+            row.pack_start(k_lbl, False, False, 0)
+
+            d_lbl = Gtk.Label(label=desc, xalign=0)
+            d_lbl.get_style_context().add_class("key-desc")
+            d_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+            row.pack_start(d_lbl, True, True, 0)
+
+            grid.attach(row, idx % 2, idx // 2, 1, 1)
+
+        scrolled.add(grid)
+        return scrolled
+
+def main():
+    app = WelcomeApp()
+    app.show_all()
+    Gtk.main()
+
+if __name__ == "__main__":
+    main()

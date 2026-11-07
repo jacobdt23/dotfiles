@@ -28,7 +28,7 @@
         "custom/brand": {
             "format": "󰣇  HyprFrost",
             "tooltip": false,
-            "on-click": "rofi -show drun"
+            "on-click": "hyprfrost-welcome"
         },
         "hyprland/workspaces": {
             "disable-scroll": true,

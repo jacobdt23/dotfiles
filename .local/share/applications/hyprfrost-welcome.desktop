@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome Center
+GenericName=HyprFrost First-Boot Hub & Keybinds
+Comment=Essential First-Boot Apps & Keybindings Cheat Sheet
+Exec=hyprfrost-welcome
+Icon=/usr/share/icons/Papirus-Dark/48x48/apps/distributor-logo-archlinux.svg
+Terminal=false
+Categories=System;Utility;
+Keywords=welcome;keybinds;cheatsheet;setup;arch;hyprfrost;
+StartupNotify=false

@@ -96,6 +96,7 @@ keys = [
     Key([mod], "Return", lazy.spawn(terminal), desc="Launch Kitty Terminal"),
     Key([mod], "e", lazy.spawn(file_manager), desc="Launch Thunar File Manager"),
     Key([mod], "b", lazy.spawn(browser), desc="Launch Brave Browser"),
+    Key([mod], "w", lazy.spawn("hyprfrost-welcome"), desc="Open HyprFrost Welcome Center"),
     Key([mod], "c", lazy.window.kill(), desc="Close focused window"),
 
     # Window State
@@ -193,7 +194,7 @@ def build_top_bar(screen_index):
             font="JetBrainsMono Nerd Font Bold",
             fontsize=11,
             padding=8,
-            mouse_callbacks={"Button1": lazy.spawn("rofi -show drun")},
+            mouse_callbacks={"Button1": lazy.spawn("hyprfrost-welcome")},
         ),
         widget.Sep(linewidth=0, padding=6),
 
@@ -592,6 +593,8 @@ floating_layout = layout.Floating(
         Match(wm_class="swappy"),
         Match(title="Missing Packages Detected"),
         Match(wm_class="Rofi"),
+        Match(wm_class="hyprfrost-welcome"),
+        Match(title="HyprFrost Welcome Center"),
     ],
 )
 

@@ -1,2 +1,1 @@
-#!/usr/bin/env bash
-exec /usr/local/bin/jacob-shell toggle welcome
+hyprfrost-welcome
