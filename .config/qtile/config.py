@@ -4,7 +4,9 @@
 # Matching Exact Jacob Shell Aesthetics (Tokyo Night Glass Floating Bars)
 # =============================================================================
 
+import html
 import os
+import re
 import subprocess
 from libqtile import bar, hook, layout, widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
@@ -177,8 +179,24 @@ layouts = [
 ]
 
 # ------------------------------------------------
-# ---- PURE NATIVE BARS & WIDGETS ----------------
+# ---- PURE NATIVE BARS & WIDGETS (DT-ADAPTED) ---
 # ------------------------------------------------
+def tray_widget():
+    if os.environ.get("WAYLAND_DISPLAY"):
+        return widget.StatusNotifier(padding=4)
+    else:
+        return widget.Systray(padding=4)
+
+def clean_task_title(text):
+    if not text:
+        return ""
+    import html, re
+    text = re.sub(r'&apos…?', "'", text)
+    text = re.sub(r'&quot…?', '"', text)
+    text = re.sub(r'&amp…?', "&", text)
+    text = html.unescape(text)
+    return html.escape(text)
+
 class AllWindowsTaskList(widget.TaskList):
     """Taskbar that displays all open windows across all groups and screens."""
     @property
@@ -196,14 +214,12 @@ class AllWindowsTaskList(widget.TaskList):
         hook.subscribe.setgroup(self.update)
         hook.subscribe.changegroup(self.update)
 
-def build_top_bar(screen_index):
-    visible_groups = [str(n) for n in range(1, 11)]
-
-    widgets = [
+def init_widgets_list(include_tray=True):
+    widgets_list = [
         # Left Margin Spacer
         widget.Sep(linewidth=0, padding=4),
 
-        # Brand Chip (Exact Jacob Shell styling)
+        # Brand Chip (Exact Jacob Shell styling, click launches welcome hub like DT's yad)
         widget.TextBox(
             text="󰣇 HyprFrost",
             foreground=colors["blue"],
@@ -215,7 +231,7 @@ def build_top_bar(screen_index):
         ),
         widget.Sep(linewidth=0, padding=6),
 
-        # Workspaces
+        # Workspaces / Groups (1-10)
         widget.GroupBox(
             font="JetBrainsMono Nerd Font Bold",
             fontsize=10,
@@ -231,8 +247,18 @@ def build_top_bar(screen_index):
             highlight_method="block",
             this_current_screen_border=colors["border_active"],
             block_highlight_text_color=colors["bar_bg"],
-            visible_groups=visible_groups,
+            visible_groups=[str(n) for n in range(1, 11)],
             disable_drag=True,
+        ),
+        widget.Sep(linewidth=0, padding=6),
+
+        # Current Layout (Adapted from DT)
+        widget.CurrentLayout(
+            foreground=colors["purple"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font Bold",
+            fontsize=10,
+            padding=8,
         ),
         widget.Sep(linewidth=0, padding=6),
 
@@ -253,13 +279,15 @@ def build_top_bar(screen_index):
             max_title_width=160,
             icon_size=18,
             spacing=4,
+            stretch=False,
+            parse_text=clean_task_title,
             txt_floating="󰉈 ",
             txt_maximized="󰊓 ",
             txt_minimized="󰍶 ",
         ),
         widget.Spacer(),
 
-        # Center Clock Pill
+        # Center Clock Pill (DT style with day, date, time)
         widget.TextBox(
             text="󰥔 ",
             foreground=colors["cyan"],
@@ -269,7 +297,7 @@ def build_top_bar(screen_index):
             padding=4,
         ),
         widget.Clock(
-            format="%a %b %d  %I:%M %p",
+            format="%a, %b %d • %I:%M %p",
             foreground=colors["cyan"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font Bold",
@@ -290,7 +318,8 @@ def build_top_bar(screen_index):
         ),
         widget.Spacer(),
 
-        # Right: CPU Pill
+        # Right Hardware Stats (Adapted from DT with Tokyo Night pills & interactive clicks):
+        # CPU
         widget.TextBox(text="󰻠", foreground=colors["blue"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.CPU(
             format="{load_percent}%",
@@ -299,22 +328,39 @@ def build_top_bar(screen_index):
             font="JetBrainsMono Nerd Font",
             fontsize=10,
             padding=4,
+            mouse_callbacks={"Button1": lazy.spawn("kitty -e btop")},
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # RAM Pill
+        # Memory (DT format with MB/GB)
         widget.TextBox(text="󰍛", foreground=colors["purple"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.Memory(
-            format="{MemPercent}%",
+            format="{MemUsed: .0f}{mm}",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
             padding=4,
+            mouse_callbacks={"Button1": lazy.spawn("kitty -e btop")},
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Volume Pill
+        # Disk Free (DT's DF widget adapted with Tokyo Night styling)
+        widget.TextBox(text="󰋊", foreground=colors["yellow"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
+        widget.DF(
+            format="{uf:.0f}{m} free",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=4,
+            partition="/",
+            visible_on_warn=False,
+            mouse_callbacks={"Button1": lazy.spawn("kitty -e df -h")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+
+        # Volume
         widget.TextBox(text="", foreground=colors["green"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.Volume(
             foreground=colors["fg"],
@@ -326,7 +372,7 @@ def build_top_bar(screen_index):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Ethernet Pill
+        # Ethernet
         widget.TextBox(
             text="󰈀",
             foreground=colors["cyan"],
@@ -337,8 +383,18 @@ def build_top_bar(screen_index):
             mouse_callbacks={"Button1": lazy.spawn("nm-connection-editor")},
         ),
         widget.Sep(linewidth=0, padding=4),
+    ]
 
-        # Power Button Pill
+    # DT Multi-Monitor Systray Strategy:
+    # Screen 1 includes the tray; Screen 2 excludes it to prevent X11 tray collisions.
+    if include_tray:
+        widgets_list.extend([
+            tray_widget(),
+            widget.Sep(linewidth=0, padding=4),
+        ])
+
+    # Power Button
+    widgets_list.extend([
         widget.TextBox(
             text=" ⏻ ",
             foreground=colors["red"],
@@ -349,8 +405,18 @@ def build_top_bar(screen_index):
             mouse_callbacks={"Button1": lazy.shutdown()},
         ),
         widget.Sep(linewidth=0, padding=4),
-    ]
+    ])
 
+    return widgets_list
+
+def init_widgets_screen1():
+    return init_widgets_list(include_tray=True)
+
+def init_widgets_screen2():
+    return init_widgets_list(include_tray=False)
+
+def build_top_bar(screen_index):
+    widgets = init_widgets_screen1() if screen_index == 0 else init_widgets_screen2()
     return bar.Bar(
         widgets,
         34,
@@ -427,22 +493,6 @@ def build_bottom_dock(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
     ]
-
-    # System Tray on Primary Screen Dock
-    if screen_index == 0:
-        try:
-            if os.environ.get("WAYLAND_DISPLAY"):
-                widgets.extend([
-                    widget.StatusNotifier(padding=4),
-                    widget.Sep(linewidth=0, padding=4),
-                ])
-            else:
-                widgets.extend([
-                    widget.Systray(padding=4),
-                    widget.Sep(linewidth=0, padding=4),
-                ])
-        except Exception:
-            pass
 
     # Layout Pill
     widgets.extend([
