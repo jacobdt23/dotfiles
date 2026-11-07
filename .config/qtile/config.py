@@ -26,9 +26,6 @@ terminal = "kitty"
 file_manager = "thunar"
 browser = "brave"
 wallpaper_path = os.path.expanduser("~/Pictures/Wallpapers/default.png")
-antigravity_icon = os.path.expanduser("~/.local/share/icons/antigravity-22.png")
-if not os.path.isfile(antigravity_icon):
-    antigravity_icon = "/usr/share/icons/Papirus-Dark/48x48/apps/antigravity.svg"
 
 # -----------------------------------------------
 # ---- TOKYO NIGHT FROSTED PALETTE --------------
@@ -309,16 +306,6 @@ def build_top_bar(screen_index):
             fontsize=12,
             padding=8,
             mouse_callbacks={"Button1": lazy.spawn("nm-connection-editor")},
-        ),
-        widget.Sep(linewidth=0, padding=4),
-
-        # Antigravity Pill
-        widget.Image(
-            filename=antigravity_icon,
-            margin_y=6,
-            margin_x=8,
-            background=colors["pill_bg"],
-            mouse_callbacks={"Button1": lazy.spawn("antigravity")},
         ),
         widget.Sep(linewidth=0, padding=4),
 

@@ -79,7 +79,7 @@ window#waybar.bottom-dock {
     font-size: 10px;
 }
 
-/* Status Pills (Clock, Media, CPU, RAM, Disk, Vol, Network, Antigravity) */
+/* Status Pills (Clock, Media, CPU, RAM, Disk, Vol, Network) */
 #clock,
 #custom-media,
 #cpu,
@@ -87,7 +87,6 @@ window#waybar.bottom-dock {
 #disk,
 #wireplumber,
 #network,
-#custom-antigravity,
 #tray {
     background-color: rgba(26, 27, 38, 0.7);
     border: 1px solid rgba(41, 46, 66, 0.8);
@@ -124,10 +123,6 @@ window#waybar.bottom-dock {
 
 #network {
     color: #7dcfff;
-}
-
-#custom-antigravity {
-    color: #bb9af7;
 }
 
 #wireplumber {

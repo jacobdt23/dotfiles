@@ -22,7 +22,6 @@
             "memory",
             "wireplumber",
             "network",
-            "custom/antigravity",
             "custom/power"
         ],
         "custom/brand": {
@@ -77,11 +76,6 @@
             "format-disconnected": "󰈂",
             "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
             "on-click": "nm-connection-editor"
-        },
-        "custom/antigravity": {
-            "format": "󰚩",
-            "tooltip": false,
-            "on-click": "antigravity"
         },
         "tray": {
             "icon-size": 15,
