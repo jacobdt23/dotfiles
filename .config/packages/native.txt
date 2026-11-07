@@ -46,6 +46,7 @@ inotify-tools
 intel-media-driver
 intel-ucode
 iwd
+keyd
 kitty
 kpmcore
 lib32-gamemode
