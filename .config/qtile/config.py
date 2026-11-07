@@ -179,30 +179,36 @@ layouts = [
 ]
 
 # ------------------------------------------------
-# ---- TOP BAR ARCHITECTURE (COMPLETE REWRITE) ----
+# ---- TOP & BOTTOM BARS (COMPLETE REWRITE) ------
 # ------------------------------------------------
+def tray_widget():
+    if os.environ.get("WAYLAND_DISPLAY"):
+        return widget.StatusNotifier(padding=4)
+    else:
+        return widget.Systray(padding=4)
+
 def clean_task_title(text):
     if not text:
         return ""
     import html, re
+    text = html.unescape(text)
     text = re.sub(r'&apos…?', "'", text)
     text = re.sub(r'&quot…?', '"', text)
     text = re.sub(r'&amp…?', "&", text)
-    return html.escape(html.unescape(text))
+    if len(text) > 30:
+        return text[:27] + "..."
+    return text
 
 def build_top_bar(screen_index=0):
     """
-    Constructs the Tokyo Night frosted top bar.
-    Identical across all monitors with pure dual-monitor parity.
-    - Left: HyprFrost Welcome launcher, Workspaces 1-10, Layout
-    - Center: Date/Clock and Media player
-    - Right: Hardware stats (CPU, RAM, Disk, Vol, Net), Open Windows Taskbar, Power
+    Completely rewritten HyprFrost top bar with DT architectural parity.
+    Identical on both monitors.
     """
     widgets = [
         # Left Margin
         widget.Sep(linewidth=0, padding=4),
 
-        # 1. Brand Chip (Launches Welcome Center)
+        # 1. Brand Chip (Welcome Center Launcher)
         widget.TextBox(
             text="󰣇 HyprFrost",
             foreground=colors["blue"],
@@ -212,14 +218,15 @@ def build_top_bar(screen_index=0):
             padding=8,
             mouse_callbacks={"Button1": lazy.spawn("hyprfrost-welcome")},
         ),
-        widget.Sep(linewidth=0, padding=6),
+        widget.Sep(linewidth=0, padding=4),
+        widget.TextBox(text="|", foreground=colors["fg_dim"], font="JetBrainsMono Nerd Font", padding=2, fontsize=12),
 
         # 2. Workspaces 1-10
         widget.GroupBox(
             font="JetBrainsMono Nerd Font Bold",
             fontsize=10,
             margin_y=3,
-            margin_x=1,
+            margin_x=2,
             padding_y=3,
             padding_x=6,
             borderwidth=1,
@@ -233,7 +240,7 @@ def build_top_bar(screen_index=0):
             visible_groups=[str(n) for n in range(1, 11)],
             disable_drag=True,
         ),
-        widget.Sep(linewidth=0, padding=6),
+        widget.TextBox(text="|", foreground=colors["fg_dim"], font="JetBrainsMono Nerd Font", padding=2, fontsize=12),
 
         # 3. Current Layout
         widget.CurrentLayout(
@@ -243,11 +250,21 @@ def build_top_bar(screen_index=0):
             fontsize=10,
             padding=8,
         ),
+        widget.TextBox(text="|", foreground=colors["fg_dim"], font="JetBrainsMono Nerd Font", padding=2, fontsize=12),
 
-        # Center Expander
+        # 4. Active Window Name
+        widget.WindowName(
+            foreground=colors["fg_dim"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            max_chars=35,
+        ),
+
+        # Center Expander Spacer
         widget.Spacer(),
 
-        # 4. Center Clock Pill
+        # 5. Center Date & Clock (DT style with day, date, time)
         widget.TextBox(
             text="󰥔 ",
             foreground=colors["cyan"],
@@ -263,10 +280,11 @@ def build_top_bar(screen_index=0):
             font="JetBrainsMono Nerd Font Bold",
             fontsize=10,
             padding=6,
+            mouse_callbacks={"Button1": lazy.spawn("notify-send 'Calendar' \"$(cal)\"")},
         ),
         widget.Sep(linewidth=0, padding=6),
 
-        # 5. Center Media Chip
+        # 6. Media Chip
         widget.TextBox(
             text="󰎆 Media",
             foreground=colors["purple"],
@@ -277,19 +295,12 @@ def build_top_bar(screen_index=0):
             mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
         ),
 
-        # Right Expander
+        # Right Expander Spacer
         widget.Spacer(),
 
-        # 6. Hardware & System Status Area
+        # 7. Hardware & System Status (Adapted from DT)
         # CPU
-        widget.TextBox(
-            text="󰻠",
-            foreground=colors["blue"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=4,
-        ),
+        widget.TextBox(text="󰻠", foreground=colors["blue"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.CPU(
             format="{load_percent}%",
             foreground=colors["fg"],
@@ -301,15 +312,8 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Memory
-        widget.TextBox(
-            text="󰍛",
-            foreground=colors["purple"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=4,
-        ),
+        # Memory (MB/GB format)
+        widget.TextBox(text="󰍛", foreground=colors["purple"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.Memory(
             format="{MemUsed: .0f}{mm}",
             foreground=colors["fg"],
@@ -321,15 +325,8 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Disk Free Space
-        widget.TextBox(
-            text="󰋊",
-            foreground=colors["yellow"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=4,
-        ),
+        # Disk Free
+        widget.TextBox(text="󰋊", foreground=colors["yellow"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.DF(
             format="{uf:.0f}{m} free",
             foreground=colors["fg"],
@@ -343,15 +340,8 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Volume
-        widget.TextBox(
-            text="",
-            foreground=colors["green"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font",
-            fontsize=11,
-            padding=4,
-        ),
+        # Audio Volume
+        widget.TextBox(text="", foreground=colors["green"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
         widget.Volume(
             foreground=colors["fg"],
             background=colors["pill_bg"],
@@ -374,7 +364,7 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=6),
 
-        # 7. Open Windows Taskbar at Top Right
+        # 8. Open Windows Taskbar at Top Right (Clickable icon tabs for all running apps)
         widget.TaskList(
             font="JetBrainsMono Nerd Font",
             fontsize=10,
@@ -388,7 +378,7 @@ def build_top_bar(screen_index=0):
             margin_y=2,
             padding_y=3,
             padding_x=8,
-            max_title_width=160,
+            max_title_width=150,
             icon_size=18,
             spacing=4,
             stretch=False,
@@ -399,7 +389,7 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=6),
 
-        # 8. Power Button
+        # 9. Power Button
         widget.TextBox(
             text=" ⏻ ",
             foreground=colors["red"],
@@ -422,13 +412,16 @@ def build_top_bar(screen_index=0):
         border_color=colors["bar_border"],
     )
 
-
 def build_bottom_dock(screen_index=0):
+    """
+    Completely rewritten HyprFrost bottom dock.
+    Fast app launchers, utilities, and clean layout.
+    """
     widgets = [
-        # Left Margin Spacer
+        # Left Margin
         widget.Sep(linewidth=0, padding=4),
 
-        # Start Button (Exact Jacob Shell styling)
+        # Start Button
         widget.TextBox(
             text=" 󰣇 Start ",
             foreground=colors["fg"],
@@ -440,7 +433,7 @@ def build_bottom_dock(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Search Pill Trigger
+        # Search Apps Pill
         widget.TextBox(
             text="󰍏  Search apps...",
             foreground=colors["fg_dim"],
@@ -452,19 +445,53 @@ def build_bottom_dock(screen_index=0):
         ),
         widget.Spacer(),
 
-        # Right Dock Utilities: Clipboard
+        # Center App Quick-Launchers
         widget.TextBox(
-            text="󰅍 Clipboard",
+            text="󰞷 Term",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
             padding=8,
-            mouse_callbacks={"Button1": lazy.spawn("sh -c 'cliphist list | rofi -dmenu | cliphist decode | wl-copy'")},
+            mouse_callbacks={"Button1": lazy.spawn("kitty")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+        widget.TextBox(
+            text="󰉋 Files",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            mouse_callbacks={"Button1": lazy.spawn("thunar")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+        widget.TextBox(
+            text="󰈹 Web",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            mouse_callbacks={"Button1": lazy.spawn("brave")},
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Snip
+        # Spacer to Right
+        widget.Spacer(),
+
+        # Dock Utilities: Clipboard, Snip, Keys
+        widget.TextBox(
+            text="󰅍 Clip",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=8,
+            mouse_callbacks={"Button1": lazy.spawn("/home/jacob/.local/bin/hypr-clipboard")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+
         widget.TextBox(
             text="󰄀 Snip",
             foreground=colors["fg"],
@@ -476,7 +503,6 @@ def build_bottom_dock(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Keys
         widget.TextBox(
             text="󰌌 Keys",
             foreground=colors["fg"],

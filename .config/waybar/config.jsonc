@@ -10,8 +10,7 @@
         "spacing": 4,
         "modules-left": [
             "custom/brand",
-            "hyprland/workspaces",
-            "wlr/taskbar"
+            "hyprland/workspaces"
         ],
         "modules-center": [
             "clock",
@@ -20,8 +19,10 @@
         "modules-right": [
             "cpu",
             "memory",
+            "disk",
             "wireplumber",
             "network",
+            "wlr/taskbar",
             "custom/power"
         ],
         "custom/brand": {
@@ -35,13 +36,8 @@
             "format": "{name}",
             "on-click": "activate"
         },
-        "hyprland/window": {
-            "format": "{}",
-            "max-length": 40,
-            "separate-outputs": true
-        },
         "clock": {
-            "format": "󰥔  {:%a %b %d  %I:%M %p}",
+            "format": "󰥔  {:%a, %b %d • %I:%M %p}",
             "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
         },
         "custom/media": {
@@ -52,17 +48,20 @@
         "cpu": {
             "interval": 2,
             "format": "󰻠 {usage}%",
-            "tooltip": false
+            "tooltip": false,
+            "on-click": "kitty -e btop"
         },
         "memory": {
             "interval": 2,
             "format": "󰍛 {percentage}%",
-            "tooltip": false
+            "tooltip": false,
+            "on-click": "kitty -e btop"
         },
         "disk": {
             "interval": 30,
             "format": "󰋊 {percentage_used}%",
-            "path": "/"
+            "path": "/",
+            "on-click": "kitty -e df -h"
         },
         "wireplumber": {
             "format": "{icon} {volume}%",
@@ -71,15 +70,22 @@
             "on-click": "pavucontrol"
         },
         "network": {
-            "format-ethernet": "󰈀",
+            "format-ethernet": "",
             "format-wifi": "",
             "format-disconnected": "󰈂",
             "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
             "on-click": "nm-connection-editor"
         },
-        "tray": {
-            "icon-size": 15,
-            "spacing": 8
+        "wlr/taskbar": {
+            "format": "{icon}",
+            "icon-size": 18,
+            "tooltip-format": "{title}",
+            "on-click": "activate",
+            "on-click-middle": "close",
+            "all-outputs": false,
+            "ignore-list": [
+                "rofi"
+            ]
         },
         "custom/power": {
             "format": " ⏻ ",
@@ -100,7 +106,11 @@
             "custom/start",
             "custom/search"
         ],
-        "modules-center": [],
+        "modules-center": [
+            "custom/term",
+            "custom/files",
+            "custom/web"
+        ],
         "modules-right": [
             "custom/clipboard",
             "custom/snip",
@@ -118,15 +128,20 @@
             "tooltip": false,
             "on-click": "rofi -show drun"
         },
-        "wlr/taskbar": {
-            "format": "{icon}",
-            "icon-size": 22,
-            "tooltip-format": "{title}",
-            "on-click": "activate",
-            "on-click-middle": "close",
-            "ignore-list": [
-                "rofi"
-            ]
+        "custom/term": {
+            "format": "󰞷  Term",
+            "tooltip": false,
+            "on-click": "kitty"
+        },
+        "custom/files": {
+            "format": "󰉋  Files",
+            "tooltip": false,
+            "on-click": "thunar"
+        },
+        "custom/web": {
+            "format": "󰈹  Web",
+            "tooltip": false,
+            "on-click": "brave"
         },
         "custom/clipboard": {
             "format": "󰅍  Clipboard",
@@ -142,6 +157,10 @@
             "format": "󰌌  Keys",
             "tooltip": false,
             "on-click": "notify-send 'Keybinds' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window\nSuper+Shift+Q: Exit'"
+        },
+        "tray": {
+            "icon-size": 16,
+            "spacing": 6
         },
         "custom/showdesktop": {
             "format": " ",

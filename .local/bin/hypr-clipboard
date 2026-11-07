@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Universal Wayland & X11 Clipboard Manager for HyprFrost / Qtile
+if command -v cliphist >/dev/null 2>&1; then
+    selected=$(cliphist list 2>/dev/null | rofi -dmenu -p "Clipboard" 2>/dev/null)
+    if [ -n "$selected" ]; then
+        if [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then
+            printf "%s" "$selected" | cliphist decode | wl-copy
+        elif command -v xclip >/dev/null 2>&1; then
+            printf "%s" "$selected" | cliphist decode | xclip -selection clipboard
+        fi
+    fi
+fi
