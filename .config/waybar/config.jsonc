@@ -20,9 +20,9 @@
         "modules-right": [
             "cpu",
             "memory",
-            "disk",
             "wireplumber",
-            "tray",
+            "network",
+            "custom/antigravity",
             "custom/power"
         ],
         "custom/brand": {
@@ -70,6 +70,18 @@
             "format-muted": "󰝟 Muted",
             "format-icons": ["", "", ""],
             "on-click": "pavucontrol"
+        },
+        "network": {
+            "format-ethernet": "󰈀",
+            "format-wifi": "",
+            "format-disconnected": "󰈂",
+            "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
+            "on-click": "nm-connection-editor"
+        },
+        "custom/antigravity": {
+            "format": "󰚩",
+            "tooltip": false,
+            "on-click": "antigravity"
         },
         "tray": {
             "icon-size": 15,
