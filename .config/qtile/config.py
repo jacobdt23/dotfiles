@@ -448,59 +448,87 @@ screens = [
 # ----------------------------
 # Seamless Drag & Drop: Move windows with either holding down the scroll wheel
 # (Button2, matching Hyprland) or Super + Left Click (Button1).
-# Once moved and dropped, windows automatically snap back to full screen.
-try:
-    import importlib
-    import libqtile.core.manager as manager
+# Once moved and dropped, windows automatically snap back into the screen/fullscreen.
+import types
 
-    # Always reload to retrieve pristine unpatched methods (prevents live-reload recursion)
-    importlib.reload(manager)
-    _orig_process_button_click = manager.Qtile.process_button_click
-    _orig_process_button_release = manager.Qtile.process_button_release
+def setup_drag_snap(qtile_inst):
+    if not qtile_inst or getattr(qtile_inst, "_drag_snap_installed", False):
+        return
 
-    def _auto_fullscreen_click(self, button_code, modmask, x, y):
+    orig_click = qtile_inst.process_button_click
+    orig_release = qtile_inst.process_button_release
+
+    def patched_click(self, button_code, modmask, x, y):
         win = self.current_window
-        was_fullscreen = False
-        if win and getattr(win, "fullscreen", False):
-            was_fullscreen = True
-            win.fullscreen = False
-            win.floating = True
-            win._was_drag_fullscreen = True
+        was_fs = False
+        was_tiled = False
+        if win:
+            if getattr(win, "fullscreen", False):
+                was_fs = True
+                win.fullscreen = False
+                win.floating = True
+            elif not getattr(win, "floating", False):
+                was_tiled = True
+                win.floating = True
 
-        handled = _orig_process_button_click(self, button_code, modmask, x, y)
+        handled = orig_click(button_code, modmask, x, y)
         if self._drag is not None and win:
-            self._dragged_window = win
-            if was_fullscreen:
-                win._was_drag_fullscreen = True
-        elif was_fullscreen and self._drag is None and win:
-            win.fullscreen = True
-            win._was_drag_fullscreen = False
+            self._active_drag_window = win
+            win._drag_was_fullscreen = was_fs
+            win._drag_was_tiled = was_tiled
+        elif self._drag is None and win:
+            if was_fs:
+                win.fullscreen = True
+            elif was_tiled:
+                win.floating = False
         return handled
 
-    def _auto_fullscreen_release(self, button_code, modmask):
-        dragged_win = getattr(self, "_dragged_window", None)
-        was_drag_active = (self._drag is not None)
-        handled = _orig_process_button_release(self, button_code, modmask)
-        if was_drag_active and dragged_win:
-            self._dragged_window = None
+    def patched_release(self, button_code, modmask):
+        win = getattr(self, "_active_drag_window", None)
+        was_drag = (self._drag is not None)
+        handled = orig_release(button_code, modmask)
+        if was_drag and win:
+            self._active_drag_window = None
             try:
-                # Utility dialogs and popups remain floating; regular windows go back full screen
-                wm_classes = [c.lower() for c in (dragged_win.get_wm_class() or [])]
+                # Keep small utility dialogs floating
+                wm_classes = [c.lower() for c in (win.get_wm_class() or [])]
                 dialogs = {
                     "pavucontrol", "blueman-manager", "pinentry", "ssh-askpass",
                     "confirmreset", "makebranch", "maketag", "branchdialog",
                     "file_progress", "dialog", "download", "error", "notification"
                 }
                 if not any(d in wm_classes for d in dialogs):
-                    dragged_win.fullscreen = True
+                    is_game = any("hogwarts" in c or "steam_app" in c for c in wm_classes)
+                    if getattr(win, "_drag_was_fullscreen", False) or is_game:
+                        win.fullscreen = True
+                        win.floating = False
+                    else:
+                        # Snap back into the tiling layout on the current screen
+                        win.floating = False
             except Exception:
                 pass
         return handled
 
-    manager.Qtile.process_button_click = _auto_fullscreen_click
-    manager.Qtile.process_button_release = _auto_fullscreen_release
+    qtile_inst.process_button_click = types.MethodType(patched_click, qtile_inst)
+    qtile_inst.process_button_release = types.MethodType(patched_release, qtile_inst)
+    qtile_inst._drag_snap_installed = True
+
+# Install on running instance immediately (if reloading) and on startup hooks
+try:
+    from libqtile import qtile
+    if qtile:
+        setup_drag_snap(qtile)
 except Exception:
     pass
+
+@hook.subscribe.startup
+def init_drag_snap():
+    try:
+        from libqtile import qtile
+        if qtile:
+            setup_drag_snap(qtile)
+    except Exception:
+        pass
 
 mouse = [
     # 1. Holding down the Scroll Wheel (Button2) - direct move anywhere (Hyprland style)
