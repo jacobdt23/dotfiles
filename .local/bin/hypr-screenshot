@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Hyprland Screenshot Utility (grim + slurp + swappy)
+# HyprFrost Universal Screenshot Utility
+# Cross-compatible across Hyprland (Wayland) and Qtile (X11)
 # Fast, elegant screenshot tool with interactive snipping & annotation editor
 # =============================================================================
 
@@ -11,6 +12,19 @@ mkdir -p "$SHOT_DIR"
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 TARGET_FILE="$SHOT_DIR/Screenshot_${TIMESTAMP}.png"
+
+# Ensure DISPLAY & XAUTHORITY are exported if running under X11
+if [ -z "$WAYLAND_DISPLAY" ]; then
+    export DISPLAY="${DISPLAY:-:0}"
+    if [ -z "$XAUTHORITY" ]; then
+        for cand in /tmp/xauth_* "$HOME/.Xauthority"; do
+            if [ -f "$cand" ] && [ -r "$cand" ]; then
+                export XAUTHORITY="$cand"
+                break
+            fi
+        done
+    fi
+fi
 
 notify() {
     local file="$1"
@@ -24,20 +38,29 @@ notify() {
 
 copy_to_clip() {
     local file="$1"
-    if command -v wl-copy >/dev/null 2>&1; then
+    if [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then
         wl-copy --type image/png < "$file" 2>/dev/null || true
+    elif [ -x "/home/jacob/.local/bin/xclip" ]; then
+        /home/jacob/.local/bin/xclip -selection clipboard -t image/png -i "$file" 2>/dev/null &
+    elif command -v xclip >/dev/null 2>&1; then
+        xclip -selection clipboard -t image/png -i "$file" 2>/dev/null &
     fi
 }
 
 take_full() {
-    grim "$TARGET_FILE"
+    if [ -n "$WAYLAND_DISPLAY" ]; then
+        grim "$TARGET_FILE"
+    else
+        /home/jacob/.local/bin/x11-snip full -o "$TARGET_FILE"
+    fi
     copy_to_clip "$TARGET_FILE"
     notify "$TARGET_FILE" "Full Screen"
 }
 
 take_window() {
-    local geo
-    geo=$(hyprctl activewindow -j 2>/dev/null | python3 -c '
+    if [ -n "$WAYLAND_DISPLAY" ]; then
+        local geo
+        geo=$(hyprctl activewindow -j 2>/dev/null | python3 -c '
 import sys, json
 try:
     d = json.load(sys.stdin)
@@ -51,30 +74,45 @@ except Exception:
 sys.exit(1)
 ' 2>/dev/null)
 
-    if [ -n "$geo" ]; then
-        grim -g "$geo" "$TARGET_FILE"
+        if [ -n "$geo" ]; then
+            grim -g "$geo" "$TARGET_FILE"
+        else
+            take_area_copy
+            return
+        fi
     else
-        take_area_copy
-        return
+        if ! /home/jacob/.local/bin/x11-snip window -o "$TARGET_FILE"; then
+            take_area_copy
+            return
+        fi
     fi
     copy_to_clip "$TARGET_FILE"
     notify "$TARGET_FILE" "Active Window"
 }
 
 take_area_copy() {
-    local geo
-    geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
-    [ -z "$geo" ] && exit 0
-    grim -g "$geo" "$TARGET_FILE"
+    if [ -n "$WAYLAND_DISPLAY" ]; then
+        local geo
+        geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
+        [ -z "$geo" ] && exit 0
+        grim -g "$geo" "$TARGET_FILE"
+    else
+        /home/jacob/.local/bin/x11-snip area -o "$TARGET_FILE"
+        [ ! -s "$TARGET_FILE" ] && exit 0
+    fi
     copy_to_clip "$TARGET_FILE"
     notify "$TARGET_FILE" "Selected Area"
 }
 
 take_area_edit() {
-    local geo
-    geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
-    [ -z "$geo" ] && exit 0
-    grim -g "$geo" - | swappy -f -
+    if [ -n "$WAYLAND_DISPLAY" ]; then
+        local geo
+        geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
+        [ -z "$geo" ] && exit 0
+        grim -g "$geo" - | swappy -f -
+    else
+        /home/jacob/.local/bin/x11-snip area --stdout | swappy -f -
+    fi
 }
 
 show_menu() {
