@@ -372,9 +372,9 @@ def init_widgets_list(include_tray=True):
         ),
         widget.Sep(linewidth=0, padding=4),
 
-        # Ethernet
+        # Ethernet (Clean outline wired icon matching Tokyo Night status theme)
         widget.TextBox(
-            text="󰈀",
+            text="",
             foreground=colors["cyan"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font Bold",
