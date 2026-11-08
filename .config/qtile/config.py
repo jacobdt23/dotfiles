@@ -137,12 +137,12 @@ keys = [
     Key([mod], "minus", lazy.spawn("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), desc="Volume down"),
     Key([mod], "BackSpace", lazy.spawn("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), desc="Mute volume"),
 
-    # Screenshots (HyprFrost Universal Screenshot Suite)
-    Key([], "Print", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot area"), desc="Snip area"),
-    Key(["shift"], "Print", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot full"), desc="Full screenshot"),
-    Key([mod], "Print", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot window"), desc="Window screenshot"),
-    Key([mod, "shift"], "s", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot area"), desc="Snip area"),
-    Key([mod, "control"], "s", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot"), desc="Open Screenshot GUI"),
+    # Screenshots (Flameshot)
+    Key([], "Print", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot"), desc="Flameshot GUI"),
+    Key(["shift"], "Print", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot full"), desc="Full screenshot"),
+    Key([mod], "Print", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot"), desc="Flameshot GUI"),
+    Key([mod, "shift"], "s", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot"), desc="Flameshot GUI"),
+    Key([mod, "control"], "s", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot config"), desc="Flameshot config"),
 
     # Clipboard & Keybind Help
     Key([mod, "shift"], "v", lazy.spawn("/home/jacob/.local/bin/hypr-clipboard"), desc="Clipboard history"),
@@ -476,8 +476,8 @@ def build_bottom_dock(screen_index=0):
             fontsize=10,
             padding=8,
             mouse_callbacks={
-                "Button1": lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot"),
-                "Button3": lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot area"),
+                "Button1": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot"),
+                "Button3": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot config"),
             },
         ),
         widget.Sep(linewidth=0, padding=4),

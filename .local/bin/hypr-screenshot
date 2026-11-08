@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# HyprFrost Screenshot Suite (Powered by Flameshot)
+# HyprFrost Screenshot Wrapper (Flameshot)
 # Full Cross-WM Compatibility (Qtile X11 & Hyprland Wayland)
 # =============================================================================
 
@@ -13,18 +13,18 @@ fi
 
 FLAMESHOT="/home/jacob/.local/bin/flameshot-bin"
 if [ ! -x "$FLAMESHOT" ]; then
-    FLAMESHOT="$(command -v flameshot || true)"
+    FLAMESHOT="$(command -v flameshot || echo "/usr/bin/flameshot")"
 fi
 
 case "${1:-}" in
     full|screen)
-        exec "$FLAMESHOT" full -c -p "$HOME/Pictures/Screenshots"
+        exec "$FLAMESHOT" full -c -p "${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
         ;;
     config|settings)
         exec "$FLAMESHOT" config
         ;;
     folder)
-        exec thunar "$HOME/Pictures/Screenshots"
+        exec thunar "${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
         ;;
     *)
         exec "$FLAMESHOT" gui

@@ -149,8 +149,8 @@
         "custom/snip": {
             "format": "󰄀  Snip",
             "tooltip": false,
-            "on-click": "/home/jacob/.local/bin/hyprfrost-screenshot",
-            "on-click-right": "/home/jacob/.local/bin/hyprfrost-screenshot area"
+            "on-click": "/home/jacob/.local/bin/hypr-screenshot",
+            "on-click-right": "/home/jacob/.local/bin/hypr-screenshot config"
         },
         "custom/keys": {
             "format": "󰌌  Keys",
