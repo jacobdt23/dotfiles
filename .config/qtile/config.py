@@ -137,14 +137,15 @@ keys = [
     Key([mod], "minus", lazy.spawn("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), desc="Volume down"),
     Key([mod], "BackSpace", lazy.spawn("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), desc="Mute volume"),
 
-    # Screenshots (Universal grim + slurp + swappy)
-    Key([], "Print", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot area"), desc="Snip area"),
-    Key(["shift"], "Print", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot full"), desc="Full screenshot"),
-    Key([mod], "Print", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot window"), desc="Window screenshot"),
-    Key([mod, "shift"], "s", lazy.spawn("/home/jacob/.local/bin/hypr-screenshot area"), desc="Snip area"),
+    # Screenshots (HyprFrost Universal Screenshot Suite)
+    Key([], "Print", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot area"), desc="Snip area"),
+    Key(["shift"], "Print", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot full"), desc="Full screenshot"),
+    Key([mod], "Print", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot window"), desc="Window screenshot"),
+    Key([mod, "shift"], "s", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot area"), desc="Snip area"),
+    Key([mod, "control"], "s", lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot"), desc="Open Screenshot GUI"),
 
     # Clipboard & Keybind Help
-    Key([mod, "shift"], "v", lazy.spawn("sh -c 'cliphist list | rofi -dmenu | cliphist decode | wl-copy'"), desc="Clipboard history"),
+    Key([mod, "shift"], "v", lazy.spawn("/home/jacob/.local/bin/hypr-clipboard"), desc="Clipboard history"),
     Key([mod], "k", lazy.spawn("notify-send 'Keybinds' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window\nSuper+Shift+Q: Exit'"), desc="Show keybinds"),
 
     # Session Management
@@ -351,20 +352,20 @@ def build_top_bar(screen_index=0):
             mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
         ),
         widget.Sep(linewidth=0, padding=4),
+    ]
 
-        # Ethernet / Network (GNOME-style wired network icon)
-        widget.TextBox(
-            text="󰌗",
-            foreground=colors["cyan"],
-            background=colors["pill_bg"],
-            font="JetBrainsMono Nerd Font Bold",
-            fontsize=12,
-            padding=8,
+    # Ethernet icon (exact SVG from Papirus-Dark) on both monitors
+    widgets.extend([
+        widget.Image(
+            filename="/usr/share/icons/Papirus-Dark/16x16/devices/network-wired.svg",
+            margin=9,
             mouse_callbacks={"Button1": lazy.spawn("nm-connection-editor")},
         ),
-        widget.Sep(linewidth=0, padding=6),
+        widget.Sep(linewidth=0, padding=4),
+    ])
 
-        # Power Button
+    # Power Button
+    widgets.extend([
         widget.TextBox(
             text=" ⏻ ",
             foreground=colors["red"],
@@ -375,7 +376,7 @@ def build_top_bar(screen_index=0):
             mouse_callbacks={"Button1": lazy.shutdown()},
         ),
         widget.Sep(linewidth=0, padding=4),
-    ]
+    ])
 
     return bar.Bar(
         widgets,
@@ -474,7 +475,10 @@ def build_bottom_dock(screen_index=0):
             font="JetBrainsMono Nerd Font",
             fontsize=10,
             padding=8,
-            mouse_callbacks={"Button1": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot area")},
+            mouse_callbacks={
+                "Button1": lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot"),
+                "Button3": lazy.spawn("/home/jacob/.local/bin/hyprfrost-screenshot area"),
+            },
         ),
         widget.Sep(linewidth=0, padding=4),
 
@@ -489,16 +493,6 @@ def build_bottom_dock(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=4),
     ]
-
-    # Systray in Primary Bottom Dock (keeps top bars symmetrical & clean)
-    if screen_index == 0:
-        try:
-            widgets.extend([
-                tray_widget(),
-                widget.Sep(linewidth=0, padding=4),
-            ])
-        except Exception:
-            pass
 
     # Layout Pill
     widgets.extend([

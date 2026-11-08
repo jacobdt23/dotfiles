@@ -1,164 +1,903 @@
-#!/usr/bin/env bash
-# =============================================================================
-# HyprFrost Universal Screenshot Utility
-# Cross-compatible across Hyprland (Wayland) and Qtile (X11)
-# Fast, elegant screenshot tool with interactive snipping & annotation editor
-# =============================================================================
+#!/usr/bin/env python3
+"""
+=============================================================================
+HyprFrost Screenshot Utility
+Dedicated Desktop GUI & Fast Snipping Suite
+Universal Wayland (Hyprland) & X11 (Qtile) Cross-Compatibility
+Tokyo Night Frosted Aesthetic
+=============================================================================
+"""
 
-set -eo pipefail
+import argparse
+import datetime
+import glob
+import os
+import shutil
+import subprocess
+import sys
+import threading
+import time
+import warnings
 
-SHOT_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
-mkdir -p "$SHOT_DIR"
+warnings.filterwarnings("ignore")
 
-TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-TARGET_FILE="$SHOT_DIR/Screenshot_${TIMESTAMP}.png"
+# Configure environment for X11 if needed
+if "WAYLAND_DISPLAY" not in os.environ and "DISPLAY" not in os.environ:
+    os.environ["DISPLAY"] = ":0"
 
-# Ensure DISPLAY & XAUTHORITY are exported if running under X11
-if [ -z "$WAYLAND_DISPLAY" ]; then
-    export DISPLAY="${DISPLAY:-:0}"
-    if [ -z "$XAUTHORITY" ]; then
-        for cand in /tmp/xauth_* "$HOME/.Xauthority"; do
-            if [ -f "$cand" ] && [ -r "$cand" ]; then
-                export XAUTHORITY="$cand"
-                break
-            fi
-        done
-    fi
-fi
+if "WAYLAND_DISPLAY" not in os.environ and "XAUTHORITY" not in os.environ:
+    for pat in ["/tmp/xauth_*", os.path.expanduser("~/.Xauthority")]:
+        matches = sorted(glob.glob(pat), key=os.path.getmtime, reverse=True)
+        if matches:
+            os.environ["XAUTHORITY"] = matches[0]
+            break
 
-notify() {
-    local file="$1"
-    local mode_name="$2"
-    if command -v notify-send >/dev/null 2>&1; then
-        notify-send -a "Screenshot" -i "$file" \
-            "Screenshot Captured ($mode_name)" \
-            "Saved to $(basename "$file")\nCopied to clipboard."
-    fi
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Gio, cairo
+
+SHOT_DIR = os.path.expanduser("~/Pictures/Screenshots")
+os.makedirs(SHOT_DIR, exist_ok=True)
+
+# -----------------------------------------------------------------------------
+# Core Utilities & Backend Functions
+# -----------------------------------------------------------------------------
+
+def is_wayland():
+    return bool(os.environ.get("WAYLAND_DISPLAY"))
+
+
+def get_timestamp_filename():
+    ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    return os.path.join(SHOT_DIR, f"Screenshot_{ts}.png")
+
+
+def copy_to_clipboard(filepath):
+    if not os.path.isfile(filepath):
+        return
+    if is_wayland():
+        if shutil.which("wl-copy"):
+            try:
+                with open(filepath, "rb") as f:
+                    subprocess.run(["wl-copy", "--type", "image/png"], stdin=f, check=False)
+            except Exception:
+                pass
+    else:
+        # X11 clipboard
+        xclip_bin = "/home/jacob/.local/bin/xclip"
+        if not os.path.isfile(xclip_bin):
+            xclip_bin = shutil.which("xclip") or "xclip"
+        try:
+            with open(filepath, "rb") as f:
+                subprocess.Popen([xclip_bin, "-selection", "clipboard", "-t", "image/png"], stdin=f)
+        except Exception:
+            pass
+        # Also store via Gtk Clipboard if mainloop active
+        try:
+            pix = GdkPixbuf.Pixbuf.new_from_file(filepath)
+            clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            clip.set_image(pix)
+            clip.store()
+        except Exception:
+            pass
+
+
+def send_notification(filepath, mode_name="Screenshot"):
+    if not shutil.which("notify-send"):
+        return
+    base = os.path.basename(filepath)
+    try:
+        subprocess.Popen([
+            "notify-send",
+            "-a", "HyprFrost Screenshot",
+            "-i", filepath,
+            f"Screenshot Captured ({mode_name})",
+            f"Saved: {base}\nCopied to clipboard."
+        ])
+    except Exception:
+        pass
+
+
+def open_in_swappy(filepath):
+    swappy_bin = "/home/jacob/.local/bin/swappy"
+    if not os.path.isfile(swappy_bin):
+        swappy_bin = shutil.which("swappy") or "swappy"
+    if os.path.isfile(filepath):
+        subprocess.Popen([swappy_bin, "-f", filepath])
+
+
+def open_in_viewer(filepath):
+    if os.path.isfile(filepath):
+        subprocess.Popen(["xdg-open", filepath])
+
+
+def open_folder(path=SHOT_DIR):
+    subprocess.Popen(["thunar", path])
+
+
+# -----------------------------------------------------------------------------
+# Capture Implementations (Wayland & X11)
+# -----------------------------------------------------------------------------
+
+def capture_fullscreen_x11(target_path):
+    display = Gdk.Display.get_default()
+    if not display:
+        raise RuntimeError("Could not open GDK display.")
+    screen = display.get_default_screen()
+    root = screen.get_root_window()
+    sw = screen.get_width()
+    sh = screen.get_height()
+    pix = Gdk.pixbuf_get_from_window(root, 0, 0, sw, sh)
+    if not pix:
+        raise RuntimeError("Failed to capture root window.")
+    pix.savev(target_path, "png", [], [])
+    return target_path
+
+
+def capture_window_x11(target_path):
+    # Try Qtile IPC first
+    geo = None
+    try:
+        from libqtile.command.client import InteractiveCommandClient
+        client = InteractiveCommandClient()
+        win = client.window.info()
+        if win and win.get("width", 0) > 0 and win.get("height", 0) > 0:
+            geo = (win["x"], win["y"], win["width"], win["height"])
+    except Exception:
+        pass
+
+    # Fallback to xdotool
+    if not geo and shutil.which("xdotool"):
+        try:
+            out = subprocess.check_output(["xdotool", "getactivewindow", "getwindowgeometry"], text=True)
+            x = y = w = h = None
+            for line in out.splitlines():
+                line = line.strip()
+                if line.startswith("Position:"):
+                    parts = line.split()[1].split(",")
+                    x, y = int(parts[0]), int(parts[1])
+                elif line.startswith("Geometry:"):
+                    parts = line.split()[1].split("x")
+                    w, h = int(parts[0]), int(parts[1])
+            if None not in (x, y, w, h) and w > 0 and h > 0:
+                geo = (x, y, w, h)
+        except Exception:
+            pass
+
+    display = Gdk.Display.get_default()
+    screen = display.get_default_screen()
+    root = screen.get_root_window()
+    sw = screen.get_width()
+    sh = screen.get_height()
+    root_pix = Gdk.pixbuf_get_from_window(root, 0, 0, sw, sh)
+
+    if geo:
+        gx, gy, gw, gh = geo
+        gx = max(0, min(gx, sw - 1))
+        gy = max(0, min(gy, sh - 1))
+        gw = min(gw, sw - gx)
+        gh = min(gh, sh - gy)
+        sub_pix = GdkPixbuf.Pixbuf.new_subpixbuf(root_pix, gx, gy, gw, gh)
+        sub_pix.savev(target_path, "png", [], [])
+    else:
+        root_pix.savev(target_path, "png", [], [])
+    return target_path
+
+
+class X11SnipOverlay(Gtk.Window):
+    def __init__(self, target_path, callback):
+        super().__init__(type=Gtk.WindowType.POPUP)
+        self.target_path = target_path
+        self.callback = callback
+
+        self.set_app_paintable(True)
+        visual = self.get_screen().get_rgba_visual() or self.get_screen().get_system_visual()
+        self.set_visual(visual)
+
+        display = Gdk.Display.get_default()
+        screen = display.get_default_screen()
+        self.sw = screen.get_width()
+        self.sh = screen.get_height()
+        self.set_default_size(self.sw, self.sh)
+        self.move(0, 0)
+        self.set_keep_above(True)
+
+        root = screen.get_root_window()
+        self.pixbuf = Gdk.pixbuf_get_from_window(root, 0, 0, self.sw, self.sh)
+
+        self.start_x = None
+        self.start_y = None
+        self.cur_x = None
+        self.cur_y = None
+        self.is_dragging = False
+
+        self.add_events(
+            Gdk.EventMask.BUTTON_PRESS_MASK
+            | Gdk.EventMask.BUTTON_RELEASE_MASK
+            | Gdk.EventMask.POINTER_MOTION_MASK
+            | Gdk.EventMask.KEY_PRESS_MASK
+        )
+
+        self.connect("draw", self.on_draw)
+        self.connect("button-press-event", self.on_button_press)
+        self.connect("button-release-event", self.on_button_release)
+        self.connect("motion-notify-event", self.on_motion)
+        self.connect("key-press-event", self.on_key_press)
+        self.show_all()
+
+    def on_draw(self, widget, ctx):
+        if not self.pixbuf:
+            return False
+
+        # Draw full background snapshot
+        Gdk.cairo_set_source_pixbuf(ctx, self.pixbuf, 0, 0)
+        ctx.paint()
+
+        # Dimmed Tokyo Night overlay
+        ctx.set_source_rgba(0.08, 0.09, 0.14, 0.55)
+        ctx.paint()
+
+        if self.start_x is not None and self.cur_x is not None:
+            x = min(self.start_x, self.cur_x)
+            y = min(self.start_y, self.cur_y)
+            w = abs(self.cur_x - self.start_x)
+            h = abs(self.cur_y - self.start_y)
+
+            if w > 2 and h > 2:
+                # Reveal original image without dimming inside selection
+                ctx.save()
+                ctx.rectangle(x, y, w, h)
+                ctx.clip()
+                Gdk.cairo_set_source_pixbuf(ctx, self.pixbuf, 0, 0)
+                ctx.paint()
+                ctx.restore()
+
+                # Neon border (Tokyo Night blue)
+                ctx.set_source_rgba(0.48, 0.64, 0.97, 1.0)
+                ctx.set_line_width(2.0)
+                ctx.rectangle(x + 1, y + 1, w - 2, h - 2)
+                ctx.stroke()
+
+                # Dimensions badge
+                badge_text = f"{int(w)} × {int(h)}"
+                ctx.select_font_face("JetBrainsMono Nerd Font", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+                ctx.set_font_size(11)
+                ext = ctx.text_extents(badge_text)
+                bx = x + 6
+                by = y - 8 if y > 30 else y + h + 18
+                ctx.set_source_rgba(0.12, 0.14, 0.22, 0.88)
+                ctx.rectangle(bx - 4, by - ext.height - 4, ext.width + 8, ext.height + 8)
+                ctx.fill()
+                ctx.set_source_rgba(0.48, 0.64, 0.97, 1.0)
+                ctx.move_to(bx, by)
+                ctx.show_text(badge_text)
+
+        return False
+
+    def on_button_press(self, widget, event):
+        if event.button == 1:
+            self.start_x = event.x
+            self.start_y = event.y
+            self.cur_x = event.x
+            self.cur_y = event.y
+            self.is_dragging = True
+            self.queue_draw()
+        elif event.button == 3:
+            # Right click cancels
+            self.destroy()
+            self.callback(None)
+        return True
+
+    def on_motion(self, widget, event):
+        if self.is_dragging:
+            self.cur_x = event.x
+            self.cur_y = event.y
+            self.queue_draw()
+        return True
+
+    def on_button_release(self, widget, event):
+        if event.button == 1 and self.is_dragging:
+            self.is_dragging = False
+            self.cur_x = event.x
+            self.cur_y = event.y
+
+            x = int(min(self.start_x, self.cur_x))
+            y = int(min(self.start_y, self.cur_y))
+            w = int(abs(self.cur_x - self.start_x))
+            h = int(abs(self.cur_y - self.start_y))
+
+            self.destroy()
+
+            if w >= 5 and h >= 5 and self.pixbuf:
+                sub = GdkPixbuf.Pixbuf.new_subpixbuf(self.pixbuf, x, y, w, h)
+                sub.savev(self.target_path, "png", [], [])
+                self.callback(self.target_path)
+            else:
+                self.callback(None)
+        return True
+
+    def on_key_press(self, widget, event):
+        if event.keyval in (Gdk.KEY_Escape, Gdk.KEY_q):
+            self.destroy()
+            self.callback(None)
+            return True
+        return False
+
+
+def execute_capture(mode="area", target_path=None, callback=None):
+    if not target_path:
+        target_path = get_timestamp_filename()
+
+    if is_wayland():
+        try:
+            if mode == "full":
+                subprocess.run(["grim", target_path], check=True)
+                if callback:
+                    callback(target_path)
+                return target_path
+            elif mode == "window":
+                geo = subprocess.check_output(
+                    "hyprctl activewindow -j | python3 -c 'import sys, json; d=json.load(sys.stdin); print(f\"{d[\"at\"][0]},{d[\"at\"][1]} {d[\"size\"][0]}x{d[\"size\"][1]}\")'",
+                    shell=True,
+                    text=True
+                ).strip()
+                if geo:
+                    subprocess.run(["grim", "-g", geo, target_path], check=True)
+                else:
+                    subprocess.run(["grim", target_path], check=True)
+                if callback:
+                    callback(target_path)
+                return target_path
+            else:
+                # Area mode with slurp
+                geo = subprocess.check_output(
+                    ["slurp", "-b", "1a1b2699", "-c", "7aa2f7ff", "-w", "2", "-d"],
+                    text=True
+                ).strip()
+                if geo:
+                    subprocess.run(["grim", "-g", geo, target_path], check=True)
+                    if callback:
+                        callback(target_path)
+                    return target_path
+                else:
+                    if callback:
+                        callback(None)
+                    return None
+        except Exception as e:
+            if callback:
+                callback(None)
+            return None
+    else:
+        # X11 Mode
+        try:
+            if mode == "full":
+                res = capture_fullscreen_x11(target_path)
+                if callback:
+                    callback(res)
+                return res
+            elif mode == "window":
+                res = capture_window_x11(target_path)
+                if callback:
+                    callback(res)
+                return res
+            else:
+                # Interactive Area Snip
+                def on_done(path):
+                    if callback:
+                        callback(path)
+
+                X11SnipOverlay(target_path, on_done)
+                return target_path
+        except Exception as e:
+            if callback:
+                callback(None)
+            return None
+
+
+# -----------------------------------------------------------------------------
+# Dedicated GTK3 Desktop GUI Application
+# -----------------------------------------------------------------------------
+
+UI_CSS = b"""
+* {
+    font-family: 'JetBrainsMono Nerd Font', monospace;
 }
 
-copy_to_clip() {
-    local file="$1"
-    if [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null 2>&1; then
-        wl-copy --type image/png < "$file" 2>/dev/null || true
-    elif [ -x "/home/jacob/.local/bin/xclip" ]; then
-        /home/jacob/.local/bin/xclip -selection clipboard -t image/png -i "$file" 2>/dev/null &
-    elif command -v xclip >/dev/null 2>&1; then
-        xclip -selection clipboard -t image/png -i "$file" 2>/dev/null &
-    fi
+window.screenshot-window {
+    background-color: #1a1b26;
+    color: #c0caf5;
 }
 
-take_full() {
-    if [ -n "$WAYLAND_DISPLAY" ]; then
-        grim "$TARGET_FILE"
-    else
-        /home/jacob/.local/bin/x11-snip full -o "$TARGET_FILE"
-    fi
-    copy_to_clip "$TARGET_FILE"
-    notify "$TARGET_FILE" "Full Screen"
+headerbar {
+    background: linear-gradient(180deg, #1f2335 0%, #1a1b26 100%);
+    border-bottom: 1px solid #292e42;
+    padding: 6px 12px;
 }
 
-take_window() {
-    if [ -n "$WAYLAND_DISPLAY" ]; then
-        local geo
-        geo=$(hyprctl activewindow -j 2>/dev/null | python3 -c '
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    at = d.get("at", [0, 0])
-    sz = d.get("size", [0, 0])
-    if sz[0] > 0 and sz[1] > 0:
-        print(f"{at[0]},{at[1]} {sz[0]}x{sz[1]}")
-        sys.exit(0)
-except Exception:
-    pass
-sys.exit(1)
-' 2>/dev/null)
+headerbar label.title {
+    color: #7aa2f7;
+    font-weight: 900;
+    font-size: 13px;
+}
 
-        if [ -n "$geo" ]; then
-            grim -g "$geo" "$TARGET_FILE"
-        else
-            take_area_copy
+headerbar label.subtitle {
+    color: #565f89;
+    font-size: 10px;
+}
+
+.mode-btn {
+    background-color: #1f2335;
+    border: 1px solid #292e42;
+    border-radius: 9px;
+    padding: 10px 14px;
+    color: #a9b1d6;
+    font-size: 11px;
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    background-color: #24283b;
+    border-color: #7aa2f7;
+    color: #c0caf5;
+}
+
+.mode-btn:checked {
+    background: linear-gradient(135deg, rgba(122, 162, 247, 0.22) 0%, rgba(187, 154, 247, 0.22) 100%);
+    border: 1px solid #7aa2f7;
+    color: #7dcfff;
+    font-weight: bold;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%);
+    color: #14161f;
+    border: 1px solid #7aa2f7;
+    border-radius: 9px;
+    padding: 10px 20px;
+    font-weight: 900;
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(122, 162, 247, 0.25);
+}
+
+.primary-btn:hover {
+    background: linear-gradient(135deg, #89b4fa 0%, #cba6f7 100%);
+    box-shadow: 0 6px 16px rgba(122, 162, 247, 0.40);
+}
+
+.action-btn {
+    background-color: #1f2335;
+    border: 1px solid #292e42;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #c0caf5;
+}
+
+.action-btn:hover {
+    background-color: #24283b;
+    border-color: #7aa2f7;
+}
+
+.danger-btn:hover {
+    background-color: #f7768e;
+    color: #14161f;
+    border-color: #f7768e;
+}
+
+.preview-container {
+    background-color: #141622;
+    border: 1px solid #292e42;
+    border-radius: 10px;
+}
+
+.thumbnail-row {
+    background-color: #1f2335;
+    border: 1px solid #292e42;
+    border-radius: 8px;
+    padding: 4px;
+    margin: 3px 0;
+}
+
+.thumbnail-row:selected, .thumbnail-row:hover {
+    background-color: #24283b;
+    border-color: #7aa2f7;
+}
+
+checkbutton label {
+    font-size: 11px;
+    color: #a9b1d6;
+}
+"""
+
+
+class ScreenshotApp(Gtk.Window):
+    def __init__(self):
+        super().__init__(title="HyprFrost Screenshot")
+        self.set_name("screenshot-window")
+        self.get_style_context().add_class("screenshot-window")
+        self.set_default_size(780, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.current_mode = "area"  # area, window, full
+        self.selected_file = None
+        self.history_files = []
+
+        self.setup_header()
+        self.setup_ui()
+        self.refresh_history()
+
+    def setup_header(self):
+        hb = Gtk.HeaderBar()
+        hb.set_show_close_button(True)
+        hb.props.title = "󰄀 HyprFrost Screenshot"
+        hb.props.subtitle = "Cross-platform capture suite"
+        self.set_titlebar(hb)
+
+        # Open screenshots folder button
+        btn_folder = Gtk.Button()
+        btn_folder.set_tooltip_text("Open Screenshots Folder")
+        btn_folder.get_style_context().add_class("action-btn")
+        lbl = Gtk.Label(label="󰉋 Folder")
+        btn_folder.add(lbl)
+        btn_folder.connect("clicked", lambda w: open_folder())
+        hb.pack_start(btn_folder)
+
+        # Refresh history
+        btn_refresh = Gtk.Button()
+        btn_refresh.set_tooltip_text("Refresh Captures")
+        btn_refresh.get_style_context().add_class("action-btn")
+        lbl_r = Gtk.Label(label="󰑐")
+        btn_refresh.add(lbl_r)
+        btn_refresh.connect("clicked", lambda w: self.refresh_history())
+        hb.pack_end(btn_refresh)
+
+    def setup_ui(self):
+        main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        main_box.set_margin_top(14)
+        main_box.set_margin_bottom(14)
+        main_box.set_margin_start(14)
+        main_box.set_margin_end(14)
+        self.add(main_box)
+
+        # LEFT PANE: Controls & Capture Options (Width ~280)
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        left_box.set_size_request(280, -1)
+        main_box.pack_start(left_box, False, False, 0)
+
+        # Section: Mode Selection
+        lbl_mode = Gtk.Label(label="<b>CAPTURE MODE</b>", use_markup=True, xalign=0)
+        lbl_mode.get_style_context().add_class("dim-label")
+        left_box.pack_start(lbl_mode, False, False, 0)
+
+        mode_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        left_box.pack_start(mode_box, False, False, 0)
+
+        self.btn_area = Gtk.RadioButton.new_with_label(None, "󰄀  Select Area")
+        self.btn_area.set_mode(False)
+        self.btn_area.get_style_context().add_class("mode-btn")
+        self.btn_area.set_active(True)
+        self.btn_area.connect("toggled", lambda w: self.set_mode("area") if w.get_active() else None)
+        mode_box.pack_start(self.btn_area, False, False, 0)
+
+        self.btn_window = Gtk.RadioButton.new_with_label_from_widget(self.btn_area, "󰖲  Active Window")
+        self.btn_window.set_mode(False)
+        self.btn_window.get_style_context().add_class("mode-btn")
+        self.btn_window.connect("toggled", lambda w: self.set_mode("window") if w.get_active() else None)
+        mode_box.pack_start(self.btn_window, False, False, 0)
+
+        self.btn_full = Gtk.RadioButton.new_with_label_from_widget(self.btn_area, "󰍹  Entire Screen")
+        self.btn_full.set_mode(False)
+        self.btn_full.get_style_context().add_class("mode-btn")
+        self.btn_full.connect("toggled", lambda w: self.set_mode("full") if w.get_active() else None)
+        mode_box.pack_start(self.btn_full, False, False, 0)
+
+        # Section: Delay Option
+        lbl_delay = Gtk.Label(label="<b>DELAY TIMER</b>", use_markup=True, xalign=0)
+        lbl_delay.set_margin_top(4)
+        left_box.pack_start(lbl_delay, False, False, 0)
+
+        self.delay_combo = Gtk.ComboBoxText()
+        self.delay_combo.append("0", "⚡ Instant (No delay)")
+        self.delay_combo.append("3", "⏱  3 seconds delay")
+        self.delay_combo.append("5", "⏱  5 seconds delay")
+        self.delay_combo.append("10", "⏱  10 seconds delay")
+        self.delay_combo.set_active(0)
+        self.delay_combo.get_style_context().add_class("action-btn")
+        left_box.pack_start(self.delay_combo, False, False, 0)
+
+        # Section: Toggles
+        lbl_opts = Gtk.Label(label="<b>ACTIONS ON CAPTURE</b>", use_markup=True, xalign=0)
+        lbl_opts.set_margin_top(4)
+        left_box.pack_start(lbl_opts, False, False, 0)
+
+        self.chk_clip = Gtk.CheckButton(label="󰅍 Copy to clipboard")
+        self.chk_clip.set_active(True)
+        left_box.pack_start(self.chk_clip, False, False, 0)
+
+        self.chk_save = Gtk.CheckButton(label="󰉋 Save to disk")
+        self.chk_save.set_active(True)
+        left_box.pack_start(self.chk_save, False, False, 0)
+
+        self.chk_edit = Gtk.CheckButton(label="󰏪 Annotate in Swappy")
+        self.chk_edit.set_active(False)
+        left_box.pack_start(self.chk_edit, False, False, 0)
+
+        # Spacer
+        left_box.pack_start(Gtk.Box(), True, True, 0)
+
+        # BIG CAPTURE BUTTON
+        self.btn_capture = Gtk.Button()
+        self.btn_capture.get_style_context().add_class("primary-btn")
+        lbl_cap = Gtk.Label(label="󰄀  Take Screenshot")
+        self.btn_capture.add(lbl_cap)
+        self.btn_capture.connect("clicked", self.on_capture_clicked)
+        left_box.pack_end(self.btn_capture, False, False, 0)
+
+        # RIGHT PANE: Preview & Recent Captures
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        main_box.pack_start(right_box, True, True, 0)
+
+        # Top Preview Box
+        preview_frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        preview_frame.get_style_context().add_class("preview-container")
+        right_box.pack_start(preview_frame, True, True, 0)
+
+        self.preview_image = Gtk.Image()
+        preview_frame.pack_start(self.preview_image, True, True, 8)
+
+        # Image Details Label
+        self.lbl_details = Gtk.Label(label="No screenshot selected", xalign=0.5)
+        self.lbl_details.set_margin_bottom(6)
+        preview_frame.pack_end(self.lbl_details, False, False, 0)
+
+        # Action Toolbar under Preview
+        act_toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        act_toolbar.set_halign(Gtk.Align.CENTER)
+        right_box.pack_start(act_toolbar, False, False, 0)
+
+        btn_copy = Gtk.Button(label="󰅍 Copy")
+        btn_copy.get_style_context().add_class("action-btn")
+        btn_copy.connect("clicked", lambda w: self.copy_selected())
+        act_toolbar.pack_start(btn_copy, False, False, 0)
+
+        btn_annotate = Gtk.Button(label="󰏪 Annotate")
+        btn_annotate.get_style_context().add_class("action-btn")
+        btn_annotate.connect("clicked", lambda w: self.annotate_selected())
+        act_toolbar.pack_start(btn_annotate, False, False, 0)
+
+        btn_view = Gtk.Button(label="󰈹 View")
+        btn_view.get_style_context().add_class("action-btn")
+        btn_view.connect("clicked", lambda w: self.view_selected())
+        act_toolbar.pack_start(btn_view, False, False, 0)
+
+        btn_delete = Gtk.Button(label="󰆴 Delete")
+        btn_delete.get_style_context().add_class("action-btn")
+        btn_delete.get_style_context().add_class("danger-btn")
+        btn_delete.connect("clicked", lambda w: self.delete_selected())
+        act_toolbar.pack_start(btn_delete, False, False, 0)
+
+        # Recent Captures Scrolled List
+        lbl_rec = Gtk.Label(label="<b>RECENT CAPTURES</b>", use_markup=True, xalign=0)
+        right_box.pack_start(lbl_rec, False, False, 0)
+
+        scroller = Gtk.ScrolledWindow()
+        scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroller.set_size_request(-1, 100)
+        right_box.pack_start(scroller, False, False, 0)
+
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.connect("row-selected", self.on_history_selected)
+        scroller.add(self.listbox)
+
+    def set_mode(self, mode):
+        self.current_mode = mode
+
+    def refresh_history(self):
+        # Clear listbox
+        for row in self.listbox.get_children():
+            self.listbox.remove(row)
+
+        self.history_files = sorted(
+            glob.glob(os.path.join(SHOT_DIR, "*.png")),
+            key=os.path.getmtime,
+            reverse=True
+        )
+
+        for path in self.history_files[:20]:
+            row = Gtk.ListBoxRow()
+            row.get_style_context().add_class("thumbnail-row")
+            row.path = path
+
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            box.set_margin_start(6)
+            box.set_margin_end(6)
+            box.set_margin_top(4)
+            box.set_margin_bottom(4)
+
+            # Thumbnail
+            img = Gtk.Image()
+            try:
+                pix = GdkPixbuf.Pixbuf.new_from_file_at_scale(path, 40, 24, True)
+                img.set_from_pixbuf(pix)
+            except Exception:
+                img.set_from_icon_name("image-x-generic", Gtk.IconSize.BUTTON)
+            box.pack_start(img, False, False, 0)
+
+            # Details
+            name = os.path.basename(path)
+            dt_str = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%b %d, %I:%M %p")
+            size_kb = os.path.getsize(path) / 1024
+            size_str = f"{size_kb:.0f} KB" if size_kb < 1024 else f"{size_kb/1024:.1f} MB"
+
+            txt = f"<b>{name}</b>  <small><span foreground='#565f89'>• {dt_str} • {size_str}</span></small>"
+            lbl = Gtk.Label(use_markup=True, xalign=0)
+            lbl.set_markup(txt)
+            box.pack_start(lbl, True, True, 0)
+
+            row.add(box)
+            self.listbox.add(row)
+
+        self.listbox.show_all()
+
+        # Select the latest file if available
+        if self.history_files:
+            first_row = self.listbox.get_row_at_index(0)
+            if first_row:
+                self.listbox.select_row(first_row)
+        else:
+            self.preview_image.clear()
+            self.lbl_details.set_text("No screenshots found in ~/Pictures/Screenshots")
+
+    def on_history_selected(self, listbox, row):
+        if not row or not hasattr(row, "path"):
             return
-        fi
-    else
-        if ! /home/jacob/.local/bin/x11-snip window -o "$TARGET_FILE"; then
-            take_area_copy
+        self.load_preview(row.path)
+
+    def load_preview(self, path):
+        if not os.path.isfile(path):
             return
-        fi
-    fi
-    copy_to_clip "$TARGET_FILE"
-    notify "$TARGET_FILE" "Active Window"
-}
+        self.selected_file = path
+        try:
+            pix = GdkPixbuf.Pixbuf.new_from_file(path)
+            pw, ph = pix.get_width(), pix.get_height()
 
-take_area_copy() {
-    if [ -n "$WAYLAND_DISPLAY" ]; then
-        local geo
-        geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
-        [ -z "$geo" ] && exit 0
-        grim -g "$geo" "$TARGET_FILE"
-    else
-        /home/jacob/.local/bin/x11-snip area -o "$TARGET_FILE"
-        [ ! -s "$TARGET_FILE" ] && exit 0
-    fi
-    copy_to_clip "$TARGET_FILE"
-    notify "$TARGET_FILE" "Selected Area"
-}
+            # Scale to fit container without distortion
+            max_w, max_h = 420, 240
+            scale = min(max_w / pw, max_h / ph, 1.0)
+            target_w = max(1, int(pw * scale))
+            target_h = max(1, int(ph * scale))
+            scaled_pix = pix.scale_simple(target_w, target_h, GdkPixbuf.InterpType.BILINEAR)
+            self.preview_image.set_from_pixbuf(scaled_pix)
 
-take_area_edit() {
-    if [ -n "$WAYLAND_DISPLAY" ]; then
-        local geo
-        geo=$(slurp -b 1a1b2699 -c 7aa2f7ff -w 2 -d 2>/dev/null)
-        [ -z "$geo" ] && exit 0
-        grim -g "$geo" - | swappy -f -
-    else
-        /home/jacob/.local/bin/x11-snip area --stdout | swappy -f -
-    fi
-}
+            dt_str = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d %I:%M:%S %p")
+            size_kb = os.path.getsize(path) / 1024
+            size_str = f"{size_kb:.0f} KB" if size_kb < 1024 else f"{size_kb/1024:.1f} MB"
+            self.lbl_details.set_text(f"{os.path.basename(path)}  |  {pw} × {ph} px  |  {size_str}  |  {dt_str}")
+        except Exception as e:
+            self.lbl_details.set_text(f"Could not load image: {e}")
 
-show_menu() {
-    if command -v zenity >/dev/null 2>&1; then
-        choice=$(zenity --list --title="Screenshot Utility" --text="Select screenshot mode:" \
-            --radiolist --column="" --column="Mode" --column="Description" \
-            TRUE "area" "Select area and annotate in Swappy" \
-            FALSE "snip" "Quick select area (Save & Copy)" \
-            FALSE "full" "Entire screen (Save & Copy)" \
-            FALSE "window" "Active window (Save & Copy)" \
-            FALSE "folder" "Open Screenshots directory" \
-            --height=280 --width=440 2>/dev/null) || exit 0
-        case "$choice" in
-            area) take_area_edit ;;
-            snip) take_area_copy ;;
-            full) take_full ;;
-            window) take_window ;;
-            folder) thunar "$SHOT_DIR" >/dev/null 2>&1 & ;;
-            *) exit 0 ;;
-        esac
-    else
-        take_area_edit
-    fi
-}
+    def copy_selected(self):
+        if self.selected_file:
+            copy_to_clipboard(self.selected_file)
+            send_notification(self.selected_file, "Copied")
 
-case "${1:-}" in
-    area|snip-edit|edit|"")
-        take_area_edit
-        ;;
-    copy|snip|area-copy)
-        take_area_copy
-        ;;
-    full|screen)
-        take_full
-        ;;
-    window|active)
-        take_window
-        ;;
-    menu|gui)
-        show_menu
-        ;;
-    folder|open)
-        thunar "$SHOT_DIR" >/dev/null 2>&1 &
-        ;;
-    *)
-        echo "Usage: hypr-screenshot [area|copy|full|window|menu|folder]"
-        exit 1
-        ;;
-esac
+    def annotate_selected(self):
+        if self.selected_file:
+            open_in_swappy(self.selected_file)
+
+    def view_selected(self):
+        if self.selected_file:
+            open_in_viewer(self.selected_file)
+
+    def delete_selected(self):
+        if self.selected_file and os.path.isfile(self.selected_file):
+            try:
+                os.remove(self.selected_file)
+            except Exception:
+                pass
+            self.refresh_history()
+
+    def on_capture_clicked(self, widget):
+        delay_sec = int(self.delay_combo.get_active_id() or "0")
+        mode = self.current_mode
+
+        # Hide window before capture
+        self.hide()
+
+        def do_capture():
+            if delay_sec > 0:
+                time.sleep(delay_sec)
+
+            target = get_timestamp_filename()
+
+            def finish_capture(result_path):
+                GLib.idle_add(lambda: self.on_capture_finished(result_path))
+
+            execute_capture(mode=mode, target_path=target, callback=finish_capture)
+
+        threading.Thread(target=do_capture, daemon=True).start()
+
+    def on_capture_finished(self, result_path):
+        self.show_all()
+        self.present()
+
+        if result_path and os.path.isfile(result_path):
+            if self.chk_clip.get_active():
+                copy_to_clipboard(result_path)
+
+            send_notification(result_path, self.current_mode.capitalize())
+
+            if self.chk_edit.get_active():
+                open_in_swappy(result_path)
+
+            self.refresh_history()
+            self.load_preview(result_path)
+
+
+# -----------------------------------------------------------------------------
+# CLI Entrypoint
+# -----------------------------------------------------------------------------
+
+def run_cli_snip(mode="area", annotate=False, output_path=None):
+    target = output_path or get_timestamp_filename()
+
+    def on_done(path):
+        if path and os.path.isfile(path):
+            copy_to_clipboard(path)
+            send_notification(path, mode.capitalize())
+            if annotate:
+                open_in_swappy(path)
+        Gtk.main_quit()
+
+    execute_capture(mode=mode, target_path=target, callback=on_done)
+    Gtk.main()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="HyprFrost Universal Screenshot Utility")
+    parser.add_argument(
+        "mode",
+        nargs="?",
+        default="gui",
+        choices=["gui", "menu", "area", "snip", "full", "screen", "window", "edit", "folder"],
+        help="Capture mode or GUI launch"
+    )
+    parser.add_argument("-o", "--output", help="Output file path")
+    parser.add_argument("-e", "--edit", action="store_true", help="Open in Swappy editor after capture")
+    args = parser.parse_args()
+
+    # Load CSS Styles
+    screen = Gdk.Screen.get_default()
+    if screen:
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(UI_CSS)
+        Gtk.StyleContext.add_provider_for_screen(
+            screen,
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+    if args.mode in ("area", "snip"):
+        run_cli_snip(mode="area", annotate=args.edit, output_path=args.output)
+    elif args.mode in ("full", "screen"):
+        run_cli_snip(mode="full", annotate=args.edit, output_path=args.output)
+    elif args.mode == "window":
+        run_cli_snip(mode="window", annotate=args.edit, output_path=args.output)
+    elif args.mode == "edit":
+        run_cli_snip(mode="area", annotate=True, output_path=args.output)
+    elif args.mode == "folder":
+        open_folder()
+    else:
+        # Launch Full GUI Application
+        app = ScreenshotApp()
+        app.connect("destroy", Gtk.main_quit)
+        app.show_all()
+        Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

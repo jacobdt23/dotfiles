@@ -69,9 +69,9 @@
             "on-click": "pavucontrol"
         },
         "network": {
-            "format-ethernet": "󰌗",
+            "format-ethernet": "󰈀",
             "format-wifi": "󰖩",
-            "format-disconnected": "󰌘",
+            "format-disconnected": "󰈂",
             "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
             "on-click": "nm-connection-editor"
         },
@@ -114,7 +114,6 @@
             "custom/clipboard",
             "custom/snip",
             "custom/keys",
-            "tray",
             "custom/showdesktop"
         ],
         "custom/start": {
@@ -145,12 +144,13 @@
         "custom/clipboard": {
             "format": "󰅍  Clipboard",
             "tooltip": false,
-            "on-click": "cliphist list | rofi -dmenu | cliphist decode | wl-copy"
+            "on-click": "/home/jacob/.local/bin/hypr-clipboard"
         },
         "custom/snip": {
             "format": "󰄀  Snip",
             "tooltip": false,
-            "on-click": "/home/jacob/.local/bin/hypr-screenshot area"
+            "on-click": "/home/jacob/.local/bin/hyprfrost-screenshot",
+            "on-click-right": "/home/jacob/.local/bin/hyprfrost-screenshot area"
         },
         "custom/keys": {
             "format": "󰌌  Keys",
