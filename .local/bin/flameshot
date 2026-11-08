@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Flameshot Wrapper for HyprFrost Desktop
+# Cross-compatible across Hyprland (Wayland) and Qtile (X11)
+# =============================================================================
+
+export LD_LIBRARY_PATH="/home/jacob/.local/lib:${LD_LIBRARY_PATH:-}"
+
+if [ -n "$WAYLAND_DISPLAY" ]; then
+    export XDG_CURRENT_DESKTOP="sway"
+    export QT_QPA_PLATFORM="wayland;xcb"
+fi
+
+exec /home/jacob/.local/bin/flameshot-bin "$@"

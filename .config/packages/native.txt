@@ -23,6 +23,7 @@ egl-wayland
 espeakup
 fastfetch
 fish
+flameshot
 gamemode
 git
 github-cli
