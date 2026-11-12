@@ -210,11 +210,11 @@ def build_top_bar(screen_index=0):
 
         # 1. Start / Brand Launcher
         widget.TextBox(
-            text="󰣇 Start",
+            text="󰣇",
             foreground=colors["blue"],
             background=colors["bg_alt"],
             font="JetBrainsMono Nerd Font Bold",
-            fontsize=11,
+            fontsize=12,
             padding=8,
             mouse_callbacks={"Button1": lazy.spawn("rofi -show drun")},
         ),
@@ -244,31 +244,31 @@ def build_top_bar(screen_index=0):
 
         # 3. Quick App Launchers (from bottom dock)
         widget.TextBox(
-            text="󰞷 Term",
+            text="󰞷",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=10,
+            fontsize=11,
             padding=6,
             mouse_callbacks={"Button1": lazy.spawn("kitty")},
         ),
         widget.Sep(linewidth=0, padding=2),
         widget.TextBox(
-            text="󰉋 Files",
+            text="󰉋",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=10,
+            fontsize=11,
             padding=6,
             mouse_callbacks={"Button1": lazy.spawn("thunar")},
         ),
         widget.Sep(linewidth=0, padding=2),
         widget.TextBox(
-            text="󰈹 Web",
+            text="󰈹",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=10,
+            fontsize=11,
             padding=6,
             mouse_callbacks={"Button1": lazy.spawn("brave")},
         ),
@@ -318,11 +318,11 @@ def build_top_bar(screen_index=0):
 
         # 7. Media Chip
         widget.TextBox(
-            text="󰎆 Media",
+            text="󰎆",
             foreground=colors["purple"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=10,
+            fontsize=11,
             padding=6,
             mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
         ),
@@ -332,22 +332,22 @@ def build_top_bar(screen_index=0):
 
         # 8. Utilities: Clipboard, Snip, Keys (from bottom dock)
         widget.TextBox(
-            text="󰅍 Clip",
+            text="󰅍",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            padding=5,
+            fontsize=11,
+            padding=6,
             mouse_callbacks={"Button1": lazy.spawn("/home/jacob/.local/bin/hypr-clipboard")},
         ),
         widget.Sep(linewidth=0, padding=2),
         widget.TextBox(
-            text="󰄀 Snip",
+            text="󰄀",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            padding=5,
+            fontsize=11,
+            padding=6,
             mouse_callbacks={
                 "Button1": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot"),
                 "Button3": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot config"),
@@ -355,12 +355,12 @@ def build_top_bar(screen_index=0):
         ),
         widget.Sep(linewidth=0, padding=2),
         widget.TextBox(
-            text="󰌌 Keys",
+            text="󰌌",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
-            fontsize=10,
-            padding=5,
+            fontsize=11,
+            padding=6,
             mouse_callbacks={"Button1": lazy.spawn("notify-send 'Shortcuts' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window'")},
         ),
         widget.Sep(linewidth=0, padding=4),
