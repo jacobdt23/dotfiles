@@ -202,22 +202,21 @@ def clean_task_title(text):
 
 def build_top_bar(screen_index=0):
     """
-    Completely rewritten HyprFrost top bar with DT architectural parity.
-    Identical on both monitors.
+    Unified single top bar combining both top status and bottom dock launchers.
     """
     widgets = [
         # Left Margin
         widget.Sep(linewidth=0, padding=4),
 
-        # 1. Brand Chip (Welcome Center Launcher)
+        # 1. Start / Brand Launcher
         widget.TextBox(
-            text="󰣇 HyprFrost",
+            text="󰣇 Start",
             foreground=colors["blue"],
             background=colors["bg_alt"],
             font="JetBrainsMono Nerd Font Bold",
             fontsize=11,
             padding=8,
-            mouse_callbacks={"Button1": lazy.spawn("hyprfrost-welcome")},
+            mouse_callbacks={"Button1": lazy.spawn("rofi -show drun")},
         ),
         widget.Sep(linewidth=0, padding=4),
         widget.TextBox(text="|", foreground=colors["fg_dim"], font="JetBrainsMono Nerd Font", padding=2, fontsize=12),
@@ -243,29 +242,61 @@ def build_top_bar(screen_index=0):
         ),
         widget.TextBox(text="|", foreground=colors["fg_dim"], font="JetBrainsMono Nerd Font", padding=2, fontsize=12),
 
-        # 3. Current Layout
+        # 3. Quick App Launchers (from bottom dock)
+        widget.TextBox(
+            text="󰞷 Term",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=6,
+            mouse_callbacks={"Button1": lazy.spawn("kitty")},
+        ),
+        widget.Sep(linewidth=0, padding=2),
+        widget.TextBox(
+            text="󰉋 Files",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=6,
+            mouse_callbacks={"Button1": lazy.spawn("thunar")},
+        ),
+        widget.Sep(linewidth=0, padding=2),
+        widget.TextBox(
+            text="󰈹 Web",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=6,
+            mouse_callbacks={"Button1": lazy.spawn("brave")},
+        ),
+        widget.TextBox(text="|", foreground=colors["fg_dim"], font="JetBrainsMono Nerd Font", padding=2, fontsize=12),
+
+        # 4. Current Layout
         widget.CurrentLayout(
             foreground=colors["purple"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font Bold",
             fontsize=10,
-            padding=8,
+            padding=6,
         ),
         widget.TextBox(text="|", foreground=colors["fg_dim"], font="JetBrainsMono Nerd Font", padding=2, fontsize=12),
 
-        # 4. Active Window Name
+        # 5. Active Window Name
         widget.WindowName(
             foreground=colors["fg_dim"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
-            padding=8,
-            max_chars=35,
+            padding=6,
+            max_chars=25,
         ),
 
         # Center Expander Spacer
         widget.Spacer(),
 
-        # 5. Center Date & Clock (DT style with day, date, time)
+        # 6. Center Date & Clock
         widget.TextBox(
             text="󰥔 ",
             foreground=colors["cyan"],
@@ -283,85 +314,120 @@ def build_top_bar(screen_index=0):
             padding=6,
             mouse_callbacks={"Button1": lazy.spawn("notify-send 'Calendar' \"$(cal)\"")},
         ),
-        widget.Sep(linewidth=0, padding=6),
+        widget.Sep(linewidth=0, padding=4),
 
-        # 6. Media Chip
+        # 7. Media Chip
         widget.TextBox(
             text="󰎆 Media",
             foreground=colors["purple"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
-            padding=8,
+            padding=6,
             mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
         ),
 
         # Right Expander Spacer
         widget.Spacer(),
 
-        # Hardware & System Status Area
+        # 8. Utilities: Clipboard, Snip, Keys (from bottom dock)
+        widget.TextBox(
+            text="󰅍 Clip",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=5,
+            mouse_callbacks={"Button1": lazy.spawn("/home/jacob/.local/bin/hypr-clipboard")},
+        ),
+        widget.Sep(linewidth=0, padding=2),
+        widget.TextBox(
+            text="󰄀 Snip",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=5,
+            mouse_callbacks={
+                "Button1": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot"),
+                "Button3": lazy.spawn("/home/jacob/.local/bin/hypr-screenshot config"),
+            },
+        ),
+        widget.Sep(linewidth=0, padding=2),
+        widget.TextBox(
+            text="󰌌 Keys",
+            foreground=colors["fg"],
+            background=colors["pill_bg"],
+            font="JetBrainsMono Nerd Font",
+            fontsize=10,
+            padding=5,
+            mouse_callbacks={"Button1": lazy.spawn("notify-send 'Shortcuts' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window'")},
+        ),
+        widget.Sep(linewidth=0, padding=4),
+
+        # 9. Hardware & System Status Area
         # CPU
-        widget.TextBox(text="󰻠", foreground=colors["blue"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
+        widget.TextBox(text="󰻠", foreground=colors["blue"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=3),
         widget.CPU(
             format="{load_percent}%",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
-            padding=4,
+            padding=3,
             mouse_callbacks={"Button1": lazy.spawn("kitty -e btop")},
         ),
-        widget.Sep(linewidth=0, padding=4),
+        widget.Sep(linewidth=0, padding=3),
 
-        # Memory (MB/GB format)
-        widget.TextBox(text="󰍛", foreground=colors["purple"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
+        # Memory
+        widget.TextBox(text="󰍛", foreground=colors["purple"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=3),
         widget.Memory(
             format="{MemUsed: .0f}{mm}",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
-            padding=4,
+            padding=3,
             mouse_callbacks={"Button1": lazy.spawn("kitty -e btop")},
         ),
-        widget.Sep(linewidth=0, padding=4),
+        widget.Sep(linewidth=0, padding=3),
 
         # Disk Free
-        widget.TextBox(text="󰋊", foreground=colors["yellow"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
+        widget.TextBox(text="󰋊", foreground=colors["yellow"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=3),
         widget.DF(
-            format="{uf:.0f}{m} free",
+            format="{uf:.0f}{m}",
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
-            padding=4,
+            padding=3,
             partition="/",
             visible_on_warn=False,
             mouse_callbacks={"Button1": lazy.spawn("kitty -e df -h")},
         ),
-        widget.Sep(linewidth=0, padding=4),
+        widget.Sep(linewidth=0, padding=3),
 
         # Audio Volume
-        widget.TextBox(text="", foreground=colors["green"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=4),
+        widget.TextBox(text="", foreground=colors["green"], background=colors["pill_bg"], font="JetBrainsMono Nerd Font", fontsize=11, padding=3),
         widget.Volume(
             foreground=colors["fg"],
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font",
             fontsize=10,
-            padding=4,
+            padding=3,
             mouse_callbacks={"Button1": lazy.spawn("pavucontrol")},
         ),
-        widget.Sep(linewidth=0, padding=4),
+        widget.Sep(linewidth=0, padding=3),
     ]
 
-    # Ethernet icon (exact SVG from Papirus-Dark) on both monitors
+    # Ethernet icon
     widgets.extend([
         widget.Image(
             filename="/usr/share/icons/Papirus-Dark/16x16/devices/network-wired.svg",
             margin=9,
             mouse_callbacks={"Button1": lazy.spawn("nm-connection-editor")},
         ),
-        widget.Sep(linewidth=0, padding=4),
+        widget.Sep(linewidth=0, padding=3),
     ])
 
     # Power Button
@@ -372,11 +438,21 @@ def build_top_bar(screen_index=0):
             background=colors["pill_bg"],
             font="JetBrainsMono Nerd Font Bold",
             fontsize=12,
-            padding=6,
+            padding=5,
             mouse_callbacks={"Button1": lazy.shutdown()},
         ),
         widget.Sep(linewidth=0, padding=4),
     ])
+
+    return bar.Bar(
+        widgets,
+        38,
+        background=colors["bar_bg"],
+        opacity=0.94,
+        margin=[6, 12, 0, 12],
+        border_width=[1, 1, 1, 1],
+        border_color=colors["bar_border"],
+    )
 
     return bar.Bar(
         widgets,
@@ -523,13 +599,11 @@ def build_bottom_dock(screen_index=0):
 screens = [
     Screen(
         top=build_top_bar(0),
-        bottom=build_bottom_dock(0),
         wallpaper=wallpaper_path if os.path.isfile(wallpaper_path) else None,
         wallpaper_mode="fill",
     ),
     Screen(
         top=build_top_bar(1),
-        bottom=build_bottom_dock(1),
         wallpaper=wallpaper_path if os.path.isfile(wallpaper_path) else None,
         wallpaper_mode="fill",
     ),
@@ -544,63 +618,80 @@ screens = [
 import types
 
 def setup_drag_snap(qtile_inst):
-    if not qtile_inst or getattr(qtile_inst, "_drag_snap_installed", False):
+    if not qtile_inst:
         return
 
-    orig_click = qtile_inst.process_button_click
-    orig_release = qtile_inst.process_button_release
-    orig_motion = qtile_inst.process_button_motion
+    # Always bind against the clean class methods so reloading config replaces any previous patch
+    orig_click = qtile_inst.__class__.process_button_click
+    orig_release = qtile_inst.__class__.process_button_release
+    orig_motion = qtile_inst.__class__.process_button_motion
+
+    def patched_click(self, button_code, modmask, x, y):
+        # Scroll wheel events (4=up, 5=down, 6=left, 7=right) must never float/unfloat windows
+        if button_code in (4, 5, 6, 7):
+            return orig_click(self, button_code, modmask, x, y)
+
+        # Only prepare drag state if (button_code, modmask) actually matches a Drag rule
+        is_drag_binding = any(
+            isinstance(m, Drag) and m.modmask == modmask
+            for m in self._mouse_map.get(button_code, [])
+        )
+        if not is_drag_binding:
+            return orig_click(self, button_code, modmask, x, y)
+
+        win = self.current_window
+        was_fs = False
+        if win and getattr(win, "fullscreen", False):
+            was_fs = True
+            win.fullscreen = False
+
+        handled = orig_click(self, button_code, modmask, x, y)
+        if self._drag is not None and win:
+            self._pending_drag_window = win
+            self._active_drag_window = None
+            self._last_drag_xy = (x, y)
+            win._drag_was_fullscreen = was_fs
+            win._drag_was_tiled = not getattr(win, "floating", False)
+        elif was_fs and win:
+            win.fullscreen = True
+        return handled
 
     def patched_motion(self, x, y):
-        handled = orig_motion(x, y)
+        if self._drag is not None:
+            self._last_drag_xy = (x, y)
+            pending = getattr(self, "_pending_drag_window", None)
+            if pending is not None:
+                ox, oy = self._drag[0], self._drag[1]
+                # Only pop window into floating mode once the mouse actually moves > 5px
+                if abs(x - ox) > 5 or abs(y - oy) > 5:
+                    self._pending_drag_window = None
+                    self._active_drag_window = pending
+                    try:
+                        if not getattr(pending, "floating", False):
+                            pending.floating = True
+                        pending.bring_to_front()
+                    except Exception:
+                        pass
+
+        handled = orig_motion(self, x, y)
         win = getattr(self, "_active_drag_window", None)
         if win:
             try:
                 win.bring_to_front()
             except Exception:
                 pass
-        return handled
-
-    def patched_click(self, button_code, modmask, x, y):
-        win = self.current_window
-        was_fs = False
-        was_tiled = False
-        if win:
-            try:
-                win.bring_to_front()
-                win.focus(warp=False)
-            except Exception:
-                pass
-
-            if getattr(win, "fullscreen", False):
-                was_fs = True
-                win.fullscreen = False
-                win.floating = True
-            elif not getattr(win, "floating", False):
-                was_tiled = True
-                win.floating = True
-
-        handled = orig_click(button_code, modmask, x, y)
-        if self._drag is not None and win:
-            self._active_drag_window = win
-            win._drag_was_fullscreen = was_fs
-            win._drag_was_tiled = was_tiled
-        elif self._drag is None and win:
-            if was_fs:
-                win.fullscreen = True
-            elif was_tiled:
-                win.floating = False
         return handled
 
     def patched_release(self, button_code, modmask):
+        self._pending_drag_window = None
         win = getattr(self, "_active_drag_window", None)
-        was_drag = (self._drag is not None)
-        handled = orig_release(button_code, modmask)
+        was_drag = (self._drag is not None) and (win is not None)
+        drop_xy = getattr(self, "_last_drag_xy", None)
+        handled = orig_release(self, button_code, modmask)
+
         if was_drag and win:
             self._active_drag_window = None
             try:
-                win.bring_to_front()
-                # Keep small utility dialogs floating
                 wm_classes = [c.lower() for c in (win.get_wm_class() or [])]
                 dialogs = {
                     "pavucontrol", "blueman-manager", "pinentry", "ssh-askpass",
@@ -613,8 +704,40 @@ def setup_drag_snap(qtile_inst):
                         win.fullscreen = True
                         win.floating = False
                     else:
-                        # Snap back into the tiling layout on the current screen
+                        # Determine which screen and tiled window the cursor dropped onto
+                        if drop_xy:
+                            dx, dy = drop_xy
+                            for scr in self.screens:
+                                if scr.x <= dx < scr.x + scr.width and scr.y <= dy < scr.y + scr.height:
+                                    if scr.group and win.group != scr.group:
+                                        win.togroup(scr.group.name)
+                                    grp = scr.group
+                                    if grp and hasattr(grp, "layout"):
+                                        lay = grp.layout
+                                        # Find tiled window under drop cursor to place before/after it
+                                        target_win = None
+                                        for w in grp.windows:
+                                            if w is not win and not getattr(w, "floating", False):
+                                                wx, wy = w.get_position()
+                                                ww, wh = w.get_size()
+                                                if wx <= dx < wx + ww and wy <= dy < wy + wh:
+                                                    target_win = w
+                                                    break
+                                        if target_win is not None and hasattr(lay, "get_node"):
+                                            node = lay.get_node(target_win)
+                                            if node is not None:
+                                                lay.current = node
+                                            wx, wy = target_win.get_position()
+                                            ww, wh = target_win.get_size()
+                                            rel_x = (dx - wx) / max(ww, 1)
+                                            rel_y = (dy - wy) / max(wh, 1)
+                                            lay.lower_right = (rel_x + rel_y) >= 1.0
+                                    break
                         win.floating = False
+                        if win.group and hasattr(win.group, "layout") and hasattr(win.group.layout, "lower_right"):
+                            win.group.layout.lower_right = True
+                        win.focus(warp=False)
+                win.bring_to_front()
             except Exception:
                 pass
         return handled

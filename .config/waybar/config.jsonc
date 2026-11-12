@@ -1,33 +1,41 @@
+// Single unified top bar configuration for Hyprland / Waybar
 [
     {
         "name": "top-bar",
         "layer": "top",
         "position": "top",
-        "height": 34,
+        "height": 38,
         "margin-top": 6,
         "margin-left": 12,
         "margin-right": 12,
-        "spacing": 4,
+        "spacing": 6,
         "modules-left": [
             "custom/brand",
-            "hyprland/workspaces"
+            "hyprland/workspaces",
+            "custom/term",
+            "custom/files",
+            "custom/web"
         ],
         "modules-center": [
             "clock",
             "custom/media"
         ],
         "modules-right": [
+            "custom/clipboard",
+            "custom/snip",
+            "custom/keys",
             "cpu",
             "memory",
             "disk",
             "wireplumber",
             "network",
+            "tray",
             "custom/power"
         ],
         "custom/brand": {
-            "format": "󰣇  HyprFrost",
+            "format": "󰣇  Start",
             "tooltip": false,
-            "on-click": "hyprfrost-welcome"
+            "on-click": "rofi -show drun"
         },
         "hyprland/workspaces": {
             "disable-scroll": true,
@@ -35,14 +43,46 @@
             "format": "{name}",
             "on-click": "activate"
         },
+        "custom/term": {
+            "format": "󰞷",
+            "tooltip-format": "Terminal (Kitty)",
+            "on-click": "kitty"
+        },
+        "custom/files": {
+            "format": "󰉋",
+            "tooltip-format": "File Manager (Thunar)",
+            "on-click": "thunar"
+        },
+        "custom/web": {
+            "format": "󰈹",
+            "tooltip-format": "Web Browser (Brave)",
+            "on-click": "brave"
+        },
         "clock": {
             "format": "󰥔  {:%a, %b %d • %I:%M %p}",
-            "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+            "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+            "on-click": "notify-send 'Calendar' \"$(cal)\""
         },
         "custom/media": {
             "format": "󰎆  Media",
             "tooltip": false,
             "on-click": "pavucontrol"
+        },
+        "custom/clipboard": {
+            "format": "󰅍",
+            "tooltip-format": "Clipboard History",
+            "on-click": "/home/jacob/.local/bin/hypr-clipboard"
+        },
+        "custom/snip": {
+            "format": "󰄀",
+            "tooltip-format": "Screenshot Tool",
+            "on-click": "/home/jacob/.local/bin/hypr-screenshot",
+            "on-click-right": "/home/jacob/.local/bin/hypr-screenshot config"
+        },
+        "custom/keys": {
+            "format": "󰌌",
+            "tooltip-format": "Show Shortcuts",
+            "on-click": "notify-send 'Keybinds' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window\nSuper+Shift+Q: Exit'"
         },
         "cpu": {
             "interval": 2,
@@ -75,96 +115,14 @@
             "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
             "on-click": "nm-connection-editor"
         },
-        "wlr/taskbar": {
-            "format": "{icon}",
-            "icon-size": 18,
-            "tooltip-format": "{title}",
-            "on-click": "activate",
-            "on-click-middle": "close",
-            "all-outputs": false,
-            "ignore-list": [
-                "rofi"
-            ]
+        "tray": {
+            "icon-size": 16,
+            "spacing": 6
         },
         "custom/power": {
             "format": " ⏻ ",
             "tooltip": false,
             "on-click": "hyprctl dispatch exit"
-        }
-    },
-    {
-        "name": "bottom-dock",
-        "layer": "top",
-        "position": "bottom",
-        "height": 44,
-        "margin-bottom": 6,
-        "margin-left": 12,
-        "margin-right": 12,
-        "spacing": 6,
-        "modules-left": [
-            "custom/start",
-            "custom/search"
-        ],
-        "modules-center": [
-            "custom/term",
-            "custom/files",
-            "custom/web"
-        ],
-        "modules-right": [
-            "custom/clipboard",
-            "custom/snip",
-            "custom/keys",
-            "custom/showdesktop"
-        ],
-        "custom/start": {
-            "format": "󰣇  Start",
-            "tooltip": false,
-            "on-click": "rofi -show drun"
-        },
-        "custom/search": {
-            "format": "󰍏  Search apps...",
-            "tooltip": false,
-            "on-click": "rofi -show drun"
-        },
-        "custom/term": {
-            "format": "󰞷  Term",
-            "tooltip": false,
-            "on-click": "kitty"
-        },
-        "custom/files": {
-            "format": "󰉋  Files",
-            "tooltip": false,
-            "on-click": "thunar"
-        },
-        "custom/web": {
-            "format": "󰈹  Web",
-            "tooltip": false,
-            "on-click": "brave"
-        },
-        "custom/clipboard": {
-            "format": "󰅍  Clipboard",
-            "tooltip": false,
-            "on-click": "/home/jacob/.local/bin/hypr-clipboard"
-        },
-        "custom/snip": {
-            "format": "󰄀  Snip",
-            "tooltip": false,
-            "on-click": "/home/jacob/.local/bin/hypr-screenshot",
-            "on-click-right": "/home/jacob/.local/bin/hypr-screenshot config"
-        },
-        "custom/keys": {
-            "format": "󰌌  Keys",
-            "tooltip": false,
-            "on-click": "notify-send 'Keybinds' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window\nSuper+Shift+Q: Exit'"
-        },
-        "tray": {
-            "icon-size": 16,
-            "spacing": 6
-        },
-        "custom/showdesktop": {
-            "format": " ",
-            "tooltip": false,
-            "on-click": "hyprctl dispatch workspace special:magic"
         }
     }
 ]

@@ -1,42 +1,15 @@
-# Enable the subsequent settings only in interactive sessions
-case $- in
-  *i*) ;;
-    *) return;;
-esac
+#
+# ~/.bashrc
+#
 
-# Path to your oh-my-bash installation.
-export OSH="$HOME/.oh-my-bash"
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
 
-# Set name of the theme to load.
-# Common great options: "font", "powerline", "agnoster", "pure"
-OSH_THEME="powerline"
+# Environment & PATH
+[[ ":$PATH:" != *":$HOME/.local/bin:"* ]] && export PATH="$PATH:$HOME/.local/bin"
+[ -f "$HOME/.config/gemini/api_key" ] && export GEMINI_API_KEY="$(cat "$HOME/.config/gemini/api_key" 2>/dev/null)"
 
-# Plugins to load
-# e.g. plugins=(git bashmarks colored-man-pages)
-plugins=(
-  git
-  bashmarks
-  colored-man-pages
-)
-
-# Aliases to load
-aliases=(
-  general
-)
-
-# Completions to load
-completions=(
-  git
-  ssh
-  system
-  dirs
-  tmux
-)
-
-# Load Oh My Bash
-source "$OSH/oh-my-bash.sh"
-
-# Dynamic system completion loader (enables instant on-demand Tab completion for system tools)
+# System completion on-demand loader
 if ! type _completion_loader >/dev/null 2>&1; then
   _lazy_completion_loader() {
     local comp_path="/usr/share/bash-completion/completions/$1"
@@ -48,10 +21,31 @@ if ! type _completion_loader >/dev/null 2>&1; then
   complete -D -F _lazy_completion_loader 2>/dev/null || true
 fi
 
-# User Aliases & Environment
+# Aliases
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
+export EDITOR='nvim'
+export VISUAL='nvim'
+alias ll='ls -lah --color=auto'
+alias gs='git status'
 alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
-[ -f "$HOME/.config/gemini/api_key" ] && export GEMINI_API_KEY="$(cat "$HOME/.config/gemini/api_key" 2>/dev/null)"
-fastfetch
+# Package management helpers
+alias pkg-save='~/.local/bin/pkg-save'
+alias pkg-list='~/.local/bin/pkg-save --list'
+alias pkg-install='~/.local/bin/pkg-install'
+alias paru-clean='paru -Sc'
+
+# Clean colored prompt with Git branch integration
+if [ -f /usr/share/git/completion/git-prompt.sh ]; then
+  . /usr/share/git/completion/git-prompt.sh
+  GIT_PS1_SHOWDIRTYSTATE=1
+  PROMPT_COMMAND='__git_ps1 "\[\e[1;36m\]\u@\h\[\e[0m\] \[\e[1;34m\]\w\[\e[0m\]" "\n\[\e[1;32m\]❯\[\e[0m\] "'
+else
+  PS1='\[\e[1;36m\]\u@\h\[\e[0m\] \[\e[1;34m\]\w\[\e[0m\]\n\[\e[1;32m\]❯\[\e[0m\] '
+fi
+
+# Launch fastfetch
+if command -v fastfetch >/dev/null 2>&1; then
+  fastfetch
+fi

@@ -1,16 +1,66 @@
 #!/usr/bin/env bash
 # =============================================================================
-# HyprFrost Screenshot Wrapper (Flameshot)
-# Full Cross-WM Compatibility (Qtile X11 & Hyprland Wayland)
+# HyprFrost Screenshot Wrapper (Cross-WM: Hyprland Wayland & Qtile X11)
+# Native grim + slurp + swappy under Wayland; Flameshot under X11
 # =============================================================================
 
-export LD_LIBRARY_PATH="/home/jacob/.local/lib:${LD_LIBRARY_PATH:-}"
+SCREENSHOT_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+mkdir -p "$SCREENSHOT_DIR"
+FILENAME="$SCREENSHOT_DIR/Screenshot_$(date +'%Y-%m-%d_%H-%M-%S').png"
 
+notify() {
+    notify-send -a "Screenshot" -i camera-photo "Screenshot Taken" "$1" 2>/dev/null || true
+}
+
+# -----------------------------------------------------------------------------
+# Wayland (Hyprland) Execution
+# -----------------------------------------------------------------------------
 if [ -n "$WAYLAND_DISPLAY" ]; then
-    export XDG_CURRENT_DESKTOP="sway"
-    export QT_QPA_PLATFORM="wayland;xcb"
+    case "${1:-}" in
+        full|screen)
+            grim "$FILENAME"
+            wl-copy < "$FILENAME"
+            notify "Full screenshot copied to clipboard and saved to $FILENAME"
+            ;;
+        window)
+            # Capture active window
+            GEOM=$(hyprctl activewindow -j 2>/dev/null | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' 2>/dev/null)
+            if [ -n "$GEOM" ] && [ "$GEOM" != "null,null nullxnull" ]; then
+                grim -g "$GEOM" "$FILENAME"
+                wl-copy < "$FILENAME"
+                notify "Window screenshot copied to clipboard and saved"
+            else
+                grim -g "$(slurp)" "$FILENAME"
+                wl-copy < "$FILENAME"
+                notify "Area screenshot copied to clipboard and saved"
+            fi
+            ;;
+        folder)
+            exec thunar "$SCREENSHOT_DIR"
+            ;;
+        config|settings)
+            if [ -x "$(command -v swappy)" ]; then
+                notify-send "Screenshot" "Swappy config directory: ~/.config/swappy"
+            fi
+            ;;
+        area|gui|*)
+            # Interactive area selection with slurp
+            GEOM=$(slurp 2>/dev/null)
+            if [ -n "$GEOM" ]; then
+                grim -g "$GEOM" - | swappy -f - -o "$FILENAME"
+                if [ -f "$FILENAME" ]; then
+                    wl-copy < "$FILENAME"
+                    notify "Screenshot copied to clipboard and saved to $FILENAME"
+                fi
+            fi
+            ;;
+    esac
+    exit 0
 fi
 
+# -----------------------------------------------------------------------------
+# X11 (Qtile) Execution via Flameshot
+# -----------------------------------------------------------------------------
 FLAMESHOT="/home/jacob/.local/bin/flameshot-bin"
 if [ ! -x "$FLAMESHOT" ]; then
     FLAMESHOT="$(command -v flameshot || echo "/usr/bin/flameshot")"
@@ -18,13 +68,13 @@ fi
 
 case "${1:-}" in
     full|screen)
-        exec "$FLAMESHOT" full -c -p "${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+        exec "$FLAMESHOT" full -c -p "$SCREENSHOT_DIR"
         ;;
     config|settings)
         exec "$FLAMESHOT" config
         ;;
     folder)
-        exec thunar "${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+        exec thunar "$SCREENSHOT_DIR"
         ;;
     *)
         exec "$FLAMESHOT" gui

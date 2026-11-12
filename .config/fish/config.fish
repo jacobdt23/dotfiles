@@ -4,9 +4,12 @@ if status is-interactive
     # Disable default greeting
     set -g fish_greeting ""
 
+    # Keep full directory path in prompt
+    set -g fish_prompt_pwd_dir_length 0
+
     # Aliases
-    alias v="nvim"
-    alias nv="neovide"
+    set -gx EDITOR nvim
+    set -gx VISUAL nvim
     alias gs="git status"
     alias ll="ls -lah"
     alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
