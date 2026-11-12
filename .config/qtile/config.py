@@ -84,6 +84,15 @@ def toggle_fullscreen_clean(qtile_inst):
     else:
         win.fullscreen = True
 
+def cycle_all_screens_layout(qtile_inst):
+    """Cycle the layout on all active monitors simultaneously in sync."""
+    if not qtile_inst.current_group or not qtile_inst.current_group.layouts:
+        return
+    target_idx = (qtile_inst.current_group.current_layout + 1) % len(qtile_inst.current_group.layouts)
+    for screen in qtile_inst.screens:
+        if screen.group:
+            screen.group.use_layout(target_idx)
+
 # -----------------------------
 # ---- KEYBINDINGS ------------
 # -----------------------------
@@ -108,7 +117,7 @@ keys = [
 
     # Tiling Layout Controls
     Key([mod], "j", lazy.layout.toggle_split(), desc="Toggle split"),
-    Key([mod, "control"], "space", lazy.next_layout(), desc="Cycle layout"),
+    Key([mod, "control"], "space", lazy.function(cycle_all_screens_layout), desc="Cycle layout on all screens"),
 
     # Focus Movement (Matching Hyprland arrows)
     Key([mod], "Left", lazy.layout.left(), desc="Move focus left"),
