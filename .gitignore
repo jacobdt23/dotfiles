@@ -21,6 +21,19 @@
 *.swp
 
 # ==========================================
+# IDE & Tool Extensions / Caches (Bloat)
+# ==========================================
+.antigravity/
+.antigravity-ide/
+.vscode/
+
+# ==========================================
+# Standalone Repositories Managed Separately
+# ==========================================
+.config/nvim/
+nixos-config/
+
+# ==========================================
 # Compiled Binaries & Archives
 # ==========================================
 .local/bin/stylua
