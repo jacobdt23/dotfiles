@@ -39,6 +39,7 @@ nixos-config/
 # ==========================================
 # Compiled Binaries & Archives
 # ==========================================
+.local/bin/hugo
 .local/bin/stylua
 .local/bin/tree-sitter
 .local/bin/unzip
