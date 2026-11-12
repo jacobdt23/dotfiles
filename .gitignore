@@ -16,6 +16,8 @@
 .local/share/gvfs-metadata/
 .local/share/hyprland/
 .local/share/Trash/
+.local/share/nvim/
+.dotfiles_backup/
 *.log
 *.tmp
 *.swp
@@ -30,7 +32,6 @@
 # ==========================================
 # Standalone Repositories Managed Separately
 # ==========================================
-.config/nvim/
 nixos-config/
 
 # ==========================================
@@ -46,8 +47,18 @@ nixos-config/
 *.zip
 
 # ==========================================
-# Browser & App Runtime Storage
+# Browser & App Runtime Storage (Bloat)
 # ==========================================
+.config/Antigravity IDE/
+.config/Code/
+.config/Gemini/
+.config/anthropic/
+.config/chromium/
+.config/google-chrome/
+.config/microsoft-edge/
+.config/vivaldi/
+.config/xodus-nexus/
+.config/fastfetch-bak/
 .config/BraveSoftware/Brave-Browser/Default/Cache/
 .config/BraveSoftware/Brave-Browser/Default/Code Cache/
 .config/BraveSoftware/Brave-Browser/Default/GPUCache/
