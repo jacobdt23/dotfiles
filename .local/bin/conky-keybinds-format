@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+"""Format combined Omarchy + personal Hyprland keybindings for Conky and the desktop background."""
+
+import json
+import math
+import re
+import subprocess
+import sys
+
+KEY_WIDTH = 24
+DESC_WIDTH = 28
+NUM_COLS = 3
+
+EXACT_SKIP_DESC = {
+    "Reveal active window on top",
+}
+
+SERIES_RULES: list[tuple[str, str, str, str]] = [
+    ("ws_focus", r"^(Switch to workspace|Workspace) \d+$", "SUPER + 1..0", "Workspace 1-10"),
+    ("ws_move", r"^Move (window )?to workspace \d+$", "SUPER+SHIFT + 1..0", "Move to workspace 1-10"),
+    ("ws_silent", r"^Move window silently to workspace \d+$", "SUPER+SHF+ALT + 1..0", "Move silently ws 1-10"),
+    ("bar_panel", r"^Bar panel \d+$", "SUPER+CTRL + 1..9", "Bar panel 1-9"),
+    ("group_idx", r"^Switch to group window \d+$", "SUPER+ALT + 1..5", "Group window 1-5"),
+    ("focus_dir", r"^Focus (on )?(left|right|above|below|up|down)( window)?$", "SUPER + Arrows", "Focus window"),
+    ("swap_dir", r"^Swap (window )?(to the )?(left|right|up|down)$", "SUPER+SHIFT + Arrows", "Swap window"),
+    ("mon_ws", r"^Move workspace to (left|right|up|down) monitor$", "SUPER+SHF+ALT + Arrows", "Move workspace monitor"),
+    ("mon_win", r"^Move window to (left|right|up|down) monitor$", "SUPER+SHF+CTL + Arrows", "Move window monitor"),
+    ("grp_move", r"^Move window to group on (left|right|top|bottom)$", "SUPER+ALT + Arrows", "Move window into group"),
+    ("resize_vert", r"^(Shrink window up|Expand window down)$", "SUPER+SHIFT + -/=", "Resize height (-/=)"),
+    ("resize_small", r"^(Expand|Shrink) window (left|down|up) a little$", "SUPER+ALT/SHF + -/=", "Resize a little"),
+    ("resize_big", r"^(Expand|Shrink) window (left|down|up) a lot$", "SUPER+CTL/SHF + -/=", "Resize a lot"),
+    ("scroll_ws", r"^Scroll active workspace (forward|backward)$", "SUPER + Scroll", "Cycle workspace"),
+    ("grp_focus_lr", r"^Move grouped window focus (left|right)$", "SUPER+CTRL + L/R Arrow", "Group focus left/right"),
+    ("grp_next", r"^Next window in group$", "SUPER+ALT + TAB/ScrlDn", "Next window in group"),
+    ("grp_prev", r"^(Previous) window in group$", "SUPER+ALT+SHF+TAB/Up", "Prev window in group"),
+]
+
+# Curated compact sidebar sections: (section_title, accent_hex, [(label, match_patterns, prefer_key_re, fallback_key)])
+COMPACT_SECTIONS = [
+    (
+        "APPS",
+        "#7aa2f7",
+        [
+            ("Terminal", [r"^Terminal$"], r"^SUPER \+ RETURN$", "SUPER + RET"),
+            ("Browser", [r"^Browser$"], r"^SUPER \+ B$", "SUPER + B"),
+            ("Files", [r"^Thunar$", r"^File manager$"], r"^SUPER \+ E$", "SUPER + E"),
+            ("Apps", [r"^Apps$"], r"^SUPER \+ D$", "SUPER + D"),
+            ("Omarchy menu", [r"^Omarchy menu$"], r"^SUPER \+ SPACE$", "SUPER + SPC"),
+            ("System menu", [r"^System menu$"], r"^SUPER \+ Q$", "SUPER + Q"),
+            ("Activity", [r"^Activity$"], r"ESCAPE$", "SUP+SHF+ESC"),
+        ],
+    ),
+    (
+        "WINDOWS",
+        "#bb9af7",
+        [
+            ("Close", [r"^Close window$"], r"C$", "SUPER + C"),
+            ("Float toggle", [r"^Toggle floating$"], r"^SUPER \+ V$", "SUPER + V"),
+            ("Fullscreen", [r"^Full screen$"], r"^SUPER \+ F$", "SUPER + F"),
+            ("Minimize", [r"^Minimize window to the dock$"], r"^SUPER \+ M$", "SUPER + M"),
+            ("Cycle layout", [r"^Cycle screens layout$"], r"^SUPER \+ L$", "SUPER + L"),
+            ("Next monitor", [r"^Focus next monitor$"], r"^SUPER \+ TAB$", "SUPER + TAB"),
+            ("Workspaces", [r"^Workspace 1-10$"], None, "SUPER + 1..0"),
+            ("Move to ws", [r"^Move to workspace 1-10$"], None, "SUP+SHF+1..0"),
+            ("Drag window", [r"^Move window$"], r"MIDDLE", "MID CLICK"),
+            ("Resize", [r"^Resize window$"], r"RMB$", "SUPER + RMB"),
+        ],
+    ),
+    (
+        "TOOLS & MEDIA",
+        "#7dcfff",
+        [
+            ("Screenshot", [r"^Screenshot$"], r"SHIFT \+ S$", "SUP+SHF + S"),
+            ("Full screen shot", [r"^Screenshot fullscreen$"], r"PRINT$", "SHF + PRINT"),
+            ("Screen record", [r"^Screenrecording$"], r"ALT \+ PRINT$", "ALT + PRINT"),
+            ("Clipboard", [r"^Clipboard$"], r"SHIFT \+ V$", "SUP+SHF + V"),
+            ("Notifications", [r"^Notification history$"], r"^SUPER \+ N$", "SUPER + N"),
+            ("Volume - / +", [r"^Volume up$", r"^Volume down$"], None, "SUPER + -/="),
+            ("Mute", [r"^Mute$"], r"BACKSPACE$", "SUPER + BKSP"),
+            ("Themes", [r"^Theme menu$"], r"CTRL \+ T$", "SUP+CTL + T"),
+            ("Wallpapers", [r"^Background switcher$"], r"CTRL \+ W$", "SUP+CTL + W"),
+            ("Reload Hyprland", [r"^Reload Hyprland$"], r"SHIFT \+ R$", "SUP+SHF + R"),
+        ],
+    ),
+]
+
+
+def short_key(key: str) -> str:
+    k = key.strip()
+    replacements = [
+        ("MIDDLE MOUSE BUTTON", "MID CLICK"),
+        ("MIDDLE CLICK", "MID CLICK"),
+        ("SUPER + LEFT MOUSE BUTTON", "SUPER + LMB"),
+        ("SUPER + RIGHT MOUSE BUTTON", "SUPER + RMB"),
+        ("SUPER + RETURN", "SUPER + RET"),
+        ("SUPER + SPACE", "SUPER + SPC"),
+        ("SUPER + BACKSPACE", "SUPER + BKSP"),
+        ("SUPER + ESCAPE", "SUPER + ESC"),
+        ("SUPER+SHIFT + ESCAPE", "SUP+SHF+ESC"),
+        ("SUPER+SHIFT + 1..0", "SUP+SHF+1..0"),
+        ("SUPER+SHIFT + ", "SUP+SHF + "),
+        ("SUPER+CTRL + ", "SUP+CTL + "),
+        ("SUPER+ALT + ", "SUP+ALT + "),
+        ("SHIFT + PRINT", "SHF + PRINT"),
+        ("SUPER + W / SUPER + C", "SUPER + C/W"),
+    ]
+    for old, new in replacements:
+        k = k.replace(old, new)
+    return k
+
+
+def compact_key(key: str) -> str:
+    replacements = {
+        "MIDDLE MOUSE BUTTON": "MIDDLE CLICK",
+        "SUPER + LEFT MOUSE BUTTON": "SUPER + LMB",
+        "SUPER + RIGHT MOUSE BUTTON": "SUPER + RMB",
+        "SUPER SHIFT CTRL ALT": "SUPER+SHF+CTL+ALT",
+        "SUPER SHIFT CTRL": "SUPER+SHF+CTL",
+        "SUPER SHIFT ALT": "SUPER+SHF+ALT",
+        "SUPER CTRL ALT": "SUPER+CTL+ALT",
+        "SHIFT CTRL ALT": "SHF+CTL+ALT",
+        "SUPER SHIFT": "SUPER+SHIFT",
+        "SUPER CTRL": "SUPER+CTRL",
+        "SUPER ALT": "SUPER+ALT",
+        "SHIFT ALT": "SHIFT+ALT",
+        "CTRL ALT": "CTRL+ALT",
+        "BRACKETLEFT": "[",
+        "BRACKETRIGHT": "]",
+    }
+    for old, new in replacements.items():
+        key = key.replace(old, new)
+    if len(key) > KEY_WIDTH:
+        key = key[: KEY_WIDTH - 1] + "…"
+    return key
+
+
+def truncate_desc(desc: str) -> str:
+    if len(desc) > DESC_WIDTH:
+        return desc[: DESC_WIDTH - 1] + "…"
+    return desc
+
+
+def get_bindings() -> list[tuple[str, str]]:
+    try:
+        out = subprocess.check_output(
+            ["omarchy", "menu", "keybindings", "--print"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        )
+    except Exception:
+        return []
+
+    rows: list[tuple[str, str]] = []
+    seen_groups: set[str] = set()
+
+    for line in out.splitlines():
+        if "→" not in line:
+            continue
+        key, desc = [part.strip() for part in line.split("→", 1)]
+        if not key or not desc:
+            continue
+
+        if "XF86" in key or desc in EXACT_SKIP_DESC:
+            continue
+
+        matched_series = False
+        for group_id, pattern, group_key, group_desc in SERIES_RULES:
+            if re.fullmatch(pattern, desc):
+                if group_id not in seen_groups:
+                    rows.append((group_key, group_desc))
+                    seen_groups.add(group_id)
+                matched_series = True
+                break
+        if matched_series:
+            continue
+
+        rows.append((compact_key(key), desc))
+
+    return rows
+
+
+def build_compact_sections(rows: list[tuple[str, str]]) -> list[dict]:
+    sections: list[dict] = []
+    has_live = len(rows) > 5
+
+    for title, color, specs in COMPACT_SECTIONS:
+        items: list[dict[str, str]] = []
+        for label, patterns, prefer_re, fallback_key in specs:
+            chosen_key: str | None = None
+            if has_live:
+                # Special combined volume pair
+                if label == "Volume - / +":
+                    has_up = any(re.fullmatch(r"^Volume up$", d) for _, d in rows)
+                    has_dn = any(re.fullmatch(r"^Volume down$", d) for _, d in rows)
+                    if has_up or has_dn:
+                        chosen_key = fallback_key
+                else:
+                    matches: list[str] = []
+                    for k, d in rows:
+                        if any(re.fullmatch(p, d) for p in patterns):
+                            matches.append(k)
+                    if matches:
+                        if prefer_re:
+                            for m in matches:
+                                if re.search(prefer_re, m):
+                                    chosen_key = short_key(m)
+                                    break
+                        if not chosen_key:
+                            chosen_key = short_key(matches[0])
+            else:
+                chosen_key = fallback_key
+
+            if chosen_key:
+                items.append({"key": chosen_key, "desc": label})
+
+        if items:
+            sections.append({"title": title, "color": color, "items": items})
+
+    return sections
+
+
+def esc_conky(text: str) -> str:
+    return text.replace("$", "$$").replace("#", r"\#")
+
+
+def render_compact_conky(sections: list[dict]) -> None:
+    for idx, sec in enumerate(sections):
+        if idx > 0:
+            print("")
+        print(f"${{color {sec['color']}}}{sec['title']}${{color}}")
+        for item in sec["items"]:
+            k = esc_conky(f"{item['key']:<14}")
+            d = esc_conky(item["desc"])
+            print(f"${{color #7dcfff}}{k}${{alignr}}${{color #c0caf5}}{d}${{color}}")
+
+
+def render_full_conky(rows: list[tuple[str, str]]) -> None:
+    if not rows:
+        print("${color #f7768e}No active Hyprland bindings found.${color}")
+        return
+    col_len = math.ceil(len(rows) / NUM_COLS)
+    columns = [rows[i * col_len : (i + 1) * col_len] for i in range(NUM_COLS)]
+    empty_cell = " " * (KEY_WIDTH + 2 + DESC_WIDTH)
+    for row_idx in range(col_len):
+        parts: list[str] = []
+        for col_idx in range(NUM_COLS):
+            if row_idx < len(columns[col_idx]):
+                k, d = columns[col_idx][row_idx]
+                parts.append(
+                    f"${{color #7dcfff}}{esc_conky(f'{k:<{KEY_WIDTH}}')}"
+                    f"${{color #565f89}}│ ${{color #c0caf5}}{esc_conky(f'{truncate_desc(d):<{DESC_WIDTH}}')}"
+                )
+            elif col_idx < NUM_COLS - 1:
+                parts.append(empty_cell)
+        print("  ${color #414868}║${color}  ".join(parts).rstrip())
+
+
+def main() -> int:
+    mode = "compact"
+    if "--json" in sys.argv:
+        mode = "json"
+    elif "--full" in sys.argv:
+        mode = "full"
+
+    rows = get_bindings()
+
+    if mode == "full":
+        render_full_conky(rows)
+        return 0
+
+    sections = build_compact_sections(rows)
+    if mode == "json":
+        print(json.dumps(sections))
+    else:
+        render_compact_conky(sections)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

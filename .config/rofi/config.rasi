@@ -1,12 +1,9 @@
-/**
- * HyprFrost Rofi Master Configuration
- **/
-
 configuration {
     modes:                      [ drun, run ];
     show-icons:                 true;
-    display-drun:               " 󰣇  Launcher ";
-    display-run:                "   Run ";
+    icon-theme:                 "Colloid-Dark";
+    display-drun:               "󰣇";
+    display-run:                "";
     drun-display-format:        "{name}";
     font:                       "JetBrainsMono Nerd Font 11";
 }

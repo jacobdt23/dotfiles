@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG="$HOME/.config/conky/keybinds.conf"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+CACHE="$CACHE_DIR/conky-keybinds.txt"
+LOCK="/tmp/toggle-conky-keybinds-${UID}.lock"
+
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+if pgrep -f "conky.*keybinds\.conf" >/dev/null 2>&1; then
+    if [ "${1:-}" = "--start" ]; then
+        exit 0
+    fi
+    pkill -f "conky.*keybinds\.conf" || true
+    exit 0
+fi
+
+mkdir -p "$CACHE_DIR"
+if [ -x "$HOME/.local/bin/conky-keybinds-format" ]; then
+    "$HOME/.local/bin/conky-keybinds-format" > "$CACHE" 2>/dev/null || true
+fi
+
+conky -d -c "$CONFIG" 9>&- >/dev/null 2>&1
+sleep 0.1

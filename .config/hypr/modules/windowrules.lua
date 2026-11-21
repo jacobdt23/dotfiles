@@ -79,8 +79,23 @@ hl.window_rule({
     center = true,
 })
 
+hl.window_rule({
+    name            = "davinci-resolve-no-follow-mouse",
+    match           = { class = "^(resolve)$" },
+    no_follow_mouse = true,
+})
+
+hl.window_rule({
+    name     = "conky-keybinds-right",
+    match    = { class = "^(conky-keybinds)$" },
+    float    = true,
+    pin      = true,
+    no_focus = true,
+    move     = { "(monitor_w-window_w-22)", "((monitor_h-window_h)/2-18)" },
+})
+
 hl.layer_rule({
-    match   = { namespace = "nwg-dock" },
+    match   = { namespace = "^(waybar|conky-keybinds-bg|nwg-dock)$" },
     no_anim = true,
 })
 

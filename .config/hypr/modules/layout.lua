@@ -1,20 +1,14 @@
--- See https://wiki.hypr.land/Configuring/Layouts/Dwindle-Layout/ for more
+-- Omarchy-aligned layout defaults
 hl.config({
     dwindle = {
-        preserve_split = true, -- You probably want this
+        preserve_split = true,
+        force_split    = 2,
     },
-})
-
--- See https://wiki.hypr.land/Configuring/Layouts/Master-Layout/ for more
-hl.config({
     master = {
         new_status = "master",
     },
-})
-
--- See https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/ for more
-hl.config({
     scrolling = {
+        column_width             = 0.49,
         fullscreen_on_one_column = true,
     },
 })

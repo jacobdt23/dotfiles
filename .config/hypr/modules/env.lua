@@ -7,7 +7,7 @@ hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 
 hl.env("GTK_THEME", "Tokyonight-Dark")
-hl.env("QT_ICON_THEME", "Papirus-Dark")
+hl.env("QT_ICON_THEME", "Colloid-Dark")
 hl.env("QT_QPA_PLATFORMTHEME", "qt5ct;qt6ct")
 
 hl.env("GDK_BACKEND", "wayland,x11,*")

@@ -4,48 +4,34 @@
 
 hl.config({
     input = {
-        kb_layout    = "us",
-        kb_variant   = "",
-        kb_model     = "",
-        kb_options   = "",
-        kb_rules     = "",
+        kb_layout         = "us",
+        kb_variant        = "",
+        kb_model          = "",
+        kb_options        = "",
+        kb_rules          = "",
+        follow_mouse      = 1,
+        sensitivity       = 0,
+        repeat_rate       = 40,
+        repeat_delay      = 250,
+        numlock_by_default = true,
 
-        follow_mouse = 1,
-
-        sensitivity  = 0, -- -1.0 - 1.0, 0 means no modification.
-
-        touchpad     = {
-            natural_scroll = false,
+        touchpad = {
+            natural_scroll       = false,
+            clickfinger_behavior = true,
+            scroll_factor        = 0.4,
         },
     },
 
-    -- Forces software cursor rendering to prevent desyncs with window damage tracking
+    -- Software cursor avoids NVIDIA/RTX 5070 KMS cursor-plane desyncs
     cursor = {
-        no_hardware_cursors = true,
+        no_hardware_cursors      = true,
+        hide_on_key_press        = true,
+        warp_on_change_workspace = 1,
     },
 })
 
 hl.gesture({
-    fingers = 3,
+    fingers   = 3,
     direction = "horizontal",
-    action = "workspace"
-})
-
--- Example per-device config
-hl.device({
-    name        = "epic-mouse-v1",
-    sensitivity = -0.5,
-})
-
--- Layout Configurations
-hl.config({
-    dwindle = {
-        preserve_split = true,
-    },
-    master = {
-        new_status = "master",
-    },
-    scrolling = {
-        fullscreen_on_one_column = true,
-    },
+    action    = "workspace",
 })

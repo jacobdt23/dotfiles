@@ -2,18 +2,18 @@
     monitor = 0
     follow = mouse
     origin = top-right
-    offset = (16, 48)
+    offset = (14, 38)
     width = 360
     height = (0, 300)
     indicate_hidden = yes
-    transparency = 10
-    separator_height = 2
+    transparency = 0
+    separator_height = 1
     padding = 12
     horizontal_padding = 14
     text_icon_padding = 12
     frame_width = 2
-    frame_color = "#3b4261"
-    separator_color = frame
+    frame_color = "#7aa2f7"
+    separator_color = "#292e42"
     sort = yes
     idle_threshold = 120
     font = JetBrainsMono Nerd Font 10
@@ -28,28 +28,30 @@
     stack_duplicates = true
     hide_duplicate_count = false
     show_indicators = yes
+    icon_theme = "Colloid-Dark, Adwaita"
+    enable_recursive_icon_lookup = true
     icon_position = left
     min_icon_size = 24
     max_icon_size = 48
-    corner_radius = 10
+    corner_radius = 8
     mouse_left_click = close_current
     mouse_middle_click = do_action, close_current
     mouse_right_click = close_all
 
 [urgency_low]
-    background = "#141622"
+    background = "#1a1b26"
     foreground = "#a9b1d6"
     frame_color = "#414868"
     timeout = 4
 
 [urgency_normal]
-    background = "#141622"
+    background = "#1a1b26"
     foreground = "#c0caf5"
     frame_color = "#7aa2f7"
     timeout = 6
 
 [urgency_critical]
-    background = "#141622"
+    background = "#1a1b26"
     foreground = "#f7768e"
     frame_color = "#f7768e"
     timeout = 0

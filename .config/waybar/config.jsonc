@@ -1,32 +1,27 @@
-// Single unified top bar configuration for Hyprland / Waybar
+// Omarchy-esque minimal solid Tokyo Night top bar for Hyprland / Waybar
 [
     {
         "name": "top-bar",
         "layer": "top",
         "position": "top",
-        "height": 38,
-        "margin-top": 6,
-        "margin-left": 12,
-        "margin-right": 12,
-        "spacing": 6,
+        "height": 28,
+        "margin-top": 0,
+        "margin-left": 0,
+        "margin-right": 0,
+        "spacing": 0,
         "modules-left": [
             "custom/brand",
-            "hyprland/workspaces",
-            "custom/term",
-            "custom/files",
-            "custom/web"
+            "hyprland/workspaces"
         ],
         "modules-center": [
-            "clock",
-            "custom/media"
+            "clock"
         ],
         "modules-right": [
+            "custom/keys",
             "custom/clipboard",
             "custom/snip",
-            "custom/keys",
             "cpu",
             "memory",
-            "disk",
             "wireplumber",
             "network",
             "tray",
@@ -34,55 +29,42 @@
         ],
         "custom/brand": {
             "format": "󰣇",
-            "tooltip": false,
+            "tooltip-format": "Apps (Super + Space)",
             "on-click": "rofi -show drun"
         },
         "hyprland/workspaces": {
-            "disable-scroll": true,
-            "all-outputs": true,
+            "disable-scroll": false,
+            "all-outputs": false,
             "format": "{name}",
-            "on-click": "activate"
-        },
-        "custom/term": {
-            "format": "󰞷",
-            "tooltip-format": "Terminal (Kitty)",
-            "on-click": "kitty"
-        },
-        "custom/files": {
-            "format": "󰉋",
-            "tooltip-format": "File Manager (Thunar)",
-            "on-click": "thunar"
-        },
-        "custom/web": {
-            "format": "󰈹",
-            "tooltip-format": "Web Browser (Brave)",
-            "on-click": "brave"
+            "on-click": "activate",
+            "persistent-workspaces": {
+                "1": [],
+                "2": [],
+                "3": [],
+                "4": [],
+                "5": []
+            }
         },
         "clock": {
-            "format": "󰥔  {:%a, %b %d • %I:%M %p}",
-            "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-            "on-click": "notify-send 'Calendar' \"$(cal)\""
+            "format": "{:%A %H:%M}",
+            "format-alt": "{:%a, %b %d  %I:%M %p}",
+            "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
         },
-        "custom/media": {
-            "format": "󰎆",
-            "tooltip": false,
-            "on-click": "pavucontrol"
+        "custom/keys": {
+            "format": "󰌌",
+            "tooltip-format": "Toggle Keybindings (Super + K)",
+            "on-click": "/home/jacob/.local/bin/toggle-conky-background"
         },
         "custom/clipboard": {
             "format": "󰅍",
-            "tooltip-format": "Clipboard History",
+            "tooltip-format": "Clipboard History (Super + Shift + V)",
             "on-click": "/home/jacob/.local/bin/hypr-clipboard"
         },
         "custom/snip": {
             "format": "󰄀",
-            "tooltip-format": "Screenshot Tool",
+            "tooltip-format": "Screenshot (Super + Shift + S)",
             "on-click": "/home/jacob/.local/bin/hypr-screenshot",
             "on-click-right": "/home/jacob/.local/bin/hypr-screenshot config"
-        },
-        "custom/keys": {
-            "format": "󰌌",
-            "tooltip-format": "Show Shortcuts",
-            "on-click": "notify-send 'Keybinds' 'Super+Return: Terminal\nSuper+Space: App Launcher\nSuper+E: Files\nSuper+B: Browser\nSuper+C: Close Window\nSuper+Shift+Q: Exit'"
         },
         "cpu": {
             "interval": 2,
@@ -93,18 +75,12 @@
         "memory": {
             "interval": 2,
             "format": "󰍛 {percentage}%",
-            "tooltip": false,
+            "tooltip-format": "{used:0.1f}G / {total:0.1f}G",
             "on-click": "kitty -e btop"
-        },
-        "disk": {
-            "interval": 30,
-            "format": "󰋊 {percentage_used}%",
-            "path": "/",
-            "on-click": "kitty -e df -h"
         },
         "wireplumber": {
             "format": "{icon} {volume}%",
-            "format-muted": "󰝟 Muted",
+            "format-muted": "󰝟",
             "format-icons": ["", "", ""],
             "on-click": "pavucontrol"
         },
@@ -116,13 +92,13 @@
             "on-click": "nm-connection-editor"
         },
         "tray": {
-            "icon-size": 16,
-            "spacing": 6
+            "icon-size": 15,
+            "spacing": 8
         },
         "custom/power": {
-            "format": " ⏻ ",
-            "tooltip": false,
-            "on-click": "hyprctl dispatch exit"
+            "format": "⏻",
+            "tooltip-format": "Power Menu (Super + Q)",
+            "on-click": "sh -c 'choice=$(printf \"󰌾  Lock\\n󰤄  Suspend\\n󰜉  Reboot\\n󰐥  Shutdown\\n󰍃  Log out\" | rofi -dmenu -i -p System); case \"$choice\" in *Lock*) hyprlock;; *Suspend*) systemctl suspend;; *Reboot*) systemctl reboot;; *Shutdown*) systemctl poweroff;; *Log*) hyprctl dispatch exit;; esac'"
         }
     }
 ]

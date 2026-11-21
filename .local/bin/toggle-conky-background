@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+QML="$HOME/.config/conky/keybinds-bg.qml"
+LOCK="/tmp/toggle-conky-background-${UID}.lock"
+
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+if pgrep -f "quickshell.*keybinds-bg\.qml|qs.*keybinds-bg\.qml" >/dev/null 2>&1; then
+    if [ "${1:-}" = "--start" ]; then
+        exit 0
+    fi
+    pkill -f "quickshell.*keybinds-bg\.qml|qs.*keybinds-bg\.qml" || true
+    if [ "${1:-}" != "--restart" ]; then
+        exit 0
+    fi
+    sleep 0.2
+fi
+
+setsid qs -p "$QML" 9>&- >/dev/null 2>&1 </dev/null &
+sleep 0.1
